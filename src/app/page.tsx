@@ -1,16 +1,25 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChemicalTreatment } from '@/types';
+import { useTreatments } from '@/hooks/useTreatments';
 import { TreatmentForm } from '@/components/treatment-form';
 import { TreatmentList } from '@/components/treatment-list';
 import { Stats } from '@/components/stats';
 import { FilterSort } from '@/components/filter-sort';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 
 export default function Home() {
-  const [treatments, setTreatments] = useState<ChemicalTreatment[]>([]);
+  const { 
+    treatments, 
+    isLoading, 
+    error, 
+    addTreatment, 
+    updateTreatment,
+    deleteTreatment,
+    refetch 
+  } = useTreatments();
+  
   const [showForm, setShowForm] = useState(false);
   
   // Состояния для фильтров
@@ -65,24 +74,56 @@ export default function Home() {
     return filtered;
   }, [treatments, cultureFilter, productTypeFilter, searchQuery, sortBy, showCompleted]);
 
-  const addTreatment = (treatment: Omit<ChemicalTreatment, 'id' | 'createdAt'>) => {
-    const newTreatment: ChemicalTreatment = {
-      ...treatment,
-      id: Date.now(),
-      createdAt: new Date(),
-    };
-    setTreatments(prev => [...prev, newTreatment]);
+  const handleAddTreatment = async (treatmentData: Omit<ChemicalTreatment, 'id' | 'createdAt'>) => {
+    await addTreatment(treatmentData);
     setShowForm(false);
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="flex justify-center items-center h-64">
+          <div className="flex flex-col items-center gap-2">
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
+            <p className="text-gray-600">Загрузка обработок...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-red-800 font-medium">Ошибка загрузки</h3>
+              <p className="text-red-600 text-sm mt-1">{error}</p>
+            </div>
+            <Button variant="outline" onClick={refetch}>
+              Повторить
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Учет химических обработок</h1>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Новая обработка
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={refetch}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Обновить
+          </Button>
+          <Button onClick={() => setShowForm(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Новая обработка
+          </Button>
+        </div>
       </div>
 
       {/* Статистика */}
@@ -105,7 +146,7 @@ export default function Home() {
       {/* Форма создания новой обработки */}
       {showForm && (
         <TreatmentForm 
-          onSubmit={addTreatment}
+          onSubmit={handleAddTreatment}
           onCancel={() => setShowForm(false)}
         />
       )}
@@ -113,7 +154,8 @@ export default function Home() {
       {/* Список обработок */}
       <TreatmentList 
         treatments={filteredTreatments}
-        onUpdate={setTreatments}
+        onUpdateTreatment={updateTreatment}
+        onDeleteTreatment={deleteTreatment}
       />
     </div>
   );

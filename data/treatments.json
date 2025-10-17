@@ -1,0 +1,43 @@
+[
+  {
+    "culture": "яблоко",
+    "area": 2,
+    "completed": true,
+    "dueDate": "2025-10-18T13:48:48.299Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Скор",
+        "dosage": "0,5 л/га",
+        "productType": "фунгицид"
+      },
+      {
+        "name": "Борей Нео",
+        "dosage": "0,25 л/га",
+        "productType": "инсектицид"
+      }
+    ],
+    "notes": "Сад №4",
+    "id": 1760708973839,
+    "createdAt": "2025-10-17T13:49:33.839Z",
+    "actualDate": "2025-10-17T14:04:25.875Z"
+  },
+  {
+    "culture": "груша",
+    "area": 10,
+    "completed": false,
+    "dueDate": "2025-10-20T13:50:21.305Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Фуфанон",
+        "dosage": "0,25 л/га",
+        "productType": "инсектицид"
+      }
+    ],
+    "notes": "Все сады",
+    "id": 1760709062320,
+    "createdAt": "2025-10-17T13:51:02.320Z",
+    "actualDate": "2025-10-17T14:06:10.202Z"
+  }
+]

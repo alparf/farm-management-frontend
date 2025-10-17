@@ -8,25 +8,36 @@ import { DatePicker } from '@/components/ui/date-picker';
 
 interface TreatmentListProps {
   treatments: ChemicalTreatment[];
-  onUpdate: (treatments: ChemicalTreatment[]) => void;
+  onUpdateTreatment: (id: number, updates: Partial<ChemicalTreatment>) => Promise<void>;
+  onDeleteTreatment: (id: number) => Promise<void>;
 }
 
-export function TreatmentList({ treatments, onUpdate }: TreatmentListProps) {
+export function TreatmentList({ treatments, onUpdateTreatment, onDeleteTreatment }: TreatmentListProps) {
   const [editingDate, setEditingDate] = useState<number | null>(null);
   const [completingTreatment, setCompletingTreatment] = useState<number | null>(null);
 
-  const toggleCompleted = (id: number, actualDate?: Date) => {
-    const updated = treatments.map(treatment =>
-      treatment.id === id 
-        ? { 
-            ...treatment, 
-            completed: !treatment.completed, 
-            actualDate: actualDate || (!treatment.completed ? new Date() : undefined)
-          }
-        : treatment
-    );
-    onUpdate(updated);
-    setCompletingTreatment(null);
+  const toggleCompleted = async (id: number, actualDate?: Date) => {
+    try {
+      await onUpdateTreatment(id, {
+        completed: true,
+        actualDate: actualDate || new Date()
+      });
+      setCompletingTreatment(null);
+    } catch (error) {
+      console.error('Error updating treatment:', error);
+      // Можно добавить toast уведомление
+    }
+  };
+
+  const markAsPending = async (id: number) => {
+    try {
+      await onUpdateTreatment(id, {
+        completed: false,
+        actualDate: undefined
+      });
+    } catch (error) {
+      console.error('Error updating treatment:', error);
+    }
   };
 
   const startCompleteWithDate = (id: number) => {
@@ -37,18 +48,21 @@ export function TreatmentList({ treatments, onUpdate }: TreatmentListProps) {
     setCompletingTreatment(null);
   };
 
-  const updateActualDate = (id: number, date: Date | undefined) => {
-    const updated = treatments.map(treatment =>
-      treatment.id === id 
-        ? { ...treatment, actualDate: date }
-        : treatment
-    );
-    onUpdate(updated);
-    setEditingDate(null);
+  const updateActualDate = async (id: number, date: Date | undefined) => {
+    try {
+      await onUpdateTreatment(id, { actualDate: date });
+      setEditingDate(null);
+    } catch (error) {
+      console.error('Error updating treatment:', error);
+    }
   };
 
-  const deleteTreatment = (id: number) => {
-    onUpdate(treatments.filter(t => t.id !== id));
+  const handleDeleteTreatment = async (id: number) => {
+    try {
+      await onDeleteTreatment(id);
+    } catch (error) {
+      console.error('Error deleting treatment:', error);
+    }
   };
 
   if (treatments.length === 0) {
@@ -124,7 +138,7 @@ export function TreatmentList({ treatments, onUpdate }: TreatmentListProps) {
                         </div>
                         <Button
                           variant="destructive"
-                          onClick={() => deleteTreatment(treatment.id)}
+                          onClick={() => handleDeleteTreatment(treatment.id)}
                           className="whitespace-nowrap"
                         >
                           Удалить
@@ -137,14 +151,14 @@ export function TreatmentList({ treatments, onUpdate }: TreatmentListProps) {
                   <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
-                      onClick={() => toggleCompleted(treatment.id)}
+                      onClick={() => markAsPending(treatment.id)}
                       className="whitespace-nowrap"
                     >
                       Вернуть в ожидание
                     </Button>
                     <Button
                       variant="destructive"
-                      onClick={() => deleteTreatment(treatment.id)}
+                      onClick={() => handleDeleteTreatment(treatment.id)}
                       className="whitespace-nowrap"
                     >
                       Удалить
