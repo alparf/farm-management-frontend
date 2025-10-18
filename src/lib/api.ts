@@ -68,3 +68,68 @@ export async function deleteTreatment(id: number): Promise<void> {
     throw new Error('Failed to delete treatment');
   }
 }
+
+// Inventory API
+export async function fetchInventory(): Promise<ProductInventory[]> {
+  const response = await fetch(`${API_BASE}/inventory`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch inventory');
+  }
+  const data = await response.json();
+  
+  return data.map((product: any) => ({
+    ...product,
+    createdAt: new Date(product.createdAt),
+    updatedAt: new Date(product.updatedAt),
+  }));
+}
+
+export async function createInventoryProduct(
+  product: Omit<ProductInventory, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<ProductInventory> {
+  const response = await fetch(`${API_BASE}/inventory`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(product),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to create product');
+  }
+
+  const data = await response.json();
+  return {
+    ...data,
+    createdAt: new Date(data.createdAt),
+    updatedAt: new Date(data.updatedAt),
+  };
+}
+
+export async function updateInventoryProduct(
+  id: number,
+  updates: Partial<ProductInventory>
+): Promise<void> {
+  const response = await fetch(`${API_BASE}/inventory/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updates),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update product');
+  }
+}
+
+export async function deleteInventoryProduct(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/inventory/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete product');
+  }
+}

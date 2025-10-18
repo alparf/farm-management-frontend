@@ -17,6 +17,19 @@ export interface ChemicalTreatment {
   chemicalProducts: ChemicalProduct[];
 }
 
+export interface ProductInventory {
+  id: number;
+  name: string;
+  type: ProductType;
+  quantity: number;
+  unit: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type InventoryUnit = 'кг' | 'л' | 'г' | 'мл' | 'уп' | 'шт';
+
 export type CultureType = 
   | 'груша' | 'яблоко' | 'черешня' | 'слива' | 'томаты' 
   | 'картофель' | 'лук' | 'свекла' | 'морковь' | 'капуста' | 'другое';
