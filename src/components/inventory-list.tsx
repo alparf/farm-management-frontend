@@ -1,18 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductInventory } from '@/types';
+import { ProductInventory, ProductType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface InventoryListProps {
   inventory: ProductInventory[];
   onUpdateProduct: (id: number, updates: Partial<ProductInventory>) => Promise<void>;
   onDeleteProduct: (id: number) => Promise<void>;
+  typeFilter?: ProductType | '';
 }
 
-export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct }: InventoryListProps) {
+export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typeFilter }: InventoryListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editQuantity, setEditQuantity] = useState('');
 
@@ -38,16 +38,16 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct }: I
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      'фунгицид': 'bg-purple-100 text-purple-800',
-      'инсектицид': 'bg-red-100 text-red-800',
-      'гербицид': 'bg-orange-100 text-orange-800',
-      'десикант': 'bg-yellow-100 text-yellow-800',
-      'регулятор роста': 'bg-green-100 text-green-800',
-      'удобрение': 'bg-blue-100 text-blue-800',
-      'биопрепарат': 'bg-teal-100 text-teal-800',
-      'адъювант': 'bg-gray-100 text-gray-800',
+      'фунгицид': 'bg-purple-100 text-purple-800 border-purple-200',
+      'инсектицид': 'bg-red-100 text-red-800 border-red-200',
+      'гербицид': 'bg-orange-100 text-orange-800 border-orange-200',
+      'десикант': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'регулятор роста': 'bg-green-100 text-green-800 border-green-200',
+      'удобрение': 'bg-blue-100 text-blue-800 border-blue-200',
+      'биопрепарат': 'bg-teal-100 text-teal-800 border-teal-200',
+      'адъювант': 'bg-gray-100 text-gray-800 border-gray-200',
     };
-    return colors[type] || 'bg-gray-100 text-gray-800';
+    return colors[type] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   if (inventory.length === 0) {
@@ -59,84 +59,103 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct }: I
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {inventory.map((product) => (
         <div
           key={product.id}
-          className="border rounded-lg p-4 bg-white hover:bg-gray-50 transition-colors"
+          className={`border-2 rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(product.type)}`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 flex-1 min-w-0">
-              {/* Информация о продукте */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-1">
-                  <span className="font-semibold text-gray-900 truncate">
-                    {product.name}
-                  </span>
-                  <span className={`text-xs px-2 py-1 rounded-full ${getTypeColor(product.type)}`}>
-                    {product.type}
-                  </span>
-                </div>
-                
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  {/* Редактирование количества */}
-                  {editingId === product.id ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={editQuantity}
-                        onChange={(e) => setEditQuantity(e.target.value)}
-                        className="w-24 h-8"
-                      />
-                      <span className="text-gray-500">{product.unit}</span>
-                      <Button size="sm" onClick={() => saveEdit(product.id)}>
-                        ✓
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={cancelEdit}>
-                        ×
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="font-medium text-gray-900">
-                        {product.quantity} {product.unit}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
-                      </span>
-                    </>
-                  )}
-                </div>
+          {/* Заголовок карточки */}
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 truncate text-sm">
+                {product.name}
+              </h3>
+              <span className="text-xs text-gray-600 capitalize">
+                {product.type}
+              </span>
+            </div>
+          </div>
 
-                {/* Примечания */}
-                {product.notes && (
-                  <p className="text-sm text-gray-600 mt-1">{product.notes}</p>
-                )}
+          {/* Количество */}
+          <div className="mb-3">
+            {editingId === product.id ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(e.target.value)}
+                  className="h-8 text-sm"
+                />
+                <span className="text-xs text-gray-500 whitespace-nowrap">{product.unit}</span>
               </div>
-            </div>
+            ) : (
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">
+                  {product.quantity}
+                </div>
+                <div className="text-xs text-gray-600">
+                  {product.unit}
+                </div>
+              </div>
+            )}
+          </div>
 
-            {/* Действия */}
-            <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-              {editingId !== product.id && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => startEdit(product)}
-                  >
-                    Изменить
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => onDeleteProduct(product.id)}
-                  >
-                    Удалить
-                  </Button>
-                </>
-              )}
+          {/* Примечания */}
+          {product.notes && (
+            <div className="mb-3">
+              <p className="text-xs text-gray-600 line-clamp-2">
+                {product.notes}
+              </p>
             </div>
+          )}
+
+          {/* Дата обновления */}
+          <div className="text-xs text-gray-500 mb-3">
+            Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
+          </div>
+
+          {/* Действия */}
+          <div className="flex gap-2">
+            {editingId === product.id ? (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => saveEdit(product.id)}
+                  className="flex-1 h-8 text-xs"
+                >
+                  ✓
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={cancelEdit}
+                  className="flex-1 h-8 text-xs"
+                >
+                  ×
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => startEdit(product)}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Изменить
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => onDeleteProduct(product.id)}
+                  className="flex-1 h-8 text-xs"
+                >
+                  Удалить
+                </Button>
+              </>
+            )}
           </div>
         </div>
       ))}

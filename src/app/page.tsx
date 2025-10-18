@@ -9,9 +9,11 @@ import { InventoryForm } from '@/components/inventory-form';
 import { TreatmentForm } from '@/components/treatment-form';
 import { Stats } from '@/components/stats';
 import { FilterSort } from '@/components/filter-sort';
+import { InventoryFilters } from '@/components/inventory-filters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, RefreshCw, Package, Sprout } from 'lucide-react';
+import { ProductType } from '@/types';
 
 type TabType = 'treatments' | 'inventory';
 
@@ -20,7 +22,19 @@ export default function Home() {
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
   
-  // Обработки
+  // Состояния для фильтров обработок
+  const [cultureFilter, setCultureFilter] = useState('');
+  const [productTypeFilter, setProductTypeFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('dueDate');
+  const [showCompleted, setShowCompleted] = useState(false);
+  
+  // Состояния для фильтров склада
+  const [inventorySearch, setInventorySearch] = useState('');
+  const [inventoryTypeFilter, setInventoryTypeFilter] = useState<ProductType | ''>('');
+  const [inventorySort, setInventorySort] = useState('name');
+
+  // Хуки для данных
   const { 
     treatments, 
     isLoading: treatmentsLoading, 
@@ -31,7 +45,6 @@ export default function Home() {
     refetch: refetchTreatments 
   } = useTreatments();
   
-  // Склад
   const {
     inventory,
     isLoading: inventoryLoading,
@@ -42,13 +55,6 @@ export default function Home() {
     refetch: refetchInventory
   } = useInventory();
   
-  // Фильтры для обработок
-  const [cultureFilter, setCultureFilter] = useState('');
-  const [productTypeFilter, setProductTypeFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('dueDate');
-  const [showCompleted, setShowCompleted] = useState(false);
-
   // Фильтрация обработок
   const filteredTreatments = useMemo(() => {
     let filtered = treatments.filter(treatment => {
@@ -80,15 +86,40 @@ export default function Home() {
     return filtered;
   }, [treatments, cultureFilter, productTypeFilter, searchQuery, sortBy, showCompleted]);
 
-  const handleAddTreatment = async (treatmentData: any) => {
-    await addTreatment(treatmentData);
-    setShowTreatmentForm(false);
-  };
+  // Фильтрация склада
+  const filteredInventory = useMemo(() => {
+    let filtered = inventory.filter(product => {
+      // Фильтр по поиску
+      if (inventorySearch && !product.name.toLowerCase().includes(inventorySearch.toLowerCase())) {
+        return false;
+      }
+      
+      // Фильтр по типу
+      if (inventoryTypeFilter && product.type !== inventoryTypeFilter) {
+        return false;
+      }
+      
+      return true;
+    });
 
-  const handleAddProduct = async (productData: any) => {
-    await addProduct(productData);
-    setShowInventoryForm(false);
-  };
+    // Сортировка
+    filtered.sort((a, b) => {
+      switch (inventorySort) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'quantity':
+          return b.quantity - a.quantity;
+        case 'type':
+          return a.type.localeCompare(b.type);
+        case 'updatedAt':
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [inventory, inventorySearch, inventoryTypeFilter, inventorySort]);
 
   // Статистика склада
   const inventoryStats = useMemo(() => {
@@ -100,6 +131,16 @@ export default function Home() {
 
     return { totalProducts, byType };
   }, [inventory]);
+
+  const handleAddTreatment = async (treatmentData: any) => {
+    await addTreatment(treatmentData);
+    setShowTreatmentForm(false);
+  };
+
+  const handleAddProduct = async (productData: any) => {
+    await addProduct(productData);
+    setShowInventoryForm(false);
+  };
 
   if (treatmentsLoading && activeTab === 'treatments') {
     return <LoadingState message="Загрузка обработок..." />;
@@ -196,26 +237,34 @@ export default function Home() {
           {inventoryError && <ErrorState error={inventoryError} onRetry={refetchInventory} />}
 
           {/* Статистика склада */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Всего продуктов</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{inventoryStats.totalProducts}</div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+            <Card className="bg-blue-50">
+              <CardContent className="p-3">
+                <div className="text-xs text-blue-600 font-medium">Всего</div>
+                <div className="text-lg font-bold text-blue-800">{inventoryStats.totalProducts}</div>
               </CardContent>
             </Card>
             {Object.entries(inventoryStats.byType).map(([type, count]) => (
-              <Card key={type}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium capitalize">{type}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{count}</div>
+              <Card key={type} className="bg-gray-50">
+                <CardContent className="p-3">
+                  <div className="text-xs text-gray-600 font-medium capitalize truncate">
+                    {type}
+                  </div>
+                  <div className="text-lg font-bold text-gray-800">{count}</div>
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          {/* Фильтры склада */}
+          <InventoryFilters
+            searchQuery={inventorySearch}
+            onSearchChange={setInventorySearch}
+            typeFilter={inventoryTypeFilter}
+            onTypeFilterChange={setInventoryTypeFilter}
+            sortBy={inventorySort}
+            onSortChange={setInventorySort}
+          />
 
           {showInventoryForm && (
             <InventoryForm 
@@ -225,9 +274,10 @@ export default function Home() {
           )}
 
           <InventoryList 
-            inventory={inventory}
+            inventory={filteredInventory}
             onUpdateProduct={updateProduct}
             onDeleteProduct={deleteProduct}
+            typeFilter={inventoryTypeFilter}
           />
         </>
       )}
