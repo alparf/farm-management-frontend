@@ -25,7 +25,6 @@ export function TreatmentList({ treatments, onUpdateTreatment, onDeleteTreatment
       setCompletingTreatment(null);
     } catch (error) {
       console.error('Error updating treatment:', error);
-      // Можно добавить toast уведомление
     }
   };
 
@@ -174,7 +173,7 @@ export function TreatmentList({ treatments, onUpdateTreatment, onDeleteTreatment
                 <h4 className="font-semibold mb-3 text-gray-900">Препараты:</h4>
                 <ul className="space-y-2">
                   {treatment.chemicalProducts.map((product, index) => (
-                    <li key={index} className="flex items-start gap-2 p-2 bg-gray-50 rounded-lg">
+                    <li key={index} className="flex items-start gap-2 p-2 rounded-lg">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900">{product.name}</div>
@@ -189,20 +188,20 @@ export function TreatmentList({ treatments, onUpdateTreatment, onDeleteTreatment
               
               <div className="space-y-3">
                 <div className="grid grid-cols-1 gap-3">
-                  <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                  <div className="flex justify-between items-center p-2 rounded-lg">
                     <span className="font-medium text-gray-700">Создано:</span>
                     <span className="text-gray-900">{treatment.createdAt.toLocaleDateString('ru-RU')}</span>
                   </div>
                   
                   {treatment.dueDate && (
-                    <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                    <div className="flex justify-between items-center p-2 rounded-lg">
                       <span className="font-medium text-gray-700">Плановая дата:</span>
                       <span className="text-gray-900">{treatment.dueDate.toLocaleDateString('ru-RU')}</span>
                     </div>
                   )}
                   
                   {/* Редактирование фактической даты */}
-                  <div className="flex justify-between items-center p-2 bg-white rounded-lg">
+                  <div className="flex justify-between items-center p-2 rounded-lg">
                     <span className="font-medium text-gray-700">Фактическая дата:</span>
                     <div className="flex items-center gap-2">
                       {editingDate === treatment.id ? (
