@@ -1,14 +1,37 @@
 [
   {
-    "culture": "яблоко",
-    "area": 2,
+    "culture": "груша",
+    "area": 10,
     "completed": true,
-    "dueDate": "2025-10-18T13:48:48.299Z",
+    "dueDate": "2025-10-19T07:43:39.233Z",
     "isTankMix": true,
     "chemicalProducts": [
       {
-        "name": "Скор",
-        "dosage": "0,5 л/га",
+        "name": "Борей Нео",
+        "dosage": "0,25 л/га",
+        "productType": "инсектицид"
+      },
+      {
+        "name": "Дискор",
+        "dosage": "0,25 л/га",
+        "productType": "фунгицид"
+      }
+    ],
+    "notes": "Тестовый",
+    "id": 1760773662131,
+    "createdAt": "2025-10-18T07:47:42.132Z",
+    "actualDate": "2025-10-19T00:00:00.000Z"
+  },
+  {
+    "culture": "яблоко",
+    "area": 5,
+    "completed": false,
+    "dueDate": "2025-10-19T07:48:24.908Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Дискор",
+        "dosage": "0,25 л/га",
         "productType": "фунгицид"
       },
       {
@@ -17,27 +40,49 @@
         "productType": "инсектицид"
       }
     ],
-    "notes": "Сад №4",
-    "id": 1760708973839,
-    "createdAt": "2025-10-17T13:49:33.839Z",
-    "actualDate": "2025-10-17T14:04:25.875Z"
+    "notes": "Тестовый ",
+    "id": 1760773750678,
+    "createdAt": "2025-10-18T07:49:10.678Z",
+    "actualDate": "2025-10-18T08:18:47.266Z"
   },
   {
-    "culture": "груша",
-    "area": 10,
+    "culture": "лук",
+    "area": 4,
     "completed": false,
-    "dueDate": "2025-10-20T13:50:21.305Z",
+    "dueDate": "2025-10-21T07:49:34.738Z",
     "isTankMix": false,
     "chemicalProducts": [
       {
-        "name": "Фуфанон",
+        "name": "Акзифор",
+        "dosage": "0,1 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Боксер",
         "dosage": "0,25 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "notes": "Тестовый",
+    "id": 1760773827665,
+    "createdAt": "2025-10-18T07:50:27.665Z"
+  },
+  {
+    "culture": "капуста",
+    "area": 2,
+    "completed": true,
+    "dueDate": "2025-10-19T07:52:07.732Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Кораген",
+        "dosage": "0,125 л/га",
         "productType": "инсектицид"
       }
     ],
-    "notes": "Все сады",
-    "id": 1760709062320,
-    "createdAt": "2025-10-17T13:51:02.320Z",
-    "actualDate": "2025-10-17T14:06:10.202Z"
+    "notes": "Тестовый",
+    "id": 1760773963174,
+    "createdAt": "2025-10-18T07:52:43.174Z",
+    "actualDate": "2025-10-18T07:53:02.724Z"
   }
 ]

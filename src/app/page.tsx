@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import { useTreatments } from '@/hooks/useTreatments';
 import { TreatmentForm } from '@/components/treatment-form';
 import { TreatmentList } from '@/components/treatment-list';
+import { CompactTreatmentList } from '@/components/compact-treatment-list';
+import { MinimalTreatmentList} from '@/components/minimal-treatment-list';
 import { Stats } from '@/components/stats';
 import { FilterSort } from '@/components/filter-sort';
 import { Button } from '@/components/ui/button';
@@ -152,7 +154,7 @@ export default function Home() {
       )}
 
       {/* Список обработок */}
-      <TreatmentList 
+      <CompactTreatmentList 
         treatments={filteredTreatments}
         onUpdateTreatment={updateTreatment}
         onDeleteTreatment={deleteTreatment}
