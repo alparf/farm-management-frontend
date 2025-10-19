@@ -62,6 +62,10 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
     setDeleteConfirm({ isOpen: false, treatment: null });
   };
 
+  function toggleCompleted(id: number): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <div className="space-y-2">
       {treatments.map((treatment) => (
