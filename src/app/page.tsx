@@ -10,12 +10,13 @@ import { TreatmentForm } from '@/components/treatment-form';
 import { Stats } from '@/components/stats';
 import { FilterSort } from '@/components/filter-sort';
 import { InventoryFilters } from '@/components/inventory-filters';
+import { AnalyticsTab } from '@/components/analytics-tab';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, RefreshCw, Package, Sprout } from 'lucide-react';
+import { Plus, RefreshCw, Package, Sprout, BarChart3 } from 'lucide-react';
 import { ProductType } from '@/types';
 
-type TabType = 'treatments' | 'inventory';
+type TabType = 'treatments' | 'inventory' | 'analytics';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('treatments');
@@ -156,13 +157,13 @@ export default function Home() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Сельхозучет</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={activeTab === 'treatments' ? refetchTreatments : refetchInventory}>
+          <Button variant="outline" onClick={activeTab === 'treatments' ? refetchTreatments : activeTab === 'inventory' ? refetchInventory : refetchTreatments}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Обновить
           </Button>
-          <Button onClick={() => activeTab === 'treatments' ? setShowTreatmentForm(true) : setShowInventoryForm(true)}>
+          <Button onClick={() => activeTab === 'treatments' ? setShowTreatmentForm(true) : activeTab === 'inventory' ? setShowInventoryForm(true) : null}>
             <Plus className="mr-2 h-4 w-4" />
-            {activeTab === 'treatments' ? 'Новая обработка' : 'Добавить продукт'}
+            {activeTab === 'treatments' ? 'Новая обработка' : activeTab === 'inventory' ? 'Добавить продукт' : 'Аналитика'}
           </Button>
         </div>
       </div>
@@ -197,10 +198,21 @@ export default function Home() {
             {inventory.length}
           </span>
         </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeTab === 'analytics'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <BarChart3 className="h-4 w-4" />
+          Аналитика
+        </button>
       </div>
 
       {/* Контент вкладок */}
-      {activeTab === 'treatments' ? (
+      {activeTab === 'treatments' && (
         <>
           {treatmentsError && <ErrorState error={treatmentsError} onRetry={refetchTreatments} />}
           
@@ -232,7 +244,9 @@ export default function Home() {
             onDeleteTreatment={deleteTreatment}
           />
         </>
-      ) : (
+      )}
+
+      {activeTab === 'inventory' && (
         <>
           {inventoryError && <ErrorState error={inventoryError} onRetry={refetchInventory} />}
 
@@ -280,6 +294,10 @@ export default function Home() {
             typeFilter={inventoryTypeFilter}
           />
         </>
+      )}
+
+      {activeTab === 'analytics' && (
+        <AnalyticsTab treatments={treatments} />
       )}
     </div>
   );

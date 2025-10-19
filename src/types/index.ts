@@ -37,3 +37,22 @@ export type CultureType =
 export type ProductType = 
   | 'гербицид' | 'инсектицид' | 'фунгицид' | 'десикант' 
   | 'регулятор роста' | 'удобрение' | 'биопрепарат' | 'адъювант';
+
+export interface TreatmentTimeline {
+  culture: CultureType;
+  treatments: {
+    id: number;
+    date: Date;
+    products: string[];
+    type: ProductType;
+    completed: boolean;
+  }[];
+}
+
+export interface CultureStats {
+  culture: CultureType;
+  totalTreatments: number;
+  completedTreatments: number;
+  lastTreatment?: Date;
+  productsUsed: string[];
+}

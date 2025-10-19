@@ -1,0 +1,107 @@
+'use client';
+
+import { useState } from 'react';
+import { ChemicalTreatment, CultureType } from '@/types';
+import { useCultureStats } from '@/hooks/useCultureStats';
+import { CultureSelector } from '@/components/culture-selector';
+import { TimelineChart } from '@/components/timeline-chart';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+interface AnalyticsTabProps {
+  treatments: ChemicalTreatment[];
+}
+
+export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
+  const [selectedCulture, setSelectedCulture] = useState<CultureType | ''>('');
+  const { cultureStats, getTimelineData } = useCultureStats(treatments);
+
+  const cultures = [...new Set(treatments.map(t => t.culture))] as CultureType[];
+
+  // Автоматически выбираем первую культуру если ничего не выбрано
+  const currentCulture = selectedCulture || (cultures.length > 0 ? cultures[0] : '');
+
+  return (
+    <div className="space-y-6">
+      {/* Выбор культуры */}
+      <CultureSelector
+        cultures={cultures}
+        selectedCulture={currentCulture}
+        onCultureChange={setSelectedCulture}
+        stats={cultureStats}
+      />
+
+      {currentCulture ? (
+        <>
+          {/* Временная шкала */}
+          <TimelineChart timelineData={getTimelineData(currentCulture)} />
+
+          {/* Статистика по культуре */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Всего обработок</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {cultureStats.find(s => s.culture === currentCulture)?.totalTreatments || 0}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Выполнено</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {cultureStats.find(s => s.culture === currentCulture)?.completedTreatments || 0}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Последняя обработка</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-semibold">
+                  {cultureStats.find(s => s.culture === currentCulture)?.lastTreatment
+                    ? cultureStats.find(s => s.culture === currentCulture)!.lastTreatment!.toLocaleDateString('ru-RU')
+                    : 'Нет данных'
+                  }
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Используемые препараты */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Часто используемые препараты</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {cultureStats.find(s => s.culture === currentCulture)?.productsUsed.map((product, index) => (
+                  <span
+                    key={index}
+                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                  >
+                    {product}
+                  </span>
+                )) || <span className="text-gray-500">Нет данных</span>}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        <Card>
+          <CardContent className="p-6">
+            <div className="text-center text-gray-500">
+              Нет данных по обработкам для отображения аналитики
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}

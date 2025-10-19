@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "culture": "яблоко",
+    "area": 2,
+    "completed": true,
+    "dueDate": "2025-10-20T08:55:01.421Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Скор",
+        "dosage": "0,35",
+        "productType": "фунгицид"
+      },
+      {
+        "name": "Борей Нео",
+        "dosage": "0,25",
+        "productType": "инсектицид"
+      }
+    ],
+    "id": 1760864124910,
+    "createdAt": "2025-10-19T08:55:24.910Z",
+    "actualDate": "2025-10-19T09:04:41.825Z"
+  },
+  {
+    "culture": "яблоко",
+    "area": 2,
+    "completed": true,
+    "dueDate": "2025-09-15T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Авант",
+        "dosage": "0.2 л/га",
+        "productType": "инсектицид"
+      }
+    ],
+    "id": 1760865305184,
+    "createdAt": "2025-10-19T09:15:05.184Z",
+    "actualDate": "2025-09-15T00:00:00.000Z"
+  }
+]
