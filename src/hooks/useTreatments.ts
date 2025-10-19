@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChemicalTreatment } from '@/types';
+import { ChemicalTreatment, ProductInventory } from '@/types';
 import { fetchTreatments, createTreatment, updateTreatment, deleteTreatment } from '@/lib/api';
 
-export function useTreatments() {
+export function useTreatments(inventory?: ProductInventory[]) {
   const [treatments, setTreatments] = useState<ChemicalTreatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

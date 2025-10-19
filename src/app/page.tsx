@@ -235,6 +235,7 @@ export default function Home() {
             <TreatmentForm 
               onSubmit={handleAddTreatment}
               onCancel={() => setShowTreatmentForm(false)}
+              inventory={inventory} // Передаем данные склада
             />
           )}
 

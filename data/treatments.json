@@ -37,5 +37,27 @@
     "id": 1760865305184,
     "createdAt": "2025-10-19T09:15:05.184Z",
     "actualDate": "2025-09-15T00:00:00.000Z"
+  },
+  {
+    "culture": "черешня",
+    "area": 1,
+    "completed": true,
+    "dueDate": "2025-10-20T10:32:21.386Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Райёк",
+        "dosage": "0,25 л/га",
+        "productType": "фунгицид"
+      },
+      {
+        "name": "Борей Нео",
+        "dosage": "0,2 л/га",
+        "productType": "инсектицид"
+      }
+    ],
+    "id": 1760870014735,
+    "createdAt": "2025-10-19T10:33:34.735Z",
+    "actualDate": "2025-08-19T00:00:00.000Z"
   }
 ]

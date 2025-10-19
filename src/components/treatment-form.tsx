@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ChemicalTreatment, CultureType, ProductType, ChemicalProduct } from '@/types';
+import { useState, useMemo } from 'react';
+import { ChemicalTreatment, CultureType, ProductType, ChemicalProduct, ProductInventory } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,9 +13,10 @@ import { QuickDateSelector } from '@/components/ui/quick-date-selector';
 interface TreatmentFormProps {
   onSubmit: (treatment: Omit<ChemicalTreatment, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
+  inventory: ProductInventory[];
 }
 
-export function TreatmentForm({ onSubmit, onCancel }: TreatmentFormProps) {
+export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormProps) {
   const [culture, setCulture] = useState<CultureType>('яблоко');
   const [area, setArea] = useState<string>('');
   const [isTankMix, setIsTankMix] = useState(false);
@@ -29,6 +30,16 @@ export function TreatmentForm({ onSubmit, onCancel }: TreatmentFormProps) {
     { name: '', dosage: '', productType: 'фунгицид' }
   ]);
 
+  // Все препараты для выпадающего списка
+  const allProducts = useMemo(() => {
+    return inventory.map(product => ({
+      id: product.id,
+      name: product.name,
+      type: product.type,
+      unit: product.unit
+    }));
+  }, [inventory]);
+
   const addProduct = () => {
     setProducts([...products, { name: '', dosage: '', productType: 'фунгицид' }]);
   };
@@ -41,6 +52,22 @@ export function TreatmentForm({ onSubmit, onCancel }: TreatmentFormProps) {
 
   const removeProduct = (index: number) => {
     setProducts(products.filter((_, i) => i !== index));
+  };
+
+  // Обработчик выбора препарата
+  const handleProductSelect = (index: number, selectedProductName: string) => {
+    const selectedProduct = allProducts.find(p => p.name === selectedProductName);
+    
+    if (selectedProduct) {
+      // Обновляем и название, и тип препарата
+      const newProducts = [...products];
+      newProducts[index] = {
+        name: selectedProduct.name,
+        dosage: '',
+        productType: selectedProduct.type
+      };
+      setProducts(newProducts);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -148,18 +175,32 @@ export function TreatmentForm({ onSubmit, onCancel }: TreatmentFormProps) {
           </div>
 
           <div>
-            <Label>Препараты</Label>
+            <div className="flex items-center justify-between mb-3">
+              <Label>Препараты</Label>
+              <span className="text-sm text-gray-500">
+                Выберите из {inventory.length} доступных препаратов
+              </span>
+            </div>
+            
             {products.map((product, index) => (
-              <div key={index} className="grid grid-cols-12 gap-2 mb-2 items-end">
-                <div className="col-span-4">
-                  <Label>Название</Label>
-                  <Input
+              <div key={index} className="grid grid-cols-12 gap-2 mb-3 items-end p-3 bg-gray-50 rounded-lg">
+                <div className="col-span-5">
+                  <Label>Название препарата</Label>
+                  <select
                     value={product.name}
-                    onChange={(e) => updateProduct(index, 'name', e.target.value)}
-                    placeholder="Название препарата"
+                    onChange={(e) => handleProductSelect(index, e.target.value)}
+                    className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                     required
-                  />
+                  >
+                    <option value="">Выберите препарат...</option>
+                    {allProducts.map((inventoryProduct) => (
+                      <option key={inventoryProduct.id} value={inventoryProduct.name}>
+                        {inventoryProduct.name} ({inventoryProduct.type})
+                      </option>
+                    ))}
+                  </select>
                 </div>
+                
                 <div className="col-span-3">
                   <Label>Дозировка</Label>
                   <Input
@@ -169,6 +210,7 @@ export function TreatmentForm({ onSubmit, onCancel }: TreatmentFormProps) {
                     required
                   />
                 </div>
+                
                 <div className="col-span-3">
                   <Label>Тип</Label>
                   <select
@@ -186,15 +228,17 @@ export function TreatmentForm({ onSubmit, onCancel }: TreatmentFormProps) {
                     <option value="адъювант">Адъювант</option>
                   </select>
                 </div>
-                <div className="col-span-2">
+                
+                <div className="col-span-1">
                   {products.length > 1 && (
                     <Button
                       type="button"
                       variant="destructive"
                       size="sm"
                       onClick={() => removeProduct(index)}
+                      className="w-full"
                     >
-                      Удалить
+                      ×
                     </Button>
                   )}
                 </div>
