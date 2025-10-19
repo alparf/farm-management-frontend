@@ -59,5 +59,22 @@
     "id": 1760870014735,
     "createdAt": "2025-10-19T10:33:34.735Z",
     "actualDate": "2025-08-19T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-10-20T10:57:49.967Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Ридамил Голд",
+        "dosage": "1 кг/га",
+        "productType": "фунгицид"
+      }
+    ],
+    "id": 1760871503664,
+    "createdAt": "2025-10-19T10:58:23.664Z",
+    "actualDate": "2025-08-19T00:00:00.000Z"
   }
 ]

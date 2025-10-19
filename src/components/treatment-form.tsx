@@ -30,15 +30,32 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
     { name: '', dosage: '', productType: 'фунгицид' }
   ]);
 
-  // Все препараты для выпадающего списка
-  const allProducts = useMemo(() => {
-    return inventory.map(product => ({
-      id: product.id,
-      name: product.name,
-      type: product.type,
-      unit: product.unit
-    }));
+  // Группируем препараты по типам
+  const inventoryByType = useMemo(() => {
+    const grouped: Record<ProductType, ProductInventory[]> = {
+      'фунгицид': [],
+      'инсектицид': [],
+      'гербицид': [],
+      'десикант': [],
+      'регулятор роста': [],
+      'удобрение': [],
+      'биопрепарат': [],
+      'адъювант': []
+    };
+
+    inventory.forEach(product => {
+      if (grouped[product.type]) {
+        grouped[product.type].push(product);
+      }
+    });
+
+    return grouped;
   }, [inventory]);
+
+  // Получаем препараты для выбранного типа
+  const getProductsByType = (type: ProductType) => {
+    return inventoryByType[type] || [];
+  };
 
   const addProduct = () => {
     setProducts([...products, { name: '', dosage: '', productType: 'фунгицид' }]);
@@ -47,6 +64,12 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
   const updateProduct = (index: number, field: keyof ChemicalProduct, value: string) => {
     const newProducts = [...products];
     newProducts[index] = { ...newProducts[index], [field]: value };
+    
+    // Если меняем тип, очищаем название препарата
+    if (field === 'productType' && value !== newProducts[index].productType) {
+      newProducts[index].name = '';
+    }
+    
     setProducts(newProducts);
   };
 
@@ -56,10 +79,11 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
 
   // Обработчик выбора препарата
   const handleProductSelect = (index: number, selectedProductName: string) => {
-    const selectedProduct = allProducts.find(p => p.name === selectedProductName);
+    const productType = products[index].productType;
+    const availableProducts = getProductsByType(productType);
+    const selectedProduct = availableProducts.find(p => p.name === selectedProductName);
     
     if (selectedProduct) {
-      // Обновляем и название, и тип препарата
       const newProducts = [...products];
       newProducts[index] = {
         name: selectedProduct.name,
@@ -73,8 +97,21 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (products.some(p => !p.name || !p.dosage)) {
+    // Проверяем, что все препараты заполнены
+    const hasEmptyProducts = products.some(p => !p.name || !p.dosage);
+    if (hasEmptyProducts) {
       alert('Заполните все поля препаратов');
+      return;
+    }
+
+    // Проверяем, что выбранные препараты существуют в складе
+    const invalidProducts = products.filter(p => {
+      const availableProducts = getProductsByType(p.productType);
+      return !availableProducts.some(ap => ap.name === p.name);
+    });
+
+    if (invalidProducts.length > 0) {
+      alert('Некоторые выбранные препараты не найдены в складе. Пожалуйста, выберите препараты из списка.');
       return;
     }
 
@@ -178,72 +215,96 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
             <div className="flex items-center justify-between mb-3">
               <Label>Препараты</Label>
               <span className="text-sm text-gray-500">
-                Выберите из {inventory.length} доступных препаратов
+                {inventory.length} препаратов доступно
               </span>
             </div>
             
-            {products.map((product, index) => (
-              <div key={index} className="grid grid-cols-12 gap-2 mb-3 items-end p-3 bg-gray-50 rounded-lg">
-                <div className="col-span-5">
-                  <Label>Название препарата</Label>
-                  <select
-                    value={product.name}
-                    onChange={(e) => handleProductSelect(index, e.target.value)}
-                    className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                    required
-                  >
-                    <option value="">Выберите препарат...</option>
-                    {allProducts.map((inventoryProduct) => (
-                      <option key={inventoryProduct.id} value={inventoryProduct.name}>
-                        {inventoryProduct.name} ({inventoryProduct.type})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div className="col-span-3">
-                  <Label>Дозировка</Label>
-                  <Input
-                    value={product.dosage}
-                    onChange={(e) => updateProduct(index, 'dosage', e.target.value)}
-                    placeholder="г/га или л/га"
-                    required
-                  />
-                </div>
-                
-                <div className="col-span-3">
-                  <Label>Тип</Label>
-                  <select
-                    value={product.productType}
-                    onChange={(e) => updateProduct(index, 'productType', e.target.value as ProductType)}
-                    className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="фунгицид">Фунгицид</option>
-                    <option value="инсектицид">Инсектицид</option>
-                    <option value="гербицид">Гербицид</option>
-                    <option value="десикант">Десикант</option>
-                    <option value="регулятор роста">Регулятор роста</option>
-                    <option value="удобрение">Удобрение</option>
-                    <option value="биопрепарат">Биопрепарат</option>
-                    <option value="адъювант">Адъювант</option>
-                  </select>
-                </div>
-                
-                <div className="col-span-1">
-                  {products.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeProduct(index)}
-                      className="w-full"
+            {products.map((product, index) => {
+              const availableProducts = getProductsByType(product.productType);
+              const hasProducts = availableProducts.length > 0;
+              
+              return (
+                <div key={index} className="grid grid-cols-12 gap-2 mb-3 items-end p-3 bg-gray-50 rounded-lg">
+                  {/* Выбор типа препарата */}
+                  <div className="col-span-3">
+                    <Label>Тип препарата</Label>
+                    <select
+                      value={product.productType}
+                      onChange={(e) => updateProduct(index, 'productType', e.target.value as ProductType)}
+                      className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                     >
-                      ×
-                    </Button>
-                  )}
+                      <option value="фунгицид">Фунгицид</option>
+                      <option value="инсектицид">Инсектицид</option>
+                      <option value="гербицид">Гербицид</option>
+                      <option value="десикант">Десикант</option>
+                      <option value="регулятор роста">Регулятор роста</option>
+                      <option value="удобрение">Удобрение</option>
+                      <option value="биопрепарат">Биопрепарат</option>
+                      <option value="адъювант">Адъювант</option>
+                    </select>
+                  </div>
+                  
+                  {/* Выбор препарата */}
+                  <div className="col-span-5">
+                    <Label>
+                      Название препарата
+                      {hasProducts && (
+                        <span className="text-xs text-gray-500 ml-1">
+                          ({availableProducts.length} доступно)
+                        </span>
+                      )}
+                    </Label>
+                    <select
+                      value={product.name}
+                      onChange={(e) => handleProductSelect(index, e.target.value)}
+                      className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                      required
+                      disabled={!hasProducts}
+                    >
+                      <option value="">
+                        {hasProducts ? 'Выберите препарат...' : 'Нет доступных препаратов'}
+                      </option>
+                      {availableProducts.map((inventoryProduct) => (
+                        <option key={inventoryProduct.id} value={inventoryProduct.name}>
+                          {inventoryProduct.name}
+                        </option>
+                      ))}
+                    </select>
+                    {!hasProducts && (
+                      <p className="text-xs text-red-500 mt-1">
+                        В складе нет препаратов типа "{product.productType}"
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Дозировка */}
+                  <div className="col-span-3">
+                    <Label>Дозировка</Label>
+                    <Input
+                      value={product.dosage}
+                      onChange={(e) => updateProduct(index, 'dosage', e.target.value)}
+                      placeholder="г/га или л/га"
+                      required
+                    />
+                  </div>
+                  
+                  {/* Кнопка удаления */}
+                  <div className="col-span-1">
+                    {products.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeProduct(index)}
+                        className="w-full"
+                      >
+                        ×
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             
             <Button type="button" variant="outline" onClick={addProduct}>
               + Добавить препарат
