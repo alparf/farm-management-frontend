@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChemicalTreatment } from '@/types';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-picker';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface CompactTreatmentListProps {
   treatments: ChemicalTreatment[];
@@ -14,14 +15,10 @@ interface CompactTreatmentListProps {
 export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTreatment }: CompactTreatmentListProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingDate, setEditingDate] = useState<number | null>(null);
-
-  const toggleCompleted = async (id: number) => {
-    await onUpdateTreatment(id, {
-      completed: true,
-      actualDate: new Date()
-    });
-  };
-
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; treatment: ChemicalTreatment | null }>({
+    isOpen: false,
+    treatment: null
+  });
   const markAsPending = async (id: number) => {
     await onUpdateTreatment(id, {
       completed: false,
@@ -41,6 +38,29 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
       </div>
     );
   }
+
+  const requestDelete = (treatment: ChemicalTreatment) => {
+    setDeleteConfirm({
+      isOpen: true,
+      treatment
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirm.treatment) {
+      try {
+        await onDeleteTreatment(deleteConfirm.treatment.id);
+        setDeleteConfirm({ isOpen: false, treatment: null });
+      } catch (error) {
+        console.error('Error deleting treatment:', error);
+        setDeleteConfirm({ isOpen: false, treatment: null });
+      }
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirm({ isOpen: false, treatment: null });
+  };
 
   return (
     <div className="space-y-2">
@@ -205,12 +225,24 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
                   <div className="pt-2">
                     <Button
                       variant="destructive"
-                      size="sm"
-                      onClick={() => onDeleteTreatment(treatment.id)}
+                      onClick={() => requestDelete(treatment)}
+                      className="whitespace-nowrap"
                     >
-                      Удалить обработку
+                      Удалить
                     </Button>
                   </div>
+
+                  {/* Диалог подтверждения удаления обработки */}
+                  <ConfirmDialog
+                    isOpen={deleteConfirm.isOpen}
+                    title="Удаление обработки"
+                    message={`Вы уверены, что хотите удалить обработку для "${deleteConfirm.treatment?.culture}"? Это действие нельзя отменить.`}
+                    onConfirm={handleConfirmDelete}
+                    onCancel={handleCancelDelete}
+                    confirmText="Удалить"
+                    cancelText="Отмена"
+                    variant="destructive"
+                  />
                 </div>
               </div>
             </div>
