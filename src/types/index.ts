@@ -56,3 +56,51 @@ export interface CultureStats {
   lastTreatment?: Date;
   productsUsed: string[];
 }
+
+export interface Vehicle {
+  id: number;
+  name: string;
+  type: VehicleType;
+  model?: string;
+  year?: number;
+  vin?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MaintenanceRecord {
+  id: number;
+  vehicleId: number;
+  vehicleName: string;
+  type: MaintenanceType;
+  date: Date;
+  hours?: number;
+  description: string;
+  works: MaintenanceWork[];
+  cost?: number;
+  notes?: string;
+  createdAt: Date;
+}
+
+export interface MaintenanceWork {
+  name: string;
+  description?: string;
+}
+
+export type VehicleType = 
+  | 'трактор'
+  | 'комбайн'
+  | 'грузовой автомобиль'
+  | 'легковой автомобиль'
+  | 'прицеп'
+  | 'сельхозорудие'
+  | 'другая техника';
+
+export type MaintenanceType = 
+  | 'плановое ТО'
+  | 'замена масла'
+  | 'сезонное обслуживание'
+  | 'внеплановый ремонт'
+  | 'диагностика'
+  | 'другое';

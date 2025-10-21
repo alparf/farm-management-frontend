@@ -3,20 +3,23 @@
 import { useState, useMemo } from 'react';
 import { useTreatments } from '@/hooks/useTreatments';
 import { useInventory } from '@/hooks/useInventory';
+import { useVehicles } from '@/hooks/useVehicles';
+import { useMaintenance } from '@/hooks/useMaintenance';
 import { CompactTreatmentList } from '@/components/compact-treatment-list';
 import { InventoryList } from '@/components/inventory-list';
 import { InventoryForm } from '@/components/inventory-form';
 import { TreatmentForm } from '@/components/treatment-form';
+import { VehiclesTab } from '@/components/vehicles-tab';
+import { AnalyticsTab } from '@/components/analytics-tab';
 import { Stats } from '@/components/stats';
 import { FilterSort } from '@/components/filter-sort';
 import { InventoryFilters } from '@/components/inventory-filters';
-import { AnalyticsTab } from '@/components/analytics-tab';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, RefreshCw, Package, Sprout, BarChart3 } from 'lucide-react';
+import { Plus, RefreshCw, Package, Sprout, BarChart3, Car } from 'lucide-react';
 import { ProductType } from '@/types';
 
-type TabType = 'treatments' | 'inventory' | 'analytics';
+type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('treatments');
@@ -56,6 +59,27 @@ export default function Home() {
     refetch: refetchInventory
   } = useInventory();
   
+  // Хуки для техники
+  const {
+    vehicles,
+    isLoading: vehiclesLoading,
+    error: vehiclesError,
+    addVehicle,
+    updateVehicle,
+    deleteVehicle,
+    refetch: refetchVehicles
+  } = useVehicles();
+
+  const {
+    maintenance,
+    isLoading: maintenanceLoading,
+    error: maintenanceError,
+    addMaintenance,
+    updateMaintenance,
+    deleteMaintenance,
+    refetch: refetchMaintenance
+  } = useMaintenance();
+
   // Фильтрация обработок
   const filteredTreatments = useMemo(() => {
     let filtered = treatments.filter(treatment => {
@@ -143,6 +167,57 @@ export default function Home() {
     setShowInventoryForm(false);
   };
 
+  // Функция для кнопки обновления
+  const handleRefresh = () => {
+    switch (activeTab) {
+      case 'treatments':
+        refetchTreatments();
+        break;
+      case 'inventory':
+        refetchInventory();
+        break;
+      case 'analytics':
+        refetchTreatments();
+        break;
+      case 'vehicles':
+        refetchVehicles();
+        refetchMaintenance();
+        break;
+      default:
+        refetchTreatments();
+    }
+  };
+
+  // Функция для кнопки добавления
+  const handleAddButton = () => {
+    switch (activeTab) {
+      case 'treatments':
+        setShowTreatmentForm(true);
+        break;
+      case 'inventory':
+        setShowInventoryForm(true);
+        break;
+      case 'vehicles':
+        // В VehiclesTab есть свои кнопки добавления
+        break;
+      default:
+        break;
+    }
+  };
+
+  const getAddButtonText = () => {
+    switch (activeTab) {
+      case 'treatments':
+        return 'Новая обработка';
+      case 'inventory':
+        return 'Добавить продукт';
+      case 'vehicles':
+        return ''; // В VehiclesTab есть свои кнопки
+      default:
+        return 'Добавить';
+    }
+  };
+
   if (treatmentsLoading && activeTab === 'treatments') {
     return <LoadingState message="Загрузка обработок..." />;
   }
@@ -151,20 +226,26 @@ export default function Home() {
     return <LoadingState message="Загрузка склада..." />;
   }
 
+  if (vehiclesLoading && activeTab === 'vehicles') {
+    return <LoadingState message="Загрузка техники..." />;
+  }
+
   return (
     <div className="container mx-auto p-4">
       {/* Заголовок и вкладки */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Сельхозучет</h1>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={activeTab === 'treatments' ? refetchTreatments : activeTab === 'inventory' ? refetchInventory : refetchTreatments}>
+          <Button variant="outline" onClick={handleRefresh}>
             <RefreshCw className="mr-2 h-4 w-4" />
             Обновить
           </Button>
-          <Button onClick={() => activeTab === 'treatments' ? setShowTreatmentForm(true) : activeTab === 'inventory' ? setShowInventoryForm(true) : null}>
-            <Plus className="mr-2 h-4 w-4" />
-            {activeTab === 'treatments' ? 'Новая обработка' : activeTab === 'inventory' ? 'Добавить продукт' : 'Аналитика'}
-          </Button>
+          {(activeTab === 'treatments' || activeTab === 'inventory') && (
+            <Button onClick={handleAddButton}>
+              <Plus className="mr-2 h-4 w-4" />
+              {getAddButtonText()}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -209,6 +290,20 @@ export default function Home() {
           <BarChart3 className="h-4 w-4" />
           Аналитика
         </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeTab === 'vehicles'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('vehicles')}
+        >
+          <Car className="h-4 w-4" />
+          Техника
+          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+            {vehicles.length}
+          </span>
+        </button>
       </div>
 
       {/* Контент вкладок */}
@@ -235,7 +330,7 @@ export default function Home() {
             <TreatmentForm 
               onSubmit={handleAddTreatment}
               onCancel={() => setShowTreatmentForm(false)}
-              inventory={inventory} // Передаем данные склада
+              inventory={inventory}
             />
           )}
 
@@ -299,6 +394,19 @@ export default function Home() {
 
       {activeTab === 'analytics' && (
         <AnalyticsTab treatments={treatments} />
+      )}
+
+      {activeTab === 'vehicles' && (
+        <VehiclesTab
+          vehicles={vehicles}
+          maintenance={maintenance}
+          onAddVehicle={addVehicle}
+          onUpdateVehicle={updateVehicle}
+          onDeleteVehicle={deleteVehicle}
+          onAddMaintenance={addMaintenance}
+          onUpdateMaintenance={updateMaintenance}
+          onDeleteMaintenance={deleteMaintenance}
+        />
       )}
     </div>
   );
