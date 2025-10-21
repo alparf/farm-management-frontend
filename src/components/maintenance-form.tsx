@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MaintenanceRecord, Vehicle, MaintenanceType, MaintenanceWork } from '@/types';
+import { MaintenanceRecord, Vehicle, MaintenanceType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,23 +21,7 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
   const [date, setDate] = useState<Date>(new Date());
   const [hours, setHours] = useState('');
   const [description, setDescription] = useState('');
-  const [works, setWorks] = useState<MaintenanceWork[]>([{ name: '', description: '' }]);
-  const [cost, setCost] = useState('');
   const [notes, setNotes] = useState('');
-
-  const addWork = () => {
-    setWorks([...works, { name: '', description: '' }]);
-  };
-
-  const updateWork = (index: number, field: keyof MaintenanceWork, value: string) => {
-    const newWorks = [...works];
-    newWorks[index] = { ...newWorks[index], [field]: value };
-    setWorks(newWorks);
-  };
-
-  const removeWork = (index: number) => {
-    setWorks(works.filter((_, i) => i !== index));
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +31,8 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
       return;
     }
 
-    if (works.some(w => !w.name)) {
-      alert('Заполните названия всех выполненных работ');
+    if (!description.trim()) {
+      alert('Введите описание обслуживания');
       return;
     }
 
@@ -64,10 +48,8 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
       type,
       date,
       hours: hours ? parseFloat(hours) : undefined,
-      description,
-      works: works.filter(w => w.name.trim() !== ''),
-      cost: cost ? parseFloat(cost) : undefined,
-      notes: notes || undefined,
+      description: description.trim(),
+      notes: notes.trim() || undefined,
     });
   };
 
@@ -136,68 +118,14 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
 
           <div>
             <Label htmlFor="description">Описание обслуживания *</Label>
-            <Input
+            <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Краткое описание проведенных работ"
+              placeholder="Опишите проведенные работы: что сделали, какие детали заменили и т.д."
+              rows={4}
               required
             />
-          </div>
-
-          <div>
-            <Label>Выполненные работы *</Label>
-            {works.map((work, index) => (
-              <div key={index} className="grid grid-cols-12 gap-2 mb-2 items-end">
-                <div className="col-span-5">
-                  <Label>Название работы</Label>
-                  <Input
-                    value={work.name}
-                    onChange={(e) => updateWork(index, 'name', e.target.value)}
-                    placeholder="Например: Замена масла двигателя"
-                    required
-                  />
-                </div>
-                <div className="col-span-6">
-                  <Label>Описание</Label>
-                  <Input
-                    value={work.description || ''}
-                    onChange={(e) => updateWork(index, 'description', e.target.value)}
-                    placeholder="Детали выполнения работы"
-                  />
-                </div>
-                <div className="col-span-1">
-                  {works.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => removeWork(index)}
-                    >
-                      ×
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ))}
-            
-            <Button type="button" variant="outline" onClick={addWork}>
-              + Добавить работу
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="cost">Стоимость (руб)</Label>
-              <Input
-                id="cost"
-                type="number"
-                step="0.01"
-                value={cost}
-                onChange={(e) => setCost(e.target.value)}
-                placeholder="0.00"
-              />
-            </div>
           </div>
 
           <div>
@@ -206,7 +134,7 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Дополнительная информация..."
+              placeholder="Дополнительная информация, рекомендации, заметки..."
               rows={3}
             />
           </div>

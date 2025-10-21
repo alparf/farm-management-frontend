@@ -77,15 +77,8 @@ export interface MaintenanceRecord {
   date: Date;
   hours?: number;
   description: string;
-  works: MaintenanceWork[];
-  cost?: number;
   notes?: string;
   createdAt: Date;
-}
-
-export interface MaintenanceWork {
-  name: string;
-  description?: string;
 }
 
 export type VehicleType = 

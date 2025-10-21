@@ -90,9 +90,6 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
                   {record.hours && (
                     <span>Моточасы: {record.hours}</span>
                   )}
-                  {record.cost && (
-                    <span>Стоимость: {record.cost} руб.</span>
-                  )}
                 </div>
               </div>
 
@@ -116,24 +113,14 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
 
             {expandedId === record.id && (
               <div className="mt-4 pt-4 border-t border-gray-300 border-opacity-50">
-                <h4 className="font-medium text-gray-900 mb-2">Выполненные работы:</h4>
-                <ul className="space-y-2">
-                  {record.works.map((work, index) => (
-                    <li key={index} className="text-sm text-gray-700">
-                      <strong>{work.name}</strong>
-                      {work.description && ` - ${work.description}`}
-                    </li>
-                  ))}
-                </ul>
-
                 {record.notes && (
-                  <div className="mt-3">
+                  <div className="mb-3">
                     <h4 className="font-medium text-gray-900 mb-1">Примечания:</h4>
                     <p className="text-sm text-gray-700">{record.notes}</p>
                   </div>
                 )}
 
-                <div className="text-xs text-gray-500 mt-3">
+                <div className="text-xs text-gray-500">
                   Создано: {record.createdAt.toLocaleDateString('ru-RU')}
                 </div>
               </div>
