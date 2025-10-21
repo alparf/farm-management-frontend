@@ -1,4 +1,4 @@
-import { ChemicalTreatment } from '@/types';
+import { ChemicalTreatment, MaintenanceRecord, ProductInventory, Vehicle } from '@/types';
 
 const API_BASE = '/api';
 
