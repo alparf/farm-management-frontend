@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Vehicle } from '@/types';
+import { Vehicle, VehicleType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,11 +25,12 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
   // Состояния для редактирования
   const [editData, setEditData] = useState<{
     name: string;
-    type: string;
+    type: VehicleType;
     model: string;
     year: string;
     vin: string;
     insuranceDate?: Date;
+    roadLegalUntil?: Date;
     notes: string;
   }>({
     name: '',
@@ -49,6 +50,7 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
       year: vehicle.year?.toString() || '',
       vin: vehicle.vin || '',
       insuranceDate: vehicle.insuranceDate,
+      roadLegalUntil: vehicle.roadLegalUntil,
       notes: vehicle.notes || ''
     });
   };
@@ -57,11 +59,12 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
     try {
       await onUpdateVehicle(id, {
         name: editData.name,
-        type: editData.type as any,
+        type: editData.type,
         model: editData.model || undefined,
         year: editData.year ? parseInt(editData.year) : undefined,
         vin: editData.vin || undefined,
         insuranceDate: editData.insuranceDate,
+        roadLegalUntil: editData.roadLegalUntil,
         notes: editData.notes || undefined,
       });
       setEditingId(null);
@@ -110,11 +113,28 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
     const daysUntilExpiry = Math.ceil((insuranceEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     
     if (daysUntilExpiry < 0) {
-      return { status: 'expired', text: 'Просрочена', color: 'bg-red-100 text-red-800' };
+      return { status: 'expired', text: 'Страховка просрочена', color: 'bg-red-100 text-red-800' };
     } else if (daysUntilExpiry <= 30) {
-      return { status: 'warning', text: `Скоро истекает (${daysUntilExpiry} д.)`, color: 'bg-yellow-100 text-yellow-800' };
+      return { status: 'warning', text: `Страховка истекает через ${daysUntilExpiry} д.`, color: 'bg-yellow-100 text-yellow-800' };
     } else {
-      return { status: 'valid', text: `Действует до ${insuranceEnd.toLocaleDateString('ru-RU')}`, color: 'bg-green-100 text-green-800' };
+      return { status: 'valid', text: `Страховка до ${insuranceEnd.toLocaleDateString('ru-RU')}`, color: 'bg-green-100 text-green-800' };
+    }
+  };
+
+  // Функция для определения статуса допуска к движению
+  const getRoadLegalStatus = (roadLegalUntil?: Date) => {
+    if (!roadLegalUntil) return null;
+    
+    const today = new Date();
+    const legalEnd = new Date(roadLegalUntil);
+    const daysUntilExpiry = Math.ceil((legalEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry < 0) {
+      return { status: 'expired', text: 'Допуск просрочен', color: 'bg-red-100 text-red-800' };
+    } else if (daysUntilExpiry <= 30) {
+      return { status: 'warning', text: `Допуск истекает через ${daysUntilExpiry} д.`, color: 'bg-yellow-100 text-yellow-800' };
+    } else {
+      return { status: 'valid', text: `Допуск до ${legalEnd.toLocaleDateString('ru-RU')}`, color: 'bg-green-100 text-green-800' };
     }
   };
 
@@ -144,6 +164,7 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {vehicles.map((vehicle) => {
           const insuranceStatus = getInsuranceStatus(vehicle.insuranceDate);
+          const roadLegalStatus = getRoadLegalStatus(vehicle.roadLegalUntil);
           const isEditing = editingId === vehicle.id;
           
           return (
@@ -169,7 +190,7 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                     <select
                       id="edit-type"
                       value={editData.type}
-                      onChange={(e) => updateEditField('type', e.target.value)}
+                      onChange={(e) => updateEditField('type', e.target.value as VehicleType)}
                       className="w-full h-8 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
                     >
                       <option value="трактор">Трактор</option>
@@ -214,12 +235,21 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                     />
                   </div>
 
-                  <div>
-                    <Label>Страховка до</Label>
-                    <DatePicker 
-                      value={editData.insuranceDate} 
-                      onChange={(date) => updateEditField('insuranceDate', date)}
-                    />
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label>Страховка до</Label>
+                      <DatePicker 
+                        value={editData.insuranceDate} 
+                        onChange={(date) => updateEditField('insuranceDate', date)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Допуск до</Label>
+                      <DatePicker 
+                        value={editData.roadLegalUntil} 
+                        onChange={(date) => updateEditField('roadLegalUntil', date)}
+                      />
+                    </div>
                   </div>
 
                   <div>
@@ -264,12 +294,19 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                     </div>
                   </div>
 
-                  {/* Статус страховки */}
-                  {insuranceStatus && (
-                    <div className={`text-xs px-2 py-1 rounded-full mb-3 ${insuranceStatus.color}`}>
-                      {insuranceStatus.text}
-                    </div>
-                  )}
+                  {/* Статусы страховки и допуска */}
+                  <div className="space-y-2 mb-3">
+                    {insuranceStatus && (
+                      <div className={`text-xs px-2 py-1 rounded-full ${insuranceStatus.color}`}>
+                        {insuranceStatus.text}
+                      </div>
+                    )}
+                    {roadLegalStatus && (
+                      <div className={`text-xs px-2 py-1 rounded-full ${roadLegalStatus.color}`}>
+                        {roadLegalStatus.text}
+                      </div>
+                    )}
+                  </div>
 
                   {vehicle.model && (
                     <div className="text-sm text-gray-700 mb-1">

@@ -16,15 +16,32 @@ export interface DatePickerProps {
 export function DatePicker({ value, onChange, className }: DatePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
+  const handleDateSelect = (date: Date | undefined) => {
+    onChange(date);
+    setIsOpen(false);
+  };
+
+  const handleInputClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(!isOpen);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    // Не делаем ничего при ручном вводе, чтобы не мешать форме
+  };
+
   return (
     <div className={cn('relative', className)}>
       <Button
         variant="outline"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleInputClick}
         className={cn(
           'w-full justify-start text-left font-normal h-8',
           !value && 'text-muted-foreground'
         )}
+        type="button" // Важно: type="button" чтобы не отправлять форму
       >
         <CalendarIcon className="mr-2 h-4 w-4" />
         {value ? format(value, 'PPP', { locale: ru }) : <span>Выберите дату</span>}
@@ -42,10 +59,10 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
               value={value ? format(value, 'yyyy-MM-dd') : ''}
               onChange={(e) => {
                 const newDate = e.target.value ? new Date(e.target.value) : undefined;
-                onChange(newDate);
-                setIsOpen(false);
+                handleDateSelect(newDate);
               }}
               className="w-full p-2 border border-gray-300 rounded-md"
+              onClick={(e) => e.stopPropagation()} // Предотвращаем всплытие
             />
           </div>
         </>

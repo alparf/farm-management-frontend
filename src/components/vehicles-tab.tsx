@@ -42,6 +42,7 @@ export function VehiclesTab({
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<VehicleType | ''>('');
   const [insuranceFilter, setInsuranceFilter] = useState('');
+  const [roadLegalFilter, setRoadLegalFilter] = useState('');
   const [sortBy, setSortBy] = useState('name');
 
   // Фильтрация и сортировка техники
@@ -70,12 +71,35 @@ export function VehiclesTab({
             break;
           case 'expiring-soon':
             if (!vehicle.insuranceDate) return false;
-            const daysUntilExpiry = Math.ceil((new Date(vehicle.insuranceDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            if (daysUntilExpiry <= 0 || daysUntilExpiry > 30) return false;
+            const daysUntilInsuranceExpiry = Math.ceil((new Date(vehicle.insuranceDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            if (daysUntilInsuranceExpiry <= 0 || daysUntilInsuranceExpiry > 30) return false;
             break;
           case 'expired':
             if (!vehicle.insuranceDate) return false;
             if (new Date(vehicle.insuranceDate) >= today) return false;
+            break;
+        }
+      }
+      
+      // Фильтр по допуску к движению
+      if (roadLegalFilter) {
+        const today = new Date();
+        
+        switch (roadLegalFilter) {
+          case 'with-road-legal':
+            if (!vehicle.roadLegalUntil) return false;
+            break;
+          case 'without-road-legal':
+            if (vehicle.roadLegalUntil) return false;
+            break;
+          case 'expiring-soon':
+            if (!vehicle.roadLegalUntil) return false;
+            const daysUntilRoadLegalExpiry = Math.ceil((new Date(vehicle.roadLegalUntil).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+            if (daysUntilRoadLegalExpiry <= 0 || daysUntilRoadLegalExpiry > 30) return false;
+            break;
+          case 'expired':
+            if (!vehicle.roadLegalUntil) return false;
+            if (new Date(vehicle.roadLegalUntil) >= today) return false;
             break;
         }
       }
@@ -97,6 +121,11 @@ export function VehiclesTab({
           if (!a.insuranceDate) return 1;
           if (!b.insuranceDate) return -1;
           return new Date(a.insuranceDate).getTime() - new Date(b.insuranceDate).getTime();
+        case 'roadLegal':
+          if (!a.roadLegalUntil && !b.roadLegalUntil) return 0;
+          if (!a.roadLegalUntil) return 1;
+          if (!b.roadLegalUntil) return -1;
+          return new Date(a.roadLegalUntil).getTime() - new Date(b.roadLegalUntil).getTime();
         case 'createdAt':
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         default:
@@ -105,7 +134,7 @@ export function VehiclesTab({
     });
 
     return filtered;
-  }, [vehicles, searchQuery, typeFilter, insuranceFilter, sortBy]);
+  }, [vehicles, searchQuery, typeFilter, insuranceFilter, roadLegalFilter, sortBy]);
 
   const handleAddVehicle = async (vehicleData: any) => {
     await onAddVehicle(vehicleData);
@@ -134,6 +163,18 @@ export function VehiclesTab({
         return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
       }).length,
     },
+    roadLegalStats: {
+      total: vehicles.filter(v => v.roadLegalUntil).length,
+      expired: vehicles.filter(v => {
+        if (!v.roadLegalUntil) return false;
+        return new Date(v.roadLegalUntil) < new Date();
+      }).length,
+      expiringSoon: vehicles.filter(v => {
+        if (!v.roadLegalUntil) return false;
+        const daysUntilExpiry = Math.ceil((new Date(v.roadLegalUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
+      }).length,
+    },
     byType: vehicles.reduce((acc, vehicle) => {
       acc[vehicle.type] = (acc[vehicle.type] || 0) + 1;
       return acc;
@@ -143,7 +184,7 @@ export function VehiclesTab({
   return (
     <div className="space-y-6">
       {/* Статистика */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <Card className="bg-blue-50">
           <CardContent className="p-3">
             <div className="text-xs text-blue-600 font-medium">Всего техники</div>
@@ -164,14 +205,20 @@ export function VehiclesTab({
         </Card>
         <Card className="bg-yellow-50">
           <CardContent className="p-3">
-            <div className="text-xs text-yellow-600 font-medium">Скоро истекают</div>
+            <div className="text-xs text-yellow-600 font-medium">Страховка истекает</div>
             <div className="text-lg font-bold text-yellow-800">{stats.insuranceStats.expiringSoon}</div>
           </CardContent>
         </Card>
-        <Card className="bg-red-50">
+        <Card className="bg-teal-50">
           <CardContent className="p-3">
-            <div className="text-xs text-red-600 font-medium">Просрочены</div>
-            <div className="text-lg font-bold text-red-800">{stats.insuranceStats.expired}</div>
+            <div className="text-xs text-teal-600 font-medium">С допуском</div>
+            <div className="text-lg font-bold text-teal-800">{stats.roadLegalStats.total}</div>
+          </CardContent>
+        </Card>
+        <Card className="bg-orange-50">
+          <CardContent className="p-3">
+            <div className="text-xs text-orange-600 font-medium">Допуск истекает</div>
+            <div className="text-lg font-bold text-orange-800">{stats.roadLegalStats.expiringSoon}</div>
           </CardContent>
         </Card>
         <Card className="bg-purple-50">
@@ -225,6 +272,8 @@ export function VehiclesTab({
             onTypeFilterChange={setTypeFilter}
             insuranceFilter={insuranceFilter}
             onInsuranceFilterChange={setInsuranceFilter}
+            roadLegalFilter={roadLegalFilter}
+            onRoadLegalFilterChange={setRoadLegalFilter}
             sortBy={sortBy}
             onSortChange={setSortBy}
           />

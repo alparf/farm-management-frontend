@@ -12,6 +12,8 @@ interface VehiclesFiltersProps {
   onTypeFilterChange: (type: VehicleType | '') => void;
   insuranceFilter: string;
   onInsuranceFilterChange: (filter: string) => void;
+  roadLegalFilter: string;
+  onRoadLegalFilterChange: (filter: string) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
 }
@@ -23,6 +25,8 @@ export function VehiclesFilters({
   onTypeFilterChange,
   insuranceFilter,
   onInsuranceFilterChange,
+  roadLegalFilter,
+  onRoadLegalFilterChange,
   sortBy,
   onSortChange,
 }: VehiclesFiltersProps) {
@@ -40,8 +44,16 @@ export function VehiclesFilters({
     { value: '', label: 'Все' },
     { value: 'with-insurance', label: 'Со страховкой' },
     { value: 'without-insurance', label: 'Без страховки' },
-    { value: 'expiring-soon', label: 'Скоро истекает' },
-    { value: 'expired', label: 'Просроченные' },
+    { value: 'expiring-soon', label: 'Страховка истекает' },
+    { value: 'expired', label: 'Страховка просрочена' },
+  ];
+
+  const roadLegalFilters = [
+    { value: '', label: 'Все' },
+    { value: 'with-road-legal', label: 'С допуском' },
+    { value: 'without-road-legal', label: 'Без допуска' },
+    { value: 'expiring-soon', label: 'Допуск истекает' },
+    { value: 'expired', label: 'Допуск просрочен' },
   ];
 
   return (
@@ -83,7 +95,7 @@ export function VehiclesFilters({
 
           {/* Фильтр по страховке */}
           <div>
-            <Label htmlFor="insurance-filter" className="text-sm">Статус страховки</Label>
+            <Label htmlFor="insurance-filter" className="text-sm">Страховка</Label>
             <select
               id="insurance-filter"
               value={insuranceFilter}
@@ -99,8 +111,25 @@ export function VehiclesFilters({
           </div>
         </div>
 
-        {/* Сортировка */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          {/* Фильтр по допуску к движению */}
+          <div>
+            <Label htmlFor="road-legal-filter" className="text-sm">Допуск к движению</Label>
+            <select
+              id="road-legal-filter"
+              value={roadLegalFilter}
+              onChange={(e) => onRoadLegalFilterChange(e.target.value)}
+              className="w-full h-9 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              {roadLegalFilters.map((filter) => (
+                <option key={filter.value} value={filter.value}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Сортировка */}
           <div>
             <Label htmlFor="vehicles-sort" className="text-sm">Сортировка</Label>
             <select
@@ -113,6 +142,7 @@ export function VehiclesFilters({
               <option value="type">По типу</option>
               <option value="year">По году выпуска</option>
               <option value="insurance">По дате страховки</option>
+              <option value="roadLegal">По дате допуска</option>
               <option value="createdAt">По дате добавления</option>
             </select>
           </div>

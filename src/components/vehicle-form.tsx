@@ -21,6 +21,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
   const [year, setYear] = useState('');
   const [vin, setVin] = useState('');
   const [insuranceDate, setInsuranceDate] = useState<Date>();
+  const [roadLegalUntil, setRoadLegalUntil] = useState<Date>();
   const [notes, setNotes] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,6 +39,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
       year: year ? parseInt(year) : undefined,
       vin: vin || undefined,
       insuranceDate: insuranceDate || undefined,
+      roadLegalUntil: roadLegalUntil || undefined,
       notes: notes || undefined,
     });
   };
@@ -115,15 +117,28 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
             />
           </div>
 
-          <div>
-            <Label>Дата окончания страховки</Label>
-            <DatePicker 
-              value={insuranceDate} 
-              onChange={setInsuranceDate}
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Оставьте пустым, если страховка не требуется или бессрочная
-            </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Дата окончания страховки</Label>
+              <DatePicker 
+                value={insuranceDate} 
+                onChange={setInsuranceDate}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Оставьте пустым, если страховка не требуется
+              </p>
+            </div>
+
+            <div>
+              <Label>Допуск к движению до</Label>
+              <DatePicker 
+                value={roadLegalUntil} 
+                onChange={setRoadLegalUntil}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Дата окончания техосмотра/регистрации
+              </p>
+            </div>
           </div>
 
           <div>
