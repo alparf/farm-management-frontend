@@ -64,6 +64,7 @@ export interface Vehicle {
   model?: string;
   year?: number;
   vin?: string;
+  insuranceDate?: Date;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;

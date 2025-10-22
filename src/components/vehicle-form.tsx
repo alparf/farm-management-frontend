@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface VehicleFormProps {
   onSubmit: (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -19,6 +20,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
   const [model, setModel] = useState('');
   const [year, setYear] = useState('');
   const [vin, setVin] = useState('');
+  const [insuranceDate, setInsuranceDate] = useState<Date>();
   const [notes, setNotes] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,6 +37,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
       model: model || undefined,
       year: year ? parseInt(year) : undefined,
       vin: vin || undefined,
+      insuranceDate: insuranceDate || undefined,
       notes: notes || undefined,
     });
   };
@@ -110,6 +113,17 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
               onChange={(e) => setVin(e.target.value)}
               placeholder="VIN или серийный номер"
             />
+          </div>
+
+          <div>
+            <Label>Дата окончания страховки</Label>
+            <DatePicker 
+              value={insuranceDate} 
+              onChange={setInsuranceDate}
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Оставьте пустым, если страховка не требуется или бессрочная
+            </p>
           </div>
 
           <div>

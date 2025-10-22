@@ -22,7 +22,7 @@ export function DatePicker({ value, onChange, className }: DatePickerProps) {
         variant="outline"
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'w-full justify-start text-left font-normal',
+          'w-full justify-start text-left font-normal h-8',
           !value && 'text-muted-foreground'
         )}
       >

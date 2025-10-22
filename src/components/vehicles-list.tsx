@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { Vehicle } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { DatePicker } from '@/components/ui/date-picker';
 
 interface VehiclesListProps {
   vehicles: Vehicle[];
@@ -13,10 +16,67 @@ interface VehiclesListProps {
 }
 
 export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: VehiclesListProps) {
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; vehicle: Vehicle | null }>({
     isOpen: false,
     vehicle: null
   });
+
+  // Состояния для редактирования
+  const [editData, setEditData] = useState<{
+    name: string;
+    type: string;
+    model: string;
+    year: string;
+    vin: string;
+    insuranceDate?: Date;
+    notes: string;
+  }>({
+    name: '',
+    type: 'трактор',
+    model: '',
+    year: '',
+    vin: '',
+    notes: ''
+  });
+
+  const startEdit = (vehicle: Vehicle) => {
+    setEditingId(vehicle.id);
+    setEditData({
+      name: vehicle.name,
+      type: vehicle.type,
+      model: vehicle.model || '',
+      year: vehicle.year?.toString() || '',
+      vin: vehicle.vin || '',
+      insuranceDate: vehicle.insuranceDate,
+      notes: vehicle.notes || ''
+    });
+  };
+
+  const saveEdit = async (id: number) => {
+    try {
+      await onUpdateVehicle(id, {
+        name: editData.name,
+        type: editData.type as any,
+        model: editData.model || undefined,
+        year: editData.year ? parseInt(editData.year) : undefined,
+        vin: editData.vin || undefined,
+        insuranceDate: editData.insuranceDate,
+        notes: editData.notes || undefined,
+      });
+      setEditingId(null);
+    } catch (error) {
+      console.error('Error updating vehicle:', error);
+    }
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const updateEditField = (field: string, value: any) => {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  };
 
   const requestDelete = (vehicle: Vehicle) => {
     setDeleteConfirm({
@@ -39,6 +99,23 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
 
   const handleCancelDelete = () => {
     setDeleteConfirm({ isOpen: false, vehicle: null });
+  };
+
+  // Функция для определения статуса страховки
+  const getInsuranceStatus = (insuranceDate?: Date) => {
+    if (!insuranceDate) return null;
+    
+    const today = new Date();
+    const insuranceEnd = new Date(insuranceDate);
+    const daysUntilExpiry = Math.ceil((insuranceEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntilExpiry < 0) {
+      return { status: 'expired', text: 'Просрочена', color: 'bg-red-100 text-red-800' };
+    } else if (daysUntilExpiry <= 30) {
+      return { status: 'warning', text: `Скоро истекает (${daysUntilExpiry} д.)`, color: 'bg-yellow-100 text-yellow-800' };
+    } else {
+      return { status: 'valid', text: `Действует до ${insuranceEnd.toLocaleDateString('ru-RU')}`, color: 'bg-green-100 text-green-800' };
+    }
   };
 
   const getTypeColor = (type: string) => {
@@ -65,64 +142,188 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {vehicles.map((vehicle) => (
-          <div
-            key={vehicle.id}
-            className={`border-2 rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(vehicle.type)}`}
-          >
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 truncate text-sm">
-                  {vehicle.name}
-                </h3>
-                <span className="text-xs text-gray-600 capitalize">
-                  {vehicle.type}
-                </span>
-              </div>
+        {vehicles.map((vehicle) => {
+          const insuranceStatus = getInsuranceStatus(vehicle.insuranceDate);
+          const isEditing = editingId === vehicle.id;
+          
+          return (
+            <div
+              key={vehicle.id}
+              className={`border-2 rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(vehicle.type)}`}
+            >
+              {isEditing ? (
+                // Режим редактирования
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="edit-name">Название *</Label>
+                    <Input
+                      id="edit-name"
+                      value={editData.name}
+                      onChange={(e) => updateEditField('name', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-type">Тип</Label>
+                    <select
+                      id="edit-type"
+                      value={editData.type}
+                      onChange={(e) => updateEditField('type', e.target.value)}
+                      className="w-full h-8 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
+                    >
+                      <option value="трактор">Трактор</option>
+                      <option value="комбайн">Комбайн</option>
+                      <option value="грузовой автомобиль">Грузовой автомобиль</option>
+                      <option value="легковой автомобиль">Легковой автомобиль</option>
+                      <option value="прицеп">Прицеп</option>
+                      <option value="сельхозорудие">Сельхозорудие</option>
+                      <option value="другая техника">Другая техника</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label htmlFor="edit-model">Модель</Label>
+                      <Input
+                        id="edit-model"
+                        value={editData.model}
+                        onChange={(e) => updateEditField('model', e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-year">Год</Label>
+                      <Input
+                        id="edit-year"
+                        type="number"
+                        value={editData.year}
+                        onChange={(e) => updateEditField('year', e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-vin">VIN</Label>
+                    <Input
+                      id="edit-vin"
+                      value={editData.vin}
+                      onChange={(e) => updateEditField('vin', e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Страховка до</Label>
+                    <DatePicker 
+                      value={editData.insuranceDate} 
+                      onChange={(date) => updateEditField('insuranceDate', date)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="edit-notes">Примечания</Label>
+                    <textarea
+                      id="edit-notes"
+                      value={editData.notes}
+                      onChange={(e) => updateEditField('notes', e.target.value)}
+                      className="w-full rounded-md border border-gray-300 bg-white px-2 py-1 text-sm min-h-[60px]"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => saveEdit(vehicle.id)}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      Сохранить
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelEdit}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      Отмена
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                // Режим просмотра
+                <>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate text-sm">
+                        {vehicle.name}
+                      </h3>
+                      <span className="text-xs text-gray-600 capitalize">
+                        {vehicle.type}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Статус страховки */}
+                  {insuranceStatus && (
+                    <div className={`text-xs px-2 py-1 rounded-full mb-3 ${insuranceStatus.color}`}>
+                      {insuranceStatus.text}
+                    </div>
+                  )}
+
+                  {vehicle.model && (
+                    <div className="text-sm text-gray-700 mb-1">
+                      Модель: {vehicle.model}
+                    </div>
+                  )}
+
+                  {vehicle.year && (
+                    <div className="text-sm text-gray-700 mb-1">
+                      Год: {vehicle.year}
+                    </div>
+                  )}
+
+                  {vehicle.vin && (
+                    <div className="text-sm text-gray-700 mb-3">
+                      VIN: {vehicle.vin}
+                    </div>
+                  )}
+
+                  {vehicle.notes && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600 line-clamp-2">
+                        {vehicle.notes}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="text-xs text-gray-500 mb-3">
+                    Добавлено: {vehicle.createdAt.toLocaleDateString('ru-RU')}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => startEdit(vehicle)}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      Редактировать
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => requestDelete(vehicle)}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      Удалить
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
-
-            {vehicle.model && (
-              <div className="text-sm text-gray-700 mb-1">
-                Модель: {vehicle.model}
-              </div>
-            )}
-
-            {vehicle.year && (
-              <div className="text-sm text-gray-700 mb-1">
-                Год: {vehicle.year}
-              </div>
-            )}
-
-            {vehicle.vin && (
-              <div className="text-sm text-gray-700 mb-3">
-                VIN: {vehicle.vin}
-              </div>
-            )}
-
-            {vehicle.notes && (
-              <div className="mb-3">
-                <p className="text-xs text-gray-600 line-clamp-2">
-                  {vehicle.notes}
-                </p>
-              </div>
-            )}
-
-            <div className="text-xs text-gray-500 mb-3">
-              Добавлено: {vehicle.createdAt.toLocaleDateString('ru-RU')}
-            </div>
-
-            <div className="flex gap-2">
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => requestDelete(vehicle)}
-                className="flex-1 h-8 text-xs"
-              >
-                Удалить
-              </Button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <ConfirmDialog

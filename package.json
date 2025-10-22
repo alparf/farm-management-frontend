@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 192.168.100.2",
+    "dev": "next dev -H 192.168.100.7",
     "build": "next build",
-    "start": "next start -H 192.168.100.2",
+    "start": "next start -H 192.168.100.7",
     "lint": "next lint"
   },
   "dependencies": {
