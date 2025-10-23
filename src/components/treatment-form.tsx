@@ -178,7 +178,14 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
             <div>
               <Label>Плановая дата обработки</Label>
               <QuickDateSelector onDateSelect={setDueDate} />
-              <DatePicker value={dueDate} onChange={setDueDate} />
+              <DatePicker 
+                value={dueDate} 
+                onChange={(date) => {
+                  if (date) {
+                    setDueDate(date);
+                  }
+                }} 
+              />
             </div>
             
             <div className="space-y-4">
