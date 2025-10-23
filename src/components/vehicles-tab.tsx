@@ -14,11 +14,11 @@ import { Plus, Wrench, Car } from 'lucide-react';
 interface VehiclesTabProps {
   vehicles: Vehicle[];
   maintenance: MaintenanceRecord[];
-  onAddVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  onUpdateVehicle: (id: number, updates: Partial<Vehicle>) => Promise<void>;
+  onAddVehicle: (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Vehicle | void>;
+  onUpdateVehicle: (id: number, updates: Partial<Vehicle>) => Promise<Vehicle | void>;
   onDeleteVehicle: (id: number) => Promise<void>;
-  onAddMaintenance: (record: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => Promise<void>;
-  onUpdateMaintenance: (id: number, updates: Partial<MaintenanceRecord>) => Promise<void>;
+  onAddMaintenance: (maintenance: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => Promise<MaintenanceRecord | void>;
+  onUpdateMaintenance: (id: number, updates: Partial<MaintenanceRecord>) => Promise<MaintenanceRecord | void>;
   onDeleteMaintenance: (id: number) => Promise<void>;
 }
 

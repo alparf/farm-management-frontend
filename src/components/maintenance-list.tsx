@@ -8,7 +8,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface MaintenanceListProps {
   maintenance: MaintenanceRecord[];
-  onUpdateMaintenance: (id: number, updates: Partial<MaintenanceRecord>) => Promise<void>;
+  onUpdateMaintenance: (id: number, updates: Partial<MaintenanceRecord>) => Promise<MaintenanceRecord | void>;
   onDeleteMaintenance: (id: number) => Promise<void>;
 }
 

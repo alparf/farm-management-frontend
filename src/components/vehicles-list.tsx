@@ -11,7 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 
 interface VehiclesListProps {
   vehicles: Vehicle[];
-  onUpdateVehicle: (id: number, updates: Partial<Vehicle>) => Promise<void>;
+  onUpdateVehicle: (id: number, updates: Partial<Vehicle>) => Promise<Vehicle | void>;
   onDeleteVehicle: (id: number) => Promise<void>;
 }
 
