@@ -108,17 +108,6 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                   {product.type}
                 </span>
               </div>
-              {/* Индикаторы запасов - теперь они не перекрывают цвет фона */}
-              {product.quantity === 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2 whitespace-nowrap">
-                  Нет в наличии
-                </span>
-              )}
-              {product.quantity > 0 && product.quantity <= 5 && (
-                <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full ml-2 whitespace-nowrap">
-                  Мало
-                </span>
-              )}
             </div>
 
             {/* Количество */}
