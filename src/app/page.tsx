@@ -37,6 +37,7 @@ export default function Home() {
   const [inventorySearch, setInventorySearch] = useState('');
   const [inventoryTypeFilter, setInventoryTypeFilter] = useState<ProductType | ''>('');
   const [inventorySort, setInventorySort] = useState('name');
+  const [stockFilter, setStockFilter] = useState('all');
 
   // Хуки для данных
   const { 
@@ -124,6 +125,17 @@ export default function Home() {
         return false;
       }
       
+      // Фильтр по запасам
+      if (stockFilter === 'low' && product.quantity > 5) {
+        return false;
+      }
+      if (stockFilter === 'out' && product.quantity > 0) {
+        return false;
+      }
+      if (stockFilter === 'normal' && product.quantity <= 5) {
+        return false;
+      }
+      
       return true;
     });
 
@@ -142,20 +154,28 @@ export default function Home() {
           return 0;
       }
     });
-
     return filtered;
-  }, [inventory, inventorySearch, inventoryTypeFilter, inventorySort]);
+  }, [inventory, inventorySearch, inventoryTypeFilter, inventorySort, stockFilter]);
 
   // Статистика склада
-  const inventoryStats = useMemo(() => {
+ const inventoryStats = useMemo(() => {
     const totalProducts = inventory.length;
     const byType = inventory.reduce((acc, product) => {
       acc[product.type] = (acc[product.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    return acc;
+  }, {} as Record<string, number>);
 
-    return { totalProducts, byType };
-  }, [inventory]);
+  // Добавляем статистику по низким запасам
+  const lowStockProducts = inventory.filter(product => product.quantity <= 5);
+  const outOfStockProducts = inventory.filter(product => product.quantity === 0);
+
+  return { 
+    totalProducts, 
+    byType,
+    lowStockCount: lowStockProducts.length,
+    outOfStockCount: outOfStockProducts.length
+  };
+}, [inventory]);
 
   const handleAddTreatment = async (treatmentData: any) => {
     await addTreatment(treatmentData);
@@ -347,7 +367,7 @@ export default function Home() {
           {inventoryError && <ErrorState error={inventoryError} onRetry={refetchInventory} />}
 
           {/* Статистика склада */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
             <Card className="bg-blue-50">
               <CardContent className="p-3">
                 <div className="text-xs text-blue-600 font-medium">Всего</div>
@@ -364,6 +384,28 @@ export default function Home() {
                 </CardContent>
               </Card>
             ))}
+
+            {/* Карточки для низких запасов */}
+            <Card className={`${inventoryStats.lowStockCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'}`}>
+              <CardContent className="p-3">
+                <div className={`text-xs font-medium ${inventoryStats.lowStockCount > 0 ? 'text-yellow-700' : 'text-gray-600'}`}>
+                  Низкий запас
+                </div>
+                <div className={`text-lg font-bold ${inventoryStats.lowStockCount > 0 ? 'text-yellow-800' : 'text-gray-800'}`}>
+                  {inventoryStats.lowStockCount}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className={`${inventoryStats.outOfStockCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50'}`}>
+              <CardContent className="p-3">
+                <div className={`text-xs font-medium ${inventoryStats.outOfStockCount > 0 ? 'text-red-700' : 'text-gray-600'}`}>
+                  Нет в наличии
+                </div>
+                <div className={`text-lg font-bold ${inventoryStats.outOfStockCount > 0 ? 'text-red-800' : 'text-gray-800'}`}>
+                  {inventoryStats.outOfStockCount}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* Фильтры склада */}
@@ -374,6 +416,8 @@ export default function Home() {
             onTypeFilterChange={setInventoryTypeFilter}
             sortBy={inventorySort}
             onSortChange={setInventorySort}
+            stockFilter={stockFilter}
+            onStockFilterChange={setStockFilter}
           />
 
           {showInventoryForm && (

@@ -64,8 +64,8 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
     setDeleteConfirm({ isOpen: false, product: null });
   };
 
-  const getTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
+  const getTypeColor = (product: ProductInventory) => {
+    const baseColors: Record<string, string> = {
       'фунгицид': 'bg-purple-100 text-purple-800 border-purple-200',
       'инсектицид': 'bg-red-100 text-red-800 border-red-200',
       'гербицид': 'bg-orange-100 text-orange-800 border-orange-200',
@@ -75,16 +75,20 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
       'биопрепарат': 'bg-teal-100 text-teal-800 border-teal-200',
       'адъювант': 'bg-gray-100 text-gray-800 border-gray-200',
     };
-    return colors[type] || 'bg-gray-100 text-gray-800 border-gray-200';
-  };
 
-  if (inventory.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500 border rounded-lg">
-        Склад пуст. Добавьте первый продукт.
-      </div>
-    );
-  }
+    let color = baseColors[product.type] || 'bg-gray-100 text-gray-800 border-gray-200';
+    
+    // Сохраняем базовые цвета, но добавляем акценты для низких запасов
+    if (product.quantity === 0) {
+      // Для нулевого количества добавляем красную рамку поверх базового цвета
+      color = color.replace('border-', 'border-2 border-red-400 ');
+    } else if (product.quantity <= 5) {
+      // Для низкого запаса добавляем желтую рамку поверх базового цвета
+      color = color.replace('border-', 'border-2 border-yellow-400 ');
+    }
+    
+    return color;
+  };
 
   return (
     <>
@@ -92,18 +96,29 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
         {inventory.map((product) => (
           <div
             key={product.id}
-            className={`border-2 rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(product.type)}`}
+            className={`border rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(product)}`}
           >
-            {/* Заголовок карточки */}
+            {/* Заголовок карточки с индикаторами запасов */}
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900 truncate text-sm">
+                <h3 className="font-semibold truncate text-sm">
                   {product.name}
                 </h3>
-                <span className="text-xs text-gray-600 capitalize">
+                <span className="text-xs opacity-75 capitalize">
                   {product.type}
                 </span>
               </div>
+              {/* Индикаторы запасов - теперь они не перекрывают цвет фона */}
+              {product.quantity === 0 && (
+                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full ml-2 whitespace-nowrap">
+                  Нет в наличии
+                </span>
+              )}
+              {product.quantity > 0 && product.quantity <= 5 && (
+                <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full ml-2 whitespace-nowrap">
+                  Мало
+                </span>
+              )}
             </div>
 
             {/* Количество */}
@@ -117,14 +132,14 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                     onChange={(e) => setEditQuantity(e.target.value)}
                     className="h-8 text-sm"
                   />
-                  <span className="text-xs text-gray-500 whitespace-nowrap">{product.unit}</span>
+                  <span className="text-xs opacity-75 whitespace-nowrap">{product.unit}</span>
                 </div>
               ) : (
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-2xl font-bold">
                     {product.quantity}
                   </div>
-                  <div className="text-xs text-gray-600">
+                  <div className="text-xs opacity-75">
                     {product.unit}
                   </div>
                 </div>
@@ -134,14 +149,14 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
             {/* Примечания */}
             {product.notes && (
               <div className="mb-3">
-                <p className="text-xs text-gray-600 line-clamp-2">
+                <p className="text-xs opacity-75 line-clamp-2">
                   {product.notes}
                 </p>
               </div>
             )}
 
             {/* Дата обновления */}
-            <div className="text-xs text-gray-500 mb-3">
+            <div className="text-xs opacity-75 mb-3">
               Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
             </div>
 

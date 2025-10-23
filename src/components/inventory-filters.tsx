@@ -12,6 +12,8 @@ interface InventoryFiltersProps {
   onTypeFilterChange: (type: ProductType | '') => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
+  stockFilter: string;
+  onStockFilterChange: (filter: string) => void;
 }
 
 export function InventoryFilters({
@@ -21,6 +23,8 @@ export function InventoryFilters({
   onTypeFilterChange,
   sortBy,
   onSortChange,
+  stockFilter,
+  onStockFilterChange,
 }: InventoryFiltersProps) {
   const productTypes: ProductType[] = [
     'фунгицид',
@@ -39,7 +43,7 @@ export function InventoryFilters({
         <CardTitle className="text-lg">Фильтры склада</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Поиск по названию */}
           <div>
             <Label htmlFor="inventory-search">Поиск по названию</Label>
@@ -66,6 +70,22 @@ export function InventoryFilters({
                   {type.charAt(0).toUpperCase() + type.slice(1)}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Фильтр по запасам */}
+          <div>
+            <Label htmlFor="stock-filter">Статус запасов</Label>
+            <select
+              id="stock-filter"
+              value={stockFilter}
+              onChange={(e) => onStockFilterChange(e.target.value)}
+              className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="all">Все запасы</option>
+              <option value="low">Низкий запас (≤5)</option>
+              <option value="out">Нет в наличии</option>
+              <option value="normal">Нормальный запас</option>
             </select>
           </div>
 
