@@ -19,11 +19,22 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
     isOpen: false,
     treatment: null
   });
+
   const markAsPending = async (id: number) => {
     await onUpdateTreatment(id, {
       completed: false,
       actualDate: undefined
     });
+  };
+
+  const toggleCompleted = async (id: number) => {
+    const treatment = treatments.find(t => t.id === id);
+    if (treatment) {
+      await onUpdateTreatment(id, {
+        completed: !treatment.completed,
+        actualDate: !treatment.completed ? new Date() : undefined
+      });
+    }
   };
 
   const updateActualDate = async (id: number, date: Date | undefined) => {
@@ -61,10 +72,6 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
   const handleCancelDelete = () => {
     setDeleteConfirm({ isOpen: false, treatment: null });
   };
-
-  function toggleCompleted(id: number): void {
-    throw new Error('Function not implemented.');
-  }
 
   return (
     <div className="space-y-2">
@@ -235,24 +242,24 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
                       Удалить
                     </Button>
                   </div>
-
-                  {/* Диалог подтверждения удаления обработки */}
-                  <ConfirmDialog
-                    isOpen={deleteConfirm.isOpen}
-                    title="Удаление обработки"
-                    message={`Вы уверены, что хотите удалить обработку для "${deleteConfirm.treatment?.culture}"? Это действие нельзя отменить.`}
-                    onConfirm={handleConfirmDelete}
-                    onCancel={handleCancelDelete}
-                    confirmText="Удалить"
-                    cancelText="Отмена"
-                    variant="destructive"
-                  />
                 </div>
               </div>
             </div>
           )}
         </div>
       ))}
+
+      {/* Диалог подтверждения удаления обработки - вынесен за пределы map */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title="Удаление обработки"
+        message={`Вы уверены, что хотите удалить обработку для "${deleteConfirm.treatment?.culture}"? Это действие нельзя отменить.`}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="destructive"
+      />
     </div>
   );
 }

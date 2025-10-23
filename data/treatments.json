@@ -1,1 +1,24 @@
-[]
+[
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-04-24T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Стомп Профессионал",
+        "dosage": "1.5 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Боксер",
+        "dosage": "0.5 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761205108761,
+    "createdAt": "2025-10-23T07:38:28.761Z",
+    "actualDate": "2025-04-24T00:00:00.000Z"
+  }
+]
