@@ -21,6 +21,8 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
       months.push({
         name: date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }),
         date: new Date(date.getFullYear(), date.getMonth(), 1),
+        startDate: new Date(date.getFullYear(), date.getMonth(), 1),
+        endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0),
       });
     }
     
@@ -28,7 +30,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   };
 
   const months = getLastNineMonths();
-  const currentMonth = new Date().getMonth();
+  const maxPosition = 100; // 100% ширины
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -45,22 +47,27 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   };
 
   const getTreatmentPosition = (treatmentDate: Date) => {
-    const treatmentMonth = treatmentDate.getMonth();
-    const treatmentYear = treatmentDate.getFullYear();
-    
     for (let i = 0; i < months.length; i++) {
       const month = months[i];
-      if (month.date.getMonth() === treatmentMonth && month.date.getFullYear() === treatmentYear) {
-        // Позиция внутри месяца (условно по неделям)
-        const week = Math.floor(treatmentDate.getDate() / 7);
-        return i * 4 + week; // 4 позиции на месяц
+      if (treatmentDate >= month.startDate && treatmentDate <= month.endDate) {
+        // Позиция внутри месяца в процентах (0-100% для каждого месяца)
+        const daysInMonth = month.endDate.getDate();
+        const dayOfMonth = treatmentDate.getDate();
+        const positionInMonth = (dayOfMonth / daysInMonth) * 100;
+        
+        // Общая позиция: позиция месяца + позиция внутри месяца
+        const monthPosition = (i / months.length) * 100;
+        const positionInTimeline = monthPosition + (positionInMonth / months.length);
+        
+        return Math.min(positionInTimeline, 100);
       }
     }
     
     return -1;
   };
 
-  const maxPosition = months.length * 4;
+  // Сортируем обработки по дате для правильного отображения
+  const sortedTreatments = [...treatments].sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
     <Card>
@@ -72,7 +79,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
       <CardContent>
         <div className="space-y-6">
           {/* Шкала месяцев */}
-          <div className="flex justify-between relative pb-8">
+          <div className="flex justify-between relative pb-12">
             {months.map((month, index) => (
               <div key={month.name} className="flex flex-col items-center flex-1">
                 <div className="text-xs text-gray-600 text-center mb-2">
@@ -94,56 +101,56 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             ))}
           </div>
 
-          {/* Обработки */}
-          <div className="relative" style={{ height: `${treatments.length * 40 + 20}px` }}>
+          {/* Обработки - все на одной линии */}
+          <div className="relative h-20">
             {/* Линия времени */}
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-200 transform -translate-y-1/2" />
             
-            {treatments.map((treatment, index) => {
+            {sortedTreatments.map((treatment) => {
               const position = getTreatmentPosition(treatment.date);
-              const left = position >= 0 ? `${(position / maxPosition) * 100}%` : '0%';
+              if (position < 0) return null;
               
               return (
                 <div
                   key={treatment.id}
-                  className="absolute transform -translate-y-1/2"
+                  className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
                   style={{ 
-                    left, 
-                    top: `${(index + 1) * 40}px`,
-                    zIndex: 10 
+                    left: `${position}%`,
+                    top: '50%'
                   }}
                 >
-                  <div className="flex items-center gap-2 group">
-                    <div
-                      className={`w-4 h-4 rounded-full ${getTypeColor(treatment.type)} border-2 border-white shadow-lg`}
-                      title={`${treatment.type} - ${treatment.date.toLocaleDateString('ru-RU')}`}
-                    />
-                    <div className="bg-white border border-gray-200 rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none min-w-48">
-                      <div className="text-sm font-semibold text-gray-900">
-                        {treatment.date.toLocaleDateString('ru-RU')}
-                      </div>
-                      <div className="text-xs text-gray-600 capitalize">
-                        {treatment.type}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {treatment.products.slice(0, 2).join(', ')}
-                        {treatment.products.length > 2 && `... (+${treatment.products.length - 2})`}
-                      </div>
+                  {/* Линия к оси */}
+                  <div className="absolute w-0.5 h-8 bg-gray-300 -top-8 left-1/2 transform -translate-x-1/2" />
+                  
+                  {/* Метка обработки */}
+                  <div
+                    className={`w-4 h-4 rounded-full ${getTypeColor(treatment.type)} border-2 border-white shadow-lg cursor-pointer relative z-10`}
+                    title={`${treatment.type} - ${treatment.date.toLocaleDateString('ru-RU')}`}
+                  />
+                  
+                  {/* Всплывающая подсказка */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border border-gray-200 rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none min-w-48 z-20">
+                    <div className="text-sm font-semibold text-gray-900">
+                      {treatment.date.toLocaleDateString('ru-RU')}
+                    </div>
+                    <div className="text-xs text-gray-600 capitalize">
+                      {treatment.type}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {treatment.products.slice(0, 2).join(', ')}
+                      {treatment.products.length > 2 && `... (+${treatment.products.length - 2})`}
+                    </div>
+                    <div className={`text-xs mt-1 ${treatment.completed ? 'text-green-600' : 'text-yellow-600'}`}>
+                      {treatment.completed ? '✅ Выполнено' : '⏳ Запланировано'}
                     </div>
                   </div>
-                  
-                  {/* Линия к оси */}
-                  <div 
-                    className="absolute w-0.5 h-8 bg-gray-300 top-4 left-2 transform -translate-x-1/2"
-                    style={{ height: `${Math.abs(20 - (index + 1) * 40)}px` }}
-                  />
                 </div>
               );
             })}
           </div>
 
           {/* Легенда */}
-          <div className="flex flex-wrap gap-4 text-xs">
+          <div className="flex flex-wrap gap-4 justify-center text-xs">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-purple-500 rounded-full" />
               <span>Фунгициды</span>
@@ -163,6 +170,10 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded-full" />
               <span>Удобрения</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+              <span>Десиканты</span>
             </div>
           </div>
         </div>

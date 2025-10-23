@@ -4,7 +4,7 @@
     "area": 4,
     "completed": true,
     "dueDate": "2025-04-24T00:00:00.000Z",
-    "isTankMix": false,
+    "isTankMix": true,
     "chemicalProducts": [
       {
         "name": "Стомп Профессионал",
@@ -17,8 +17,286 @@
         "productType": "гербицид"
       }
     ],
-    "id": 1761205108761,
-    "createdAt": "2025-10-23T07:38:28.761Z",
+    "id": 1761206553396,
+    "createdAt": "2025-10-23T08:02:33.396Z",
     "actualDate": "2025-04-24T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-04-30T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Голден Ринг",
+        "dosage": "2 л/га",
+        "productType": "десикант"
+      },
+      {
+        "name": "Боксер",
+        "dosage": "0.5 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761206639558,
+    "createdAt": "2025-10-23T08:03:59.558Z",
+    "actualDate": "2025-04-30T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-05-05T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Пирамин Турбо",
+        "dosage": "0.4 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Базагран",
+        "dosage": "0.1 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761206749363,
+    "createdAt": "2025-10-23T08:05:49.363Z",
+    "actualDate": "2025-05-05T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-05-10T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Пирамин Турбо",
+        "dosage": "0.4 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Базагран",
+        "dosage": "0.15 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761206869663,
+    "createdAt": "2025-10-23T08:07:49.663Z",
+    "actualDate": "2025-05-10T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-05-18T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Пирамин Турбо",
+        "dosage": "0.4 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Базагран",
+        "dosage": "0.15 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761206986190,
+    "createdAt": "2025-10-23T08:09:46.190Z",
+    "actualDate": "2025-05-18T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-05-24T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Фюзилад Форте",
+        "dosage": "2 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761207066155,
+    "createdAt": "2025-10-23T08:11:06.155Z",
+    "actualDate": "2025-05-24T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-05-28T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Пирамин Турбо",
+        "dosage": "0.4 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Акзифор",
+        "dosage": "0.05 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761207186288,
+    "createdAt": "2025-10-23T08:13:06.288Z",
+    "actualDate": "2025-05-28T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-05-21T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Стомп Профессионал",
+        "dosage": "0.25 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Акзифор",
+        "dosage": "0.03 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761207301469,
+    "createdAt": "2025-10-23T08:15:01.469Z",
+    "actualDate": "2025-05-21T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-06-11T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Акзифор",
+        "dosage": "0.09 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Боксер",
+        "dosage": "1 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761207431697,
+    "createdAt": "2025-10-23T08:17:11.697Z",
+    "actualDate": "2025-06-11T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-06-23T00:00:00.000Z",
+    "isTankMix": true,
+    "chemicalProducts": [
+      {
+        "name": "Акзифор",
+        "dosage": "0.1 л/га",
+        "productType": "гербицид"
+      },
+      {
+        "name": "Боксер",
+        "dosage": "1 л/га",
+        "productType": "гербицид"
+      }
+    ],
+    "id": 1761207528238,
+    "createdAt": "2025-10-23T08:18:48.238Z",
+    "actualDate": "2025-06-23T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-06-29T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Магний Сернокислый",
+        "dosage": "1.5 л/га",
+        "productType": "удобрение"
+      }
+    ],
+    "id": 1761207616108,
+    "createdAt": "2025-10-23T08:20:16.108Z",
+    "actualDate": "2025-06-29T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-07-01T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Нитрат Кальция",
+        "dosage": "3 л/га",
+        "productType": "удобрение"
+      }
+    ],
+    "id": 1761207700277,
+    "createdAt": "2025-10-23T08:21:40.277Z",
+    "actualDate": "2025-07-01T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-07-09T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Акробат",
+        "dosage": "1.5 л/га",
+        "productType": "фунгицид"
+      }
+    ],
+    "id": 1761207813245,
+    "createdAt": "2025-10-23T08:23:33.245Z",
+    "actualDate": "2025-07-09T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-07-13T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Трайдекс",
+        "dosage": "1.6 л/га",
+        "productType": "фунгицид"
+      }
+    ],
+    "id": 1761208011651,
+    "createdAt": "2025-10-23T08:26:51.651Z",
+    "actualDate": "2025-07-13T00:00:00.000Z"
+  },
+  {
+    "culture": "лук",
+    "area": 4,
+    "completed": true,
+    "dueDate": "2025-08-05T00:00:00.000Z",
+    "isTankMix": false,
+    "chemicalProducts": [
+      {
+        "name": "Калий Азотнокислый",
+        "dosage": "3 кг/га",
+        "productType": "удобрение"
+      }
+    ],
+    "id": 1761208095417,
+    "createdAt": "2025-10-23T08:28:15.417Z",
+    "actualDate": "2025-08-05T00:00:00.000Z"
   }
 ]
