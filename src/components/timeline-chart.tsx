@@ -10,27 +10,51 @@ interface TimelineChartProps {
 export function TimelineChart({ timelineData }: TimelineChartProps) {
   const { culture, treatments } = timelineData;
 
-  // Получаем последние 9 месяцев
-  const getLastNineMonths = () => {
-    const months = [];
-    const now = new Date();
+  // Получаем диапазон дат для таймлайна
+  const getTimelineRange = () => {
+    if (treatments.length === 0) {
+      const now = new Date();
+      const start = new Date(now);
+      start.setMonth(now.getMonth() - 8); // 9 месяцев назад
+      return { start, end: now };
+    }
+
+    const dates = treatments.map(t => t.date.getTime());
+    const minDate = new Date(Math.min(...dates));
+    const maxDate = new Date(Math.max(...dates));
     
-    for (let i = 8; i >= 0; i--) {
-      const date = new Date(now);
-      date.setMonth(now.getMonth() - i);
+    // Расширяем диапазон на 1 месяц в обе стороны
+    const start = new Date(minDate);
+    start.setMonth(start.getMonth() - 1);
+    const end = new Date(maxDate);
+    end.setMonth(end.getMonth() + 1);
+    
+    return { start, end };
+  };
+
+  const { start, end } = getTimelineRange();
+  
+  // Создаем месяцы для отображения
+  const getMonths = () => {
+    const months = [];
+    const current = new Date(start);
+    current.setDate(1); // Начало месяца
+    
+    while (current <= end) {
       months.push({
-        name: date.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }),
-        date: new Date(date.getFullYear(), date.getMonth(), 1),
-        startDate: new Date(date.getFullYear(), date.getMonth(), 1),
-        endDate: new Date(date.getFullYear(), date.getMonth() + 1, 0),
+        name: current.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }),
+        date: new Date(current),
+        startDate: new Date(current),
+        endDate: new Date(current.getFullYear(), current.getMonth() + 1, 0)
       });
+      current.setMonth(current.getMonth() + 1);
     }
     
     return months;
   };
 
-  const months = getLastNineMonths();
-  const maxPosition = 100; // 100% ширины
+  const months = getMonths();
+  const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -47,27 +71,25 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   };
 
   const getTreatmentPosition = (treatmentDate: Date) => {
-    for (let i = 0; i < months.length; i++) {
-      const month = months[i];
-      if (treatmentDate >= month.startDate && treatmentDate <= month.endDate) {
-        // Позиция внутри месяца в процентах (0-100% для каждого месяца)
-        const daysInMonth = month.endDate.getDate();
-        const dayOfMonth = treatmentDate.getDate();
-        const positionInMonth = (dayOfMonth / daysInMonth) * 100;
-        
-        // Общая позиция: позиция месяца + позиция внутри месяца
-        const monthPosition = (i / months.length) * 100;
-        const positionInTimeline = monthPosition + (positionInMonth / months.length);
-        
-        return Math.min(positionInTimeline, 100);
-      }
-    }
-    
-    return -1;
+    const daysFromStart = (treatmentDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+    const position = (daysFromStart / totalDays) * 100;
+    return Math.max(0, Math.min(100, position)); // Ограничиваем от 0 до 100%
   };
 
   // Сортируем обработки по дате для правильного отображения
   const sortedTreatments = [...treatments].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // Отладочная информация
+  console.log('Всего обработок:', treatments.length);
+  console.log('Отображаемые обработки:', sortedTreatments.length);
+  sortedTreatments.forEach((treatment, index) => {
+    console.log(`Обработка ${index + 1}:`, {
+      date: treatment.date.toLocaleDateString('ru-RU'),
+      type: treatment.type,
+      products: treatment.products,
+      position: getTreatmentPosition(treatment.date)
+    });
+  });
 
   return (
     <Card>
@@ -75,6 +97,9 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
         <CardTitle className="text-lg">
           Временная шкала обработок: {culture}
         </CardTitle>
+        <div className="text-sm text-gray-500">
+          Всего обработок: {treatments.length} | Отображено: {sortedTreatments.length}
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -106,13 +131,12 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             {/* Линия времени */}
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-200 transform -translate-y-1/2" />
             
-            {sortedTreatments.map((treatment) => {
+            {sortedTreatments.map((treatment, index) => {
               const position = getTreatmentPosition(treatment.date);
-              if (position < 0) return null;
               
               return (
                 <div
-                  key={treatment.id}
+                  key={`${treatment.id}-${index}`}
                   className="absolute transform -translate-x-1/2 -translate-y-1/2 group"
                   style={{ 
                     left: `${position}%`,
@@ -124,7 +148,9 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
                   
                   {/* Метка обработки */}
                   <div
-                    className={`w-4 h-4 rounded-full ${getTypeColor(treatment.type)} border-2 border-white shadow-lg cursor-pointer relative z-10`}
+                    className={`w-4 h-4 rounded-full ${getTypeColor(treatment.type)} border-2 border-white shadow-lg cursor-pointer relative z-10 ${
+                      treatment.completed ? 'ring-2 ring-green-400' : 'ring-2 ring-yellow-400'
+                    }`}
                     title={`${treatment.type} - ${treatment.date.toLocaleDateString('ru-RU')}`}
                   />
                   
@@ -137,8 +163,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
                       {treatment.type}
                     </div>
                     <div className="text-xs text-gray-500 mt-1">
-                      {treatment.products.slice(0, 2).join(', ')}
-                      {treatment.products.length > 2 && `... (+${treatment.products.length - 2})`}
+                      {treatment.products.join(', ')}
                     </div>
                     <div className={`text-xs mt-1 ${treatment.completed ? 'text-green-600' : 'text-yellow-600'}`}>
                       {treatment.completed ? '✅ Выполнено' : '⏳ Запланировано'}
@@ -176,11 +201,33 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
               <span>Десиканты</span>
             </div>
           </div>
+
+          {/* Статус выполнения */}
+          <div className="flex justify-center gap-6 mt-4">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500 ring-2 ring-green-300" />
+              <span className="text-sm text-gray-600">Выполнено</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-yellow-500 ring-2 ring-yellow-300" />
+              <span className="text-sm text-gray-600">Запланировано</span>
+            </div>
+          </div>
         </div>
 
         {treatments.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            Нет выполненных обработок за последние 9 месяцев
+            Нет выполненных обработок
+          </div>
+        )}
+
+        {/* Отладочная информация */}
+        {treatments.length !== sortedTreatments.length && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
+            <div className="font-medium text-yellow-800">Внимание: не все обработки отображаются</div>
+            <div className="text-yellow-700">
+              Всего: {treatments.length}, Отображено: {sortedTreatments.length}
+            </div>
           </div>
         )}
       </CardContent>
