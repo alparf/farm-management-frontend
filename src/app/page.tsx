@@ -22,7 +22,7 @@ import { ProductType } from '@/types';
 type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles';
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabType>('treatments');
+  const [activeTab, setActiveTab] = useState<TabType>('analytics');
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
   const [showInventoryForm, setShowInventoryForm] = useState(false);
   
@@ -273,6 +273,17 @@ export default function Home() {
       <div className="flex border-b border-gray-200 mb-6">
         <button
           className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeTab === 'analytics'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          <BarChart3 className="h-4 w-4" />
+          Аналитика
+        </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
             activeTab === 'treatments'
               ? 'border-blue-500 text-blue-600'
               : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -298,17 +309,6 @@ export default function Home() {
           <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
             {inventory.length}
           </span>
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'analytics'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          <BarChart3 className="h-4 w-4" />
-          Аналитика
         </button>
         <button
           className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
