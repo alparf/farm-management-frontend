@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ProductType, InventoryUnit } from '@/types';
+import { ProductType, InventoryUnit, ProductInventory } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

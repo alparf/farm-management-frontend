@@ -44,6 +44,18 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
     });
   };
 
+  // Обработчики для предотвращения отправки формы
+  const handleInputKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Предотвращаем отправку формы при нажатии Enter
+    }
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    // Обычная обработка, но форма не отправляется
+    setType(e.target.value as VehicleType);
+  };
+
   return (
     <Card className="mb-6">
       <CardHeader>
@@ -58,6 +70,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 placeholder="Например: Трактор John Deere 7930"
                 required
               />
@@ -68,7 +81,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
               <select
                 id="type"
                 value={type}
-                onChange={(e) => setType(e.target.value as VehicleType)}
+                onChange={handleSelectChange}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
               >
                 <option value="трактор">Трактор</option>
@@ -89,6 +102,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
                 id="model"
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 placeholder="Модель техники"
               />
             </div>
@@ -102,6 +116,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
                 max="2030"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
+                onKeyDown={handleInputKeyDown}
                 placeholder="2020"
               />
             </div>
@@ -113,6 +128,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
               id="vin"
               value={vin}
               onChange={(e) => setVin(e.target.value)}
+              onKeyDown={handleInputKeyDown}
               placeholder="VIN или серийный номер"
             />
           </div>
@@ -147,6 +163,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              onKeyDown={handleInputKeyDown}
               placeholder="Дополнительная информация о технике..."
               rows={3}
             />
