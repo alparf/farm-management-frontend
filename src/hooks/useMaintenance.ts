@@ -1,72 +1,133 @@
-'use client';
-
+// hooks/useMaintenance.ts
 import { useState, useEffect } from 'react';
 import { MaintenanceRecord } from '@/types';
-import { fetchMaintenance, createMaintenance, updateMaintenance, deleteMaintenance } from '@/lib/api';
 
-export function useMaintenance() {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+
+export const useMaintenance = () => {
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadMaintenance();
-  }, []);
-
-  const loadMaintenance = async () => {
+  const fetchMaintenance = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await fetchMaintenance();
-      setMaintenance(data);
+      const response = await fetch(`${API_BASE_URL}/maintenance`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Преобразуем строки дат в Date объекты
+      const processedData = data.map((record: any) => ({
+        ...record,
+        date: new Date(record.date),
+        createdAt: new Date(record.createdAt),
+      }));
+      
+      setMaintenance(processedData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load maintenance');
-      console.error('Error loading maintenance:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch maintenance records';
+      setError(errorMessage);
+      console.error('Error fetching maintenance:', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const addMaintenance = async (recordData: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => {
+  const addMaintenance = async (maintenanceData: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => {
     try {
-      setError(null);
-      const newRecord = await createMaintenance(recordData);
-      setMaintenance(prev => [...prev, newRecord]);
-      return newRecord;
+      const response = await fetch(`${API_BASE_URL}/maintenance`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(maintenanceData),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const newRecord = await response.json();
+      
+      // Преобразуем даты
+      const processedRecord = {
+        ...newRecord,
+        date: new Date(newRecord.date),
+        createdAt: new Date(newRecord.createdAt),
+      };
+
+      setMaintenance(prev => [...prev, processedRecord]);
+      return processedRecord;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create maintenance record';
-      setError(message);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add maintenance record';
+      setError(errorMessage);
       throw err;
     }
   };
 
-  const updateMaintenanceItem = async (id: number, updates: Partial<MaintenanceRecord>) => {
+  const updateMaintenance = async (id: number, updates: Partial<MaintenanceRecord>) => {
     try {
-      setError(null);
-      await updateMaintenance(id, updates);
-      setMaintenance(prev =>
-        prev.map(record =>
-          record.id === id ? { ...record, ...updates } : record
+      const response = await fetch(`${API_BASE_URL}/maintenance/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const updatedRecord = await response.json();
+      
+      // Преобразуем даты
+      const processedRecord = {
+        ...updatedRecord,
+        date: new Date(updatedRecord.date),
+        createdAt: new Date(updatedRecord.createdAt),
+      };
+
+      setMaintenance(prev => 
+        prev.map(record => 
+          record.id === id ? processedRecord : record
         )
       );
+      
+      return processedRecord;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update maintenance record';
-      setError(message);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update maintenance record';
+      setError(errorMessage);
       throw err;
     }
   };
 
-  const deleteMaintenanceItem = async (id: number) => {
+  const deleteMaintenance = async (id: number) => {
     try {
-      setError(null);
-      await deleteMaintenance(id);
+      const response = await fetch(`${API_BASE_URL}/maintenance/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       setMaintenance(prev => prev.filter(record => record.id !== id));
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete maintenance record';
-      setError(message);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete maintenance record';
+      setError(errorMessage);
       throw err;
     }
   };
+
+  useEffect(() => {
+    fetchMaintenance();
+  }, []);
 
   return {
     maintenance,
@@ -75,6 +136,6 @@ export function useMaintenance() {
     addMaintenance,
     updateMaintenance,
     deleteMaintenance,
-    refetch: loadMaintenance,
+    refetch: fetchMaintenance,
   };
-}
+};
