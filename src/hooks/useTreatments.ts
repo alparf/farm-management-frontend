@@ -1,4 +1,4 @@
-// hooks/useTreatments.ts (обновленная версия)
+// hooks/useTreatments.ts
 import { useState, useEffect } from 'react';
 import { ChemicalTreatment } from '@/types';
 
@@ -10,39 +10,38 @@ export const useTreatments = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchTreatments = async () => {
-  try {
-    setIsLoading(true);
-    setError(null);
-    const response = await fetch(`${API_BASE_URL}/treatments`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/treatments`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Преобразуем строки дат в Date объекты и area в числа
+      const processedData = data.map((treatment: any) => ({
+        ...treatment,
+        area: typeof treatment.area === 'string' 
+          ? parseFloat(treatment.area) 
+          : Number(treatment.area) || 0,
+        createdAt: new Date(treatment.createdAt),
+        dueDate: treatment.dueDate ? new Date(treatment.dueDate) : undefined,
+        actualDate: treatment.actualDate ? new Date(treatment.actualDate) : undefined,
+      }));
+      
+      setTreatments(processedData);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch treatments';
+      setError(errorMessage);
+      console.error('Error fetching treatments:', err);
+    } finally {
+      setIsLoading(false);
     }
-    
-    const data = await response.json();
-    
-    // Преобразуем строки дат в Date объекты и area в числа
-    const processedData = data.map((treatment: any) => ({
-      ...treatment,
-      area: typeof treatment.area === 'string' 
-        ? parseFloat(treatment.area) 
-        : Number(treatment.area) || 0,
-      createdAt: new Date(treatment.createdAt),
-      dueDate: treatment.dueDate ? new Date(treatment.dueDate) : undefined,
-      actualDate: treatment.actualDate ? new Date(treatment.actualDate) : undefined,
-    }));
-    
-    setTreatments(processedData);
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to fetch treatments';
-    setError(errorMessage);
-    console.error('Error fetching treatments:', err);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
-  // ... остальные методы остаются такими же
   const addTreatment = async (treatmentData: Omit<ChemicalTreatment, 'id' | 'createdAt'>) => {
     try {
       const response = await fetch(`${API_BASE_URL}/treatments`, {
@@ -62,6 +61,9 @@ export const useTreatments = () => {
       // Преобразуем даты
       const processedTreatment = {
         ...newTreatment,
+        area: typeof newTreatment.area === 'string' 
+          ? parseFloat(newTreatment.area) 
+          : Number(newTreatment.area) || 0,
         createdAt: new Date(newTreatment.createdAt),
         dueDate: newTreatment.dueDate ? new Date(newTreatment.dueDate) : undefined,
         actualDate: newTreatment.actualDate ? new Date(newTreatment.actualDate) : undefined,
@@ -78,35 +80,74 @@ export const useTreatments = () => {
 
   const updateTreatment = async (id: number, updates: Partial<ChemicalTreatment>) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/treatments/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
-      });
+      // Если это отметка о выполнении, используем специальный эндпоинт
+      if (updates.completed === true && !updates.actualDate) {
+        const response = await fetch(`${API_BASE_URL}/treatments/${id}/complete`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const updatedTreatment = await response.json();
+        
+        // Преобразуем даты
+        const processedTreatment = {
+          ...updatedTreatment,
+          area: typeof updatedTreatment.area === 'string' 
+            ? parseFloat(updatedTreatment.area) 
+            : Number(updatedTreatment.area) || 0,
+          createdAt: new Date(updatedTreatment.createdAt),
+          dueDate: updatedTreatment.dueDate ? new Date(updatedTreatment.dueDate) : undefined,
+          actualDate: updatedTreatment.actualDate ? new Date(updatedTreatment.actualDate) : undefined,
+        };
+
+        setTreatments(prev => 
+          prev.map(treatment => 
+            treatment.id === id ? processedTreatment : treatment
+          )
+        );
+        
+        return processedTreatment;
+      } else {
+        // Для обычных обновлений используем стандартный эндпоинт
+        const response = await fetch(`${API_BASE_URL}/treatments/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(updates),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const updatedTreatment = await response.json();
+        
+        // Преобразуем даты
+        const processedTreatment = {
+          ...updatedTreatment,
+          area: typeof updatedTreatment.area === 'string' 
+            ? parseFloat(updatedTreatment.area) 
+            : Number(updatedTreatment.area) || 0,
+          createdAt: new Date(updatedTreatment.createdAt),
+          dueDate: updatedTreatment.dueDate ? new Date(updatedTreatment.dueDate) : undefined,
+          actualDate: updatedTreatment.actualDate ? new Date(updatedTreatment.actualDate) : undefined,
+        };
+
+        setTreatments(prev => 
+          prev.map(treatment => 
+            treatment.id === id ? processedTreatment : treatment
+          )
+        );
+        
+        return processedTreatment;
       }
-
-      const updatedTreatment = await response.json();
-      
-      // Преобразуем даты
-      const processedTreatment = {
-        ...updatedTreatment,
-        createdAt: new Date(updatedTreatment.createdAt),
-        dueDate: updatedTreatment.dueDate ? new Date(updatedTreatment.dueDate) : undefined,
-        actualDate: updatedTreatment.actualDate ? new Date(updatedTreatment.actualDate) : undefined,
-      };
-
-      setTreatments(prev => 
-        prev.map(treatment => 
-          treatment.id === id ? processedTreatment : treatment
-        )
-      );
-      
-      return processedTreatment;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update treatment';
       setError(errorMessage);

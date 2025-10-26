@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { ProductInventory } from '@/types';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
 export const useInventory = () => {
   const [inventory, setInventory] = useState<ProductInventory[]>([]);
@@ -21,16 +21,20 @@ export const useInventory = () => {
       
       const data = await response.json();
       
-      // Преобразуем строки дат в Date объекты
+      // Преобразуем строки дат в Date объекты и quantity в числа
       const processedData = data.map((product: any) => ({
         ...product,
+        quantity: typeof product.quantity === 'string' 
+          ? parseFloat(product.quantity) 
+          : Number(product.quantity) || 0,
         createdAt: new Date(product.createdAt),
         updatedAt: new Date(product.updatedAt),
       }));
       
       setInventory(processedData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch inventory');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch inventory';
+      setError(errorMessage);
       console.error('Error fetching inventory:', err);
     } finally {
       setIsLoading(false);
@@ -56,6 +60,9 @@ export const useInventory = () => {
       // Преобразуем даты
       const processedProduct = {
         ...newProduct,
+        quantity: typeof newProduct.quantity === 'string' 
+          ? parseFloat(newProduct.quantity) 
+          : Number(newProduct.quantity) || 0,
         createdAt: new Date(newProduct.createdAt),
         updatedAt: new Date(newProduct.updatedAt),
       };
@@ -63,15 +70,17 @@ export const useInventory = () => {
       setInventory(prev => [...prev, processedProduct]);
       return processedProduct;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to add product');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to add product';
+      setError(errorMessage);
       throw err;
     }
   };
 
   const updateProduct = async (id: number, updates: Partial<ProductInventory>) => {
     try {
+      // Используем PATCH вместо PUT
       const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
-        method: 'PUT',
+        method: 'PATCH', // Изменено с PUT на PATCH
         headers: {
           'Content-Type': 'application/json',
         },
@@ -87,6 +96,9 @@ export const useInventory = () => {
       // Преобразуем даты
       const processedProduct = {
         ...updatedProduct,
+        quantity: typeof updatedProduct.quantity === 'string' 
+          ? parseFloat(updatedProduct.quantity) 
+          : Number(updatedProduct.quantity) || 0,
         createdAt: new Date(updatedProduct.createdAt),
         updatedAt: new Date(updatedProduct.updatedAt),
       };
@@ -99,7 +111,8 @@ export const useInventory = () => {
       
       return processedProduct;
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update product');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update product';
+      setError(errorMessage);
       throw err;
     }
   };
@@ -116,7 +129,8 @@ export const useInventory = () => {
 
       setInventory(prev => prev.filter(product => product.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete product');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete product';
+      setError(errorMessage);
       throw err;
     }
   };
