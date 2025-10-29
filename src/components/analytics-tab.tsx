@@ -1,3 +1,4 @@
+// components/analytics-tab.tsx
 'use client';
 
 import { useState } from 'react';
@@ -20,6 +21,8 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
   // Автоматически выбираем первую культуру если ничего не выбрано
   const currentCulture = selectedCulture || (cultures.length > 0 ? cultures[0] : '');
 
+  const currentCultureStats = cultureStats.find(s => s.culture === currentCulture);
+
   return (
     <div className="space-y-6">
       {/* Выбор культуры */}
@@ -36,14 +39,14 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
           <TimelineChart timelineData={getTimelineData(currentCulture)} />
 
           {/* Статистика по культуре */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Всего обработок</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {cultureStats.find(s => s.culture === currentCulture)?.totalTreatments || 0}
+                  {currentCultureStats?.totalTreatments || 0}
                 </div>
               </CardContent>
             </Card>
@@ -54,8 +57,28 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-600">
-                  {cultureStats.find(s => s.culture === currentCulture)?.completedTreatments || 0}
+                  {currentCultureStats?.completedTreatments || 0}
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  {currentCultureStats?.totalTreatments ? 
+                    Math.round((currentCultureStats.completedTreatments / currentCultureStats.totalTreatments) * 100) 
+                    : 0
+                  }% выполнено
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Запланировано</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {currentCultureStats?.plannedTreatments || 0}
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  предстоящие обработки
+                </p>
               </CardContent>
             </Card>
 
@@ -65,11 +88,14 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
               </CardHeader>
               <CardContent>
                 <div className="text-sm font-semibold">
-                  {cultureStats.find(s => s.culture === currentCulture)?.lastTreatment
-                    ? cultureStats.find(s => s.culture === currentCulture)!.lastTreatment!.toLocaleDateString('ru-RU')
+                  {currentCultureStats?.lastTreatment
+                    ? currentCultureStats.lastTreatment.toLocaleDateString('ru-RU')
                     : 'Нет данных'
                   }
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  дата выполнения
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -81,14 +107,18 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {cultureStats.find(s => s.culture === currentCulture)?.productsUsed.map((product, index) => (
-                  <span
-                    key={index}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                  >
-                    {product}
-                  </span>
-                )) || <span className="text-gray-500">Нет данных</span>}
+                {currentCultureStats?.productsUsed && currentCultureStats.productsUsed.length > 0 ? (
+                  currentCultureStats.productsUsed.map((product, index) => (
+                    <span
+                      key={index}
+                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                    >
+                      {product}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-500">Нет данных о препаратах</span>
+                )}
               </div>
             </CardContent>
           </Card>

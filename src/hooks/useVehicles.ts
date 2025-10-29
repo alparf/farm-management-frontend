@@ -76,8 +76,9 @@ export const useVehicles = () => {
 
   const updateVehicle = async (id: number, updates: Partial<Vehicle>) => {
     try {
+      // Используем PATCH вместо PUT
       const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
-        method: 'PUT',
+        method: 'PATCH', // Изменено с PUT на PATCH
         headers: {
           'Content-Type': 'application/json',
         },

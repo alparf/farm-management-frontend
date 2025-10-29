@@ -53,6 +53,7 @@ export interface CultureStats {
   culture: CultureType;
   totalTreatments: number;
   completedTreatments: number;
+  plannedTreatments: number;
   lastTreatment?: Date;
   productsUsed: string[];
 }

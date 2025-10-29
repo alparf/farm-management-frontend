@@ -72,8 +72,9 @@ export const useMaintenance = () => {
 
   const updateMaintenance = async (id: number, updates: Partial<MaintenanceRecord>) => {
     try {
+      // Используем PATCH вместо PUT
       const response = await fetch(`${API_BASE_URL}/maintenance/${id}`, {
-        method: 'PUT',
+        method: 'PATCH', // Изменено с PUT на PATCH
         headers: {
           'Content-Type': 'application/json',
         },
