@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { ChemicalTreatment } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
@@ -15,6 +17,8 @@ interface CompactTreatmentListProps {
 export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTreatment }: CompactTreatmentListProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingDate, setEditingDate] = useState<number | null>(null);
+  const [editingNotes, setEditingNotes] = useState<number | null>(null);
+  const [editNotesText, setEditNotesText] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; treatment: ChemicalTreatment | null }>({
     isOpen: false,
     treatment: null
@@ -40,6 +44,22 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
   const updateActualDate = async (id: number, date: Date | undefined) => {
     await onUpdateTreatment(id, { actualDate: date });
     setEditingDate(null);
+  };
+
+  const startEditNotes = (treatment: ChemicalTreatment) => {
+    setEditingNotes(treatment.id);
+    setEditNotesText(treatment.notes || '');
+  };
+
+  const saveNotes = async (id: number) => {
+    await onUpdateTreatment(id, { notes: editNotesText || undefined });
+    setEditingNotes(null);
+    setEditNotesText('');
+  };
+
+  const cancelEditNotes = () => {
+    setEditingNotes(null);
+    setEditNotesText('');
   };
 
   if (treatments.length === 0) {
@@ -222,15 +242,55 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
                     )}
                   </div>
 
-                  {/* Примечания */}
-                  {treatment.notes && (
-                    <div>
-                      <h5 className="font-medium text-sm text-gray-900 mb-1">Примечания:</h5>
-                      <p className="text-sm text-gray-700 bg-yellow-50 p-2 rounded border border-yellow-200">
-                        {treatment.notes}
-                      </p>
-                    </div>
-                  )}
+                  {/* Редактирование примечаний */}
+                  <div>
+                    <h5 className="font-medium text-sm text-gray-900 mb-2">Примечания:</h5>
+                    {editingNotes === treatment.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editNotesText}
+                          onChange={(e) => setEditNotesText(e.target.value)}
+                          placeholder="Введите примечания..."
+                          rows={3}
+                          className="text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => saveNotes(treatment.id)}
+                          >
+                            Сохранить
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={cancelEditNotes}
+                          >
+                            Отмена
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-start gap-3">
+                        <div className={`flex-1 p-2 rounded border ${
+                          treatment.notes 
+                            ? 'bg-yellow-50 border-yellow-200' 
+                            : 'bg-gray-50 border-gray-200'
+                        }`}>
+                          <p className="text-sm text-gray-700">
+                            {treatment.notes || 'Примечания отсутствуют'}
+                          </p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => startEditNotes(treatment)}
+                        >
+                          {treatment.notes ? 'Изменить' : 'Добавить'}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Кнопка удаления */}
                   <div className="pt-2">
