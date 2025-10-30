@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DatePicker } from '@/components/ui/date-picker';
+import { AlertTriangle, Calendar } from 'lucide-react';
 
 interface VehiclesListProps {
   vehicles: Vehicle[];
@@ -104,51 +105,29 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
     setDeleteConfirm({ isOpen: false, vehicle: null });
   };
 
-  // Функция для определения статуса страховки
-  const getInsuranceStatus = (insuranceDate?: Date) => {
-    if (!insuranceDate) return null;
-    
-    const today = new Date();
-    const insuranceEnd = new Date(insuranceDate);
-    const daysUntilExpiry = Math.ceil((insuranceEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilExpiry < 0) {
-      return { status: 'expired', text: 'Страховка просрочена', color: 'bg-red-100 text-red-800' };
-    } else if (daysUntilExpiry <= 30) {
-      return { status: 'warning', text: `Страховка истекает через ${daysUntilExpiry} д.`, color: 'bg-yellow-100 text-yellow-800' };
-    } else {
-      return { status: 'valid', text: `Страховка до ${insuranceEnd.toLocaleDateString('ru-RU')}`, color: 'bg-green-100 text-green-800' };
-    }
+  // Функция для проверки просроченных дат
+  const isDateExpired = (date?: Date) => {
+    if (!date) return false;
+    return new Date(date) < new Date();
   };
 
-  // Функция для определения статуса допуска к движению
-  const getRoadLegalStatus = (roadLegalUntil?: Date) => {
-    if (!roadLegalUntil) return null;
-    
-    const today = new Date();
-    const legalEnd = new Date(roadLegalUntil);
-    const daysUntilExpiry = Math.ceil((legalEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysUntilExpiry < 0) {
-      return { status: 'expired', text: 'Допуск просрочен', color: 'bg-red-100 text-red-800' };
-    } else if (daysUntilExpiry <= 30) {
-      return { status: 'warning', text: `Допуск истекает через ${daysUntilExpiry} д.`, color: 'bg-yellow-100 text-yellow-800' };
-    } else {
-      return { status: 'valid', text: `Допуск до ${legalEnd.toLocaleDateString('ru-RU')}`, color: 'bg-green-100 text-green-800' };
-    }
+  // Функция для форматирования даты
+  const formatDate = (date?: Date) => {
+    if (!date) return null;
+    return date.toLocaleDateString('ru-RU');
   };
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
-      'трактор': 'bg-orange-100 text-orange-800 border-orange-200',
-      'комбайн': 'bg-amber-100 text-amber-800 border-amber-200',
-      'грузовой автомобиль': 'bg-blue-100 text-blue-800 border-blue-200',
-      'легковой автомобиль': 'bg-cyan-100 text-cyan-800 border-cyan-200',
-      'прицеп': 'bg-gray-100 text-gray-800 border-gray-200',
-      'сельхозорудие': 'bg-green-100 text-green-800 border-green-200',
-      'другая техника': 'bg-purple-100 text-purple-800 border-purple-200',
+      'трактор': 'bg-orange-50 border-orange-200',
+      'комбайн': 'bg-amber-50 border-amber-200',
+      'грузовой автомобиль': 'bg-blue-50 border-blue-200',
+      'легковой автомобиль': 'bg-cyan-50 border-cyan-200',
+      'прицеп': 'bg-gray-50 border-gray-200',
+      'сельхозорудие': 'bg-green-50 border-green-200',
+      'другая техника': 'bg-purple-50 border-purple-200',
     };
-    return colors[type] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colors[type] || 'bg-gray-50 border-gray-200';
   };
 
   if (vehicles.length === 0) {
@@ -163,14 +142,14 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {vehicles.map((vehicle) => {
-          const insuranceStatus = getInsuranceStatus(vehicle.insuranceDate);
-          const roadLegalStatus = getRoadLegalStatus(vehicle.roadLegalUntil);
+          const isInsuranceExpired = isDateExpired(vehicle.insuranceDate);
+          const isRoadLegalExpired = isDateExpired(vehicle.roadLegalUntil);
           const isEditing = editingId === vehicle.id;
           
           return (
             <div
               key={vehicle.id}
-              className={`border-2 rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(vehicle.type)}`}
+              className={`border rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(vehicle.type)}`}
             >
               {isEditing ? (
                 // Режим редактирования
@@ -294,16 +273,37 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                     </div>
                   </div>
 
-                  {/* Статусы страховки и допуска */}
+                  {/* Информация о страховке и допуске */}
                   <div className="space-y-2 mb-3">
-                    {insuranceStatus && (
-                      <div className={`text-xs px-2 py-1 rounded-full ${insuranceStatus.color}`}>
-                        {insuranceStatus.text}
+                    {vehicle.insuranceDate && (
+                      <div className="flex items-center gap-2 text-xs text-gray-700">
+                        <Calendar className="h-3 w-3" />
+                        <span>Страховка: {formatDate(vehicle.insuranceDate)}</span>
+                        {isInsuranceExpired && (
+                          <div className="flex items-center gap-1 text-red-500">
+                            <AlertTriangle className="h-3 w-3" />
+                            <span className="text-xs">просрочена</span>
+                          </div>
+                        )}
                       </div>
                     )}
-                    {roadLegalStatus && (
-                      <div className={`text-xs px-2 py-1 rounded-full ${roadLegalStatus.color}`}>
-                        {roadLegalStatus.text}
+                    
+                    {vehicle.roadLegalUntil && (
+                      <div className="flex items-center gap-2 text-xs text-gray-700">
+                        <Calendar className="h-3 w-3" />
+                        <span>Допуск: {formatDate(vehicle.roadLegalUntil)}</span>
+                        {isRoadLegalExpired && (
+                          <div className="flex items-center gap-1 text-red-500">
+                            <AlertTriangle className="h-3 w-3" />
+                            <span className="text-xs">просрочен</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {(!vehicle.insuranceDate && !vehicle.roadLegalUntil) && (
+                      <div className="text-xs text-gray-500">
+                        Нет данных о страховке и допуске
                       </div>
                     )}
                   </div>

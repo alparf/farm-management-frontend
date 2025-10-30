@@ -5,6 +5,7 @@ import { ProductInventory, ProductType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { AlertTriangle, PackageX, Package } from 'lucide-react';
 
 interface InventoryListProps {
   inventory: ProductInventory[];
@@ -64,134 +65,150 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
     setDeleteConfirm({ isOpen: false, product: null });
   };
 
-  const getTypeColor = (product: ProductInventory) => {
-    const baseColors: Record<string, string> = {
-      'фунгицид': 'bg-purple-100 text-purple-800 border-purple-200',
-      'инсектицид': 'bg-red-100 text-red-800 border-red-200',
-      'гербицид': 'bg-orange-100 text-orange-800 border-orange-200',
-      'десикант': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'регулятор роста': 'bg-green-100 text-green-800 border-green-200',
-      'удобрение': 'bg-blue-100 text-blue-800 border-blue-200',
-      'биопрепарат': 'bg-teal-100 text-teal-800 border-teal-200',
-      'адъювант': 'bg-gray-100 text-gray-800 border-gray-200',
+  const getTypeColor = (type: ProductType) => {
+    const colors: Record<string, string> = {
+      'фунгицид': 'bg-purple-50 border-purple-200',
+      'инсектицид': 'bg-red-50 border-red-200',
+      'гербицид': 'bg-orange-50 border-orange-200',
+      'десикант': 'bg-yellow-50 border-yellow-200',
+      'регулятор роста': 'bg-green-50 border-green-200',
+      'удобрение': 'bg-blue-50 border-blue-200',
+      'биопрепарат': 'bg-teal-50 border-teal-200',
+      'адъювант': 'bg-gray-50 border-gray-200',
     };
+    return colors[type] || 'bg-gray-50 border-gray-200';
+  };
 
-    let color = baseColors[product.type] || 'bg-gray-100 text-gray-800 border-gray-200';
-    
-    // Сохраняем базовые цвета, но добавляем акценты для низких запасов
-    if (product.quantity === 0) {
-      // Для нулевого количества добавляем красную рамку поверх базового цвета
-      color = color.replace('border-', 'border-2 border-red-400 ');
-    } else if (product.quantity <= 5) {
-      // Для низкого запаса добавляем желтую рамку поверх базового цвета
-      color = color.replace('border-', 'border-2 border-yellow-400 ');
+  // Функция для определения статуса запасов
+  const getStockStatus = (quantity: number) => {
+    if (quantity === 0) {
+      return { status: 'out', icon: PackageX, color: 'text-red-500', text: 'Нет в наличии' };
+    } else if (quantity <= 5) {
+      return { status: 'low', icon: AlertTriangle, color: 'text-yellow-500', text: 'Низкий запас' };
+    } else {
+      return { status: 'normal', icon: Package, color: 'text-green-500', text: '' };
     }
-    
-    return color;
   };
 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {inventory.map((product) => (
-          <div
-            key={product.id}
-            className={`border rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(product)}`}
-          >
-            {/* Заголовок карточки с индикаторами запасов */}
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold truncate text-sm">
-                  {product.name}
-                </h3>
-                <span className="text-xs opacity-75 capitalize">
-                  {product.type}
-                </span>
+        {inventory.map((product) => {
+          const stockStatus = getStockStatus(product.quantity);
+          const StatusIcon = stockStatus.icon;
+          const isEditing = editingId === product.id;
+          
+          return (
+            <div
+              key={product.id}
+              className={`border rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(product.type)}`}
+            >
+              {/* Заголовок карточки с индикаторами запасов */}
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold truncate text-sm">
+                    {product.name}
+                  </h3>
+                  <span className="text-xs text-gray-600 capitalize">
+                    {product.type}
+                  </span>
+                </div>
+                <StatusIcon className={`h-4 w-4 ${stockStatus.color}`} />
               </div>
-            </div>
 
-            {/* Количество */}
-            <div className="mb-3">
-              {editingId === product.id ? (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={editQuantity}
-                    onChange={(e) => setEditQuantity(e.target.value)}
-                    className="h-8 text-sm"
-                  />
-                  <span className="text-xs opacity-75 whitespace-nowrap">{product.unit}</span>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <div className="text-2xl font-bold">
-                    {product.quantity}
-                  </div>
-                  <div className="text-xs opacity-75">
-                    {product.unit}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Примечания */}
-            {product.notes && (
+              {/* Количество */}
               <div className="mb-3">
-                <p className="text-xs opacity-75 line-clamp-2">
-                  {product.notes}
-                </p>
+                {isEditing ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={editQuantity}
+                      onChange={(e) => setEditQuantity(e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <span className="text-xs text-gray-600 whitespace-nowrap">{product.unit}</span>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-900">
+                      {product.quantity}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      {product.unit}
+                    </div>
+                    {/* Текстовый статус запасов с фиксированной высотой */}
+                    <div className="h-5 mt-1">
+                      {stockStatus.text && (
+                        <div className={`text-xs ${
+                          stockStatus.status === 'out' ? 'text-red-600' : 'text-yellow-600'
+                        }`}>
+                          {stockStatus.text}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
 
-            {/* Дата обновления */}
-            <div className="text-xs opacity-75 mb-3">
-              Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
-            </div>
-
-            {/* Действия */}
-            <div className="flex gap-2">
-              {editingId === product.id ? (
-                <>
-                  <Button
-                    size="sm"
-                    onClick={() => saveEdit(product.id)}
-                    className="flex-1 h-8 text-xs"
-                  >
-                    ✓
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={cancelEdit}
-                    className="flex-1 h-8 text-xs"
-                  >
-                    ×
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => startEdit(product)}
-                    className="flex-1 h-8 text-xs"
-                  >
-                    Изменить
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => requestDelete(product)}
-                    className="flex-1 h-8 text-xs"
-                  >
-                    Удалить
-                  </Button>
-                </>
+              {/* Примечания */}
+              {product.notes && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-600 line-clamp-2">
+                    {product.notes}
+                  </p>
+                </div>
               )}
+
+              {/* Дата обновления */}
+              <div className="text-xs text-gray-500 mb-3">
+                Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
+              </div>
+
+              {/* Действия */}
+              <div className="flex gap-2">
+                {isEditing ? (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => saveEdit(product.id)}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      ✓
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelEdit}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      ×
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => startEdit(product)}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      Изменить
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => requestDelete(product)}
+                      className="flex-1 h-8 text-xs"
+                    >
+                      Удалить
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Диалог подтверждения удаления */}

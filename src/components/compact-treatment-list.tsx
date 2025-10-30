@@ -249,7 +249,7 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
         </div>
       ))}
 
-      {/* Диалог подтверждения удаления обработки - вынесен за пределы map */}
+      {/* Диалог подтверждения удаления обработки */}
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         title="Удаление обработки"

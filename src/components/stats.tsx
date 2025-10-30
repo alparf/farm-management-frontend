@@ -1,82 +1,54 @@
 // components/stats.tsx
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+'use client';
+
 import { ChemicalTreatment } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle, Clock } from 'lucide-react';
 
 interface StatsProps {
   treatments: ChemicalTreatment[];
 }
 
 export function Stats({ treatments }: StatsProps) {
-  // Преобразуем area в числа и суммируем
-  const totalArea = treatments.reduce((sum, treatment) => {
-    const area = typeof treatment.area === 'string' 
-      ? parseFloat(treatment.area) 
-      : Number(treatment.area) || 0;
-    return sum + area;
-  }, 0);
-
-  const completedArea = treatments.reduce((sum, treatment) => {
-    if (!treatment.completed) return sum;
-    const area = typeof treatment.area === 'string' 
-      ? parseFloat(treatment.area) 
-      : Number(treatment.area) || 0;
-    return sum + area;
-  }, 0);
-
-  const completedTreatments = treatments.filter(t => t.completed).length;
-  const upcomingTreatments = treatments.filter(t => 
-    !t.completed && t.dueDate && new Date(t.dueDate) > new Date()
-  ).length;
+  const total = treatments.length;
+  const completed = treatments.filter(t => t.completed).length;
+  const pending = total - completed;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Общая площадь</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalArea.toFixed(1)} га</div>
-          <p className="text-xs text-gray-500">
-            {completedArea.toFixed(1)} га обработано
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Всего обработок</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{treatments.length}</div>
-          <p className="text-xs text-gray-500">
-            {completedTreatments} завершено
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Предстоящие</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{upcomingTreatments}</div>
-          <p className="text-xs text-gray-500">
-            обработки по плану
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Эффективность</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {totalArea > 0 ? ((completedArea / totalArea) * 100).toFixed(0) : 0}%
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-600">Всего обработок</p>
+              <p className="text-2xl font-bold text-blue-800">{total}</p>
+            </div>
+            <Clock className="h-8 w-8 text-blue-600 opacity-60" />
           </div>
-          <p className="text-xs text-gray-500">
-            выполнено от плана
-          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-green-50 border-green-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-green-600">Выполнено</p>
+              <p className="text-2xl font-bold text-green-800">{completed}</p>
+            </div>
+            <CheckCircle className="h-8 w-8 text-green-600 opacity-60" />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-orange-50 border-orange-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-orange-600">Ожидают</p>
+              <p className="text-2xl font-bold text-orange-800">{pending}</p>
+            </div>
+            <Clock className="h-8 w-8 text-orange-600 opacity-60" />
+          </div>
         </CardContent>
       </Card>
     </div>

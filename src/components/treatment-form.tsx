@@ -1,7 +1,8 @@
+// treatment-form.tsx - ПОЛНЫЙ ФАЙЛ:
 'use client';
 
-import { useState, useMemo } from 'react';
-import { ChemicalTreatment, CultureType, ProductType, ChemicalProduct, ProductInventory } from '@/types';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { ChemicalTreatment, CultureType, ProductType, ChemicalProduct, ProductInventory, COMPATIBILITY_RULES } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { QuickDateSelector } from '@/components/ui/quick-date-selector';
+import { AlertTriangle } from 'lucide-react';
 
 interface TreatmentFormProps {
   onSubmit: (treatment: Omit<ChemicalTreatment, 'id' | 'createdAt'>) => void;
@@ -29,6 +31,7 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
   const [products, setProducts] = useState<ChemicalProduct[]>([
     { name: '', dosage: '', productType: 'фунгицид' }
   ]);
+  const [compatibilityWarning, setCompatibilityWarning] = useState<string>('');
 
   // Группируем препараты по типам
   const inventoryByType = useMemo(() => {
@@ -51,6 +54,66 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
 
     return grouped;
   }, [inventory]);
+
+  // Функция проверки совместимости
+  const checkCompatibility = useCallback((products: ChemicalProduct[]) => {
+    if (!isTankMix || products.length <= 1) {
+      setCompatibilityWarning('');
+      return;
+    }
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Проверяем все возможные пары продуктов
+    for (let i = 0; i < products.length; i++) {
+      for (let j = i + 1; j < products.length; j++) {
+        const product1 = products[i];
+        const product2 = products[j];
+        
+        // Ищем правило совместимости
+        const rule = COMPATIBILITY_RULES.find(r => 
+          (r.productType1 === product1.productType && r.productType2 === product2.productType) ||
+          (r.productType1 === product2.productType && r.productType2 === product1.productType)
+        );
+
+        if (rule && !rule.compatible) {
+          errors.push(`${product1.productType} (${product1.name}) и ${product2.productType} (${product2.name}) - ${rule.notes}`);
+        }
+      }
+    }
+
+    // Дополнительные проверки
+    const productTypes = products.map(p => p.productType);
+    const uniqueTypes = new Set(productTypes);
+    
+    if (uniqueTypes.size > 3) {
+      warnings.push('Слишком много разных типов препаратов в смеси - возможна нестабильность');
+    }
+
+    const hasBiologics = productTypes.includes('биопрепарат');
+    const hasChemicals = productTypes.some(type => 
+      ['гербицид', 'инсектицид', 'фунгицид'].includes(type)
+    );
+    
+    if (hasBiologics && hasChemicals) {
+      warnings.push('Биопрепараты могут терять эффективность в смеси с химическими средствами');
+    }
+
+    // Формируем итоговое сообщение
+    if (errors.length > 0) {
+      setCompatibilityWarning(`⚠️ Критические проблемы совместимости: ${errors.join('; ')}`);
+    } else if (warnings.length > 0) {
+      setCompatibilityWarning(`ℹ️ Предупреждения: ${warnings.join('; ')}`);
+    } else {
+      setCompatibilityWarning('');
+    }
+  }, [isTankMix]);
+
+  // Вызываем проверку при изменении продуктов или флага баковой смеси
+  useEffect(() => {
+    checkCompatibility(products);
+  }, [products, isTankMix, checkCompatibility]);
 
   // Получаем препараты для выбранного типа
   const getProductsByType = (type: ProductType) => {
@@ -120,6 +183,10 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
       return;
     }
 
+    // Проверяем совместимость для баковых смесей
+    const hasCriticalIssues = compatibilityWarning.includes('Критические проблемы');
+    const hasCompatibilityIssues = compatibilityWarning !== '';
+
     onSubmit({
       culture,
       area: parseFloat(area),
@@ -127,7 +194,9 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
       dueDate,
       isTankMix,
       chemicalProducts: products,
-      notes: notes || undefined
+      notes: notes || undefined,
+      hasCompatibilityIssues: isTankMix ? hasCompatibilityIssues : undefined,
+      compatibilityWarnings: isTankMix ? compatibilityWarning : undefined
     });
   };
 
@@ -206,6 +275,39 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
               </div>
             </div>
           </div>
+
+          {/* Предупреждение о совместимости */}
+          {compatibilityWarning && (
+            <div className={`p-3 rounded-lg border ${
+              compatibilityWarning.includes('Критические') 
+                ? 'bg-red-50 border-red-200' 
+                : 'bg-yellow-50 border-yellow-200'
+            }`}>
+              <div className="flex items-start">
+                <AlertTriangle className={`h-5 w-5 mr-2 mt-0.5 ${
+                  compatibilityWarning.includes('Критические') 
+                    ? 'text-red-600' 
+                    : 'text-yellow-600'
+                }`} />
+                <div>
+                  <p className={`text-sm font-medium ${
+                    compatibilityWarning.includes('Критические') 
+                      ? 'text-red-800' 
+                      : 'text-yellow-800'
+                  }`}>
+                    {compatibilityWarning.split(':')[0]}:
+                  </p>
+                  <p className={`text-xs mt-1 ${
+                    compatibilityWarning.includes('Критические') 
+                      ? 'text-red-700' 
+                      : 'text-yellow-700'
+                  }`}>
+                    {compatibilityWarning.split(':').slice(1).join(':')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="notes">Примечания</Label>
@@ -322,8 +424,18 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
             <Button type="button" variant="outline" onClick={onCancel}>
               Отмена
             </Button>
-            <Button type="submit">
-              Создать обработку
+            <Button 
+              type="submit"
+              className={
+                compatibilityWarning.includes('Критические') 
+                  ? 'bg-orange-600 hover:bg-orange-700' 
+                  : ''
+              }
+            >
+              {compatibilityWarning.includes('Критические') 
+                ? 'Создать с предупреждением' 
+                : 'Создать обработку'
+              }
             </Button>
           </div>
         </form>
