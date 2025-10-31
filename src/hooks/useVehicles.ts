@@ -1,8 +1,6 @@
-// hooks/useVehicles.ts
 import { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { API_CONFIG, ENDPOINTS } from '@/lib/config';
 
 export const useVehicles = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -13,7 +11,10 @@ export const useVehicles = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/vehicles`);
+      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}`;
+      console.log('Fetching vehicles from:', url);
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -42,7 +43,8 @@ export const useVehicles = () => {
 
   const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/vehicles`, {
+      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,9 +78,9 @@ export const useVehicles = () => {
 
   const updateVehicle = async (id: number, updates: Partial<Vehicle>) => {
     try {
-      // Используем PATCH вместо PUT
-      const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
-        method: 'PATCH', // Изменено с PUT на PATCH
+      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}/${id}`;
+      const response = await fetch(url, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -116,7 +118,8 @@ export const useVehicles = () => {
 
   const deleteVehicle = async (id: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/vehicles/${id}`, {
+      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}/${id}`;
+      const response = await fetch(url, {
         method: 'DELETE',
       });
 
