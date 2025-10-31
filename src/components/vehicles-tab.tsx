@@ -61,22 +61,24 @@ export function VehiclesTab({
       // Фильтр по страховке
       if (insuranceFilter) {
         const today = new Date();
-        
         switch (insuranceFilter) {
           case 'with-insurance':
-            if (!vehicle.insuranceDate) return false;
+            // Только с действующей страховкой
+            if (!vehicle.insuranceDate || new Date(vehicle.insuranceDate) < today) return false;
             break;
           case 'without-insurance':
-            if (vehicle.insuranceDate) return false;
+            // Без страховки или с просроченной
+            if (vehicle.insuranceDate && new Date(vehicle.insuranceDate) >= today) return false;
             break;
           case 'expiring-soon':
+            // Истекает в течение 30 дней и еще действует
             if (!vehicle.insuranceDate) return false;
             const daysUntilInsuranceExpiry = Math.ceil((new Date(vehicle.insuranceDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
             if (daysUntilInsuranceExpiry <= 0 || daysUntilInsuranceExpiry > 30) return false;
             break;
           case 'expired':
-            if (!vehicle.insuranceDate) return false;
-            if (new Date(vehicle.insuranceDate) >= today) return false;
+            // Просроченная страховка
+            if (!vehicle.insuranceDate || new Date(vehicle.insuranceDate) >= today) return false;
             break;
         }
       }
@@ -84,26 +86,27 @@ export function VehiclesTab({
       // Фильтр по допуску к движению
       if (roadLegalFilter) {
         const today = new Date();
-        
         switch (roadLegalFilter) {
           case 'with-road-legal':
-            if (!vehicle.roadLegalUntil) return false;
+            // Только с действующим допуском
+            if (!vehicle.roadLegalUntil || new Date(vehicle.roadLegalUntil) < today) return false;
             break;
           case 'without-road-legal':
-            if (vehicle.roadLegalUntil) return false;
+            // Без допуска или с просроченным
+            if (vehicle.roadLegalUntil && new Date(vehicle.roadLegalUntil) >= today) return false;
             break;
           case 'expiring-soon':
+            // Истекает в течение 30 дней и еще действует
             if (!vehicle.roadLegalUntil) return false;
             const daysUntilRoadLegalExpiry = Math.ceil((new Date(vehicle.roadLegalUntil).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
             if (daysUntilRoadLegalExpiry <= 0 || daysUntilRoadLegalExpiry > 30) return false;
             break;
           case 'expired':
-            if (!vehicle.roadLegalUntil) return false;
-            if (new Date(vehicle.roadLegalUntil) >= today) return false;
+            // Просроченный допуск
+            if (!vehicle.roadLegalUntil || new Date(vehicle.roadLegalUntil) >= today) return false;
             break;
         }
       }
-      
       return true;
     });
 
@@ -153,7 +156,10 @@ export function VehiclesTab({
     filteredVehicles: filteredVehicles.length,
     withoutRoadLegal: vehicles.filter(v => !v.roadLegalUntil).length,
     insuranceStats: {
-      total: vehicles.filter(v => v.insuranceDate).length,
+      total: vehicles.filter(v => {
+        if (!v.insuranceDate) return false;
+        return new Date(v.insuranceDate) >= new Date(); // Только не просроченные
+      }).length,
       expired: vehicles.filter(v => {
         if (!v.insuranceDate) return false;
         return new Date(v.insuranceDate) < new Date();
@@ -161,11 +167,14 @@ export function VehiclesTab({
       expiringSoon: vehicles.filter(v => {
         if (!v.insuranceDate) return false;
         const daysUntilExpiry = Math.ceil((new Date(v.insuranceDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
+        return daysUntilExpiry > 0 && daysUntilExpiry <= 30; // Только не просроченные и истекающие
       }).length,
     },
     roadLegalStats: {
-      total: vehicles.filter(v => v.roadLegalUntil).length,
+      total: vehicles.filter(v => {
+        if (!v.roadLegalUntil) return false;
+        return new Date(v.roadLegalUntil) >= new Date(); // Только не просроченные
+      }).length,
       expired: vehicles.filter(v => {
         if (!v.roadLegalUntil) return false;
         return new Date(v.roadLegalUntil) < new Date();
@@ -173,7 +182,7 @@ export function VehiclesTab({
       expiringSoon: vehicles.filter(v => {
         if (!v.roadLegalUntil) return false;
         const daysUntilExpiry = Math.ceil((new Date(v.roadLegalUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
+        return daysUntilExpiry > 0 && daysUntilExpiry <= 30; // Только не просроченные и истекающие
       }).length,
     },
     byType: vehicles.reduce((acc, vehicle) => {
