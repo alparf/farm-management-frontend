@@ -1,4 +1,3 @@
-// hooks/useCultureStats.ts
 import { useMemo } from 'react';
 import { ChemicalTreatment, CultureType, CultureStats, TreatmentTimeline } from '@/types';
 

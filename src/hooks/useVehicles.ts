@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Vehicle } from '@/types';
-import { API_CONFIG, ENDPOINTS } from '@/lib/config';
+import { useApi } from './useApi';
 
 export const useVehicles = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { getBaseUrl } = useApi();
 
   const fetchVehicles = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}`;
+      const baseUrl = getBaseUrl();
+      const url = `${baseUrl}/vehicles`;
       console.log('Fetching vehicles from:', url);
       
       const response = await fetch(url);
@@ -43,7 +45,8 @@ export const useVehicles = () => {
 
   const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}`;
+      const baseUrl = getBaseUrl();
+      const url = `${baseUrl}/vehicles`;
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -78,7 +81,8 @@ export const useVehicles = () => {
 
   const updateVehicle = async (id: number, updates: Partial<Vehicle>) => {
     try {
-      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}/${id}`;
+      const baseUrl = getBaseUrl();
+      const url = `${baseUrl}/vehicles/${id}`;
       const response = await fetch(url, {
         method: 'PATCH',
         headers: {
@@ -118,7 +122,8 @@ export const useVehicles = () => {
 
   const deleteVehicle = async (id: number) => {
     try {
-      const url = `${API_CONFIG.baseUrl}${ENDPOINTS.vehicles}/${id}`;
+      const baseUrl = getBaseUrl();
+      const url = `${baseUrl}/vehicles/${id}`;
       const response = await fetch(url, {
         method: 'DELETE',
       });

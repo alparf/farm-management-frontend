@@ -1,19 +1,19 @@
-// hooks/useInventory.ts
 import { useState, useEffect } from 'react';
 import { ProductInventory } from '@/types';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { useApi } from './useApi';
 
 export const useInventory = () => {
   const [inventory, setInventory] = useState<ProductInventory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { getBaseUrl } = useApi();
 
   const fetchInventory = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/inventory`);
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/inventory`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -43,7 +43,8 @@ export const useInventory = () => {
 
   const addProduct = async (productData: Omit<ProductInventory, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory`, {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/inventory`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,9 +79,9 @@ export const useInventory = () => {
 
   const updateProduct = async (id: number, updates: Partial<ProductInventory>) => {
     try {
-      // Используем PATCH вместо PUT
-      const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
-        method: 'PATCH', // Изменено с PUT на PATCH
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/inventory/${id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -119,7 +120,8 @@ export const useInventory = () => {
 
   const deleteProduct = async (id: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/inventory/${id}`, {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/inventory/${id}`, {
         method: 'DELETE',
       });
 

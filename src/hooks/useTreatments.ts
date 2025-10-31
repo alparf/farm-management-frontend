@@ -1,19 +1,22 @@
-// hooks/useTreatments.ts
 import { useState, useEffect } from 'react';
 import { ChemicalTreatment } from '@/types';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { useApi } from './useApi';
 
 export const useTreatments = () => {
   const [treatments, setTreatments] = useState<ChemicalTreatment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { getBaseUrl } = useApi();
 
   const fetchTreatments = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/treatments`);
+      const baseUrl = getBaseUrl();
+      const url = `${baseUrl}/treatments`;
+      console.log('Fetching treatments from:', url);
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -44,7 +47,9 @@ export const useTreatments = () => {
 
   const addTreatment = async (treatmentData: Omit<ChemicalTreatment, 'id' | 'createdAt'>) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/treatments`, {
+      const baseUrl = getBaseUrl();
+      const url = `${baseUrl}/treatments`;
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,7 +63,6 @@ export const useTreatments = () => {
 
       const newTreatment = await response.json();
       
-      // Преобразуем даты
       const processedTreatment = {
         ...newTreatment,
         area: typeof newTreatment.area === 'string' 
@@ -80,9 +84,11 @@ export const useTreatments = () => {
 
   const updateTreatment = async (id: number, updates: Partial<ChemicalTreatment>) => {
     try {
-      // Если это отметка о выполнении, используем специальный эндпоинт
+      const baseUrl = getBaseUrl();
+      
       if (updates.completed === true && !updates.actualDate) {
-        const response = await fetch(`${API_BASE_URL}/treatments/${id}/complete`, {
+        const url = `${baseUrl}/treatments/${id}/complete`;
+        const response = await fetch(url, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -95,7 +101,6 @@ export const useTreatments = () => {
 
         const updatedTreatment = await response.json();
         
-        // Преобразуем даты
         const processedTreatment = {
           ...updatedTreatment,
           area: typeof updatedTreatment.area === 'string' 
@@ -114,8 +119,8 @@ export const useTreatments = () => {
         
         return processedTreatment;
       } else {
-        // Для обычных обновлений используем стандартный эндпоинт
-        const response = await fetch(`${API_BASE_URL}/treatments/${id}`, {
+        const url = `${baseUrl}/treatments/${id}`;
+        const response = await fetch(url, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -129,7 +134,6 @@ export const useTreatments = () => {
 
         const updatedTreatment = await response.json();
         
-        // Преобразуем даты
         const processedTreatment = {
           ...updatedTreatment,
           area: typeof updatedTreatment.area === 'string' 
@@ -157,7 +161,9 @@ export const useTreatments = () => {
 
   const deleteTreatment = async (id: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/treatments/${id}`, {
+      const baseUrl = getBaseUrl();
+      const url = `${baseUrl}/treatments/${id}`;
+      const response = await fetch(url, {
         method: 'DELETE',
       });
 

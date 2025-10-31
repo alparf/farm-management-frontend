@@ -1,19 +1,19 @@
-// hooks/useMaintenance.ts
 import { useState, useEffect } from 'react';
 import { MaintenanceRecord } from '@/types';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+import { useApi } from './useApi';
 
 export const useMaintenance = () => {
   const [maintenance, setMaintenance] = useState<MaintenanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { getBaseUrl } = useApi();
 
   const fetchMaintenance = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch(`${API_BASE_URL}/maintenance`);
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/maintenance`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -26,6 +26,7 @@ export const useMaintenance = () => {
         ...record,
         date: new Date(record.date),
         createdAt: new Date(record.createdAt),
+        updatedAt: new Date(record.updatedAt),
       }));
       
       setMaintenance(processedData);
@@ -38,9 +39,10 @@ export const useMaintenance = () => {
     }
   };
 
-  const addMaintenance = async (maintenanceData: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => {
+  const addMaintenance = async (maintenanceData: Omit<MaintenanceRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/maintenance`, {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/maintenance`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -59,6 +61,7 @@ export const useMaintenance = () => {
         ...newRecord,
         date: new Date(newRecord.date),
         createdAt: new Date(newRecord.createdAt),
+        updatedAt: new Date(newRecord.updatedAt),
       };
 
       setMaintenance(prev => [...prev, processedRecord]);
@@ -72,9 +75,9 @@ export const useMaintenance = () => {
 
   const updateMaintenance = async (id: number, updates: Partial<MaintenanceRecord>) => {
     try {
-      // Используем PATCH вместо PUT
-      const response = await fetch(`${API_BASE_URL}/maintenance/${id}`, {
-        method: 'PATCH', // Изменено с PUT на PATCH
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/maintenance/${id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -92,6 +95,7 @@ export const useMaintenance = () => {
         ...updatedRecord,
         date: new Date(updatedRecord.date),
         createdAt: new Date(updatedRecord.createdAt),
+        updatedAt: new Date(updatedRecord.updatedAt),
       };
 
       setMaintenance(prev => 
@@ -110,7 +114,8 @@ export const useMaintenance = () => {
 
   const deleteMaintenance = async (id: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/maintenance/${id}`, {
+      const baseUrl = getBaseUrl();
+      const response = await fetch(`${baseUrl}/maintenance/${id}`, {
         method: 'DELETE',
       });
 
