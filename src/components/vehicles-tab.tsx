@@ -151,6 +151,7 @@ export function VehiclesTab({
     totalVehicles: vehicles.length,
     totalMaintenance: maintenance.length,
     filteredVehicles: filteredVehicles.length,
+    withoutRoadLegal: vehicles.filter(v => !v.roadLegalUntil).length,
     insuranceStats: {
       total: vehicles.filter(v => v.insuranceDate).length,
       expired: vehicles.filter(v => {
@@ -221,10 +222,10 @@ export function VehiclesTab({
             <div className="text-lg font-bold text-orange-800">{stats.roadLegalStats.expiringSoon}</div>
           </CardContent>
         </Card>
-        <Card className="bg-purple-50">
+        <Card className="bg-red-50">
           <CardContent className="p-3">
-            <div className="text-xs text-purple-600 font-medium">Отфильтровано</div>
-            <div className="text-lg font-bold text-purple-800">{stats.filteredVehicles}</div>
+            <div className="text-xs text-red-600 font-medium">Без допуска</div>
+            <div className="text-lg font-bold text-red-800">{stats.withoutRoadLegal}</div>
           </CardContent>
         </Card>
       </div>
