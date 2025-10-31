@@ -42,6 +42,27 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
     notes: ''
   });
 
+  // Функция для проверки просроченных дат
+  const isDateExpired = (date?: Date) => {
+    if (!date) return false;
+    return new Date(date) < new Date();
+  };
+
+  // Функция для проверки истекающих дат (в течение 30 дней)
+  const isDateExpiringSoon = (date?: Date, daysThreshold: number = 30) => {
+    if (!date) return false;
+    const today = new Date();
+    const timeDiff = new Date(date).getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    return daysDiff > 0 && daysDiff <= daysThreshold;
+  };
+
+  // Функция для форматирования даты
+  const formatDate = (date?: Date) => {
+    if (!date) return null;
+    return date.toLocaleDateString('ru-RU');
+  };
+
   const startEdit = (vehicle: Vehicle) => {
     setEditingId(vehicle.id);
     setEditData({
@@ -105,18 +126,6 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
     setDeleteConfirm({ isOpen: false, vehicle: null });
   };
 
-  // Функция для проверки просроченных дат
-  const isDateExpired = (date?: Date) => {
-    if (!date) return false;
-    return new Date(date) < new Date();
-  };
-
-  // Функция для форматирования даты
-  const formatDate = (date?: Date) => {
-    if (!date) return null;
-    return date.toLocaleDateString('ru-RU');
-  };
-
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       'трактор': 'bg-orange-50 border-orange-200',
@@ -144,6 +153,8 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
         {vehicles.map((vehicle) => {
           const isInsuranceExpired = isDateExpired(vehicle.insuranceDate);
           const isRoadLegalExpired = isDateExpired(vehicle.roadLegalUntil);
+          const isInsuranceExpiringSoon = isDateExpiringSoon(vehicle.insuranceDate);
+          const isRoadLegalExpiringSoon = isDateExpiringSoon(vehicle.roadLegalUntil);
           const isEditing = editingId === vehicle.id;
           
           return (
@@ -273,40 +284,49 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                     </div>
                   </div>
 
-                  {/* Информация о страховке и допуске */}
-                  <div className="space-y-2 mb-3">
-                    {vehicle.insuranceDate && (
-                      <div className="flex items-center gap-2 text-xs text-gray-700">
-                        <Calendar className="h-3 w-3" />
-                        <span>Страховка: {formatDate(vehicle.insuranceDate)}</span>
-                        {isInsuranceExpired && (
-                          <div className="flex items-center gap-1 text-red-500">
-                            <AlertTriangle className="h-3 w-3" />
-                            <span className="text-xs">просрочена</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    
-                    {vehicle.roadLegalUntil && (
-                      <div className="flex items-center gap-2 text-xs text-gray-700">
-                        <Calendar className="h-3 w-3" />
-                        <span>Допуск: {formatDate(vehicle.roadLegalUntil)}</span>
-                        {isRoadLegalExpired && (
-                          <div className="flex items-center gap-1 text-red-500">
-                            <AlertTriangle className="h-3 w-3" />
-                            <span className="text-xs">просрочен</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                  {/* Информация о страховке */}
+                  {vehicle.insuranceDate && (
+                    <div className="flex items-center gap-2 text-xs text-gray-700 mb-2">
+                      <Calendar className="h-3 w-3" />
+                      <span>Страховка: {formatDate(vehicle.insuranceDate)}</span>
+                      {isInsuranceExpired ? (
+                        <div className="flex items-center gap-1 text-red-500">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span className="text-xs">просрочена</span>
+                        </div>
+                      ) : isInsuranceExpiringSoon ? (
+                        <div className="flex items-center gap-1 text-yellow-500">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span className="text-xs">истекает</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
+                  
+                  {/* Информация о допуске */}
+                  {vehicle.roadLegalUntil && (
+                    <div className="flex items-center gap-2 text-xs text-gray-700 mb-3">
+                      <Calendar className="h-3 w-3" />
+                      <span>Допуск: {formatDate(vehicle.roadLegalUntil)}</span>
+                      {isRoadLegalExpired ? (
+                        <div className="flex items-center gap-1 text-red-500">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span className="text-xs">просрочен</span>
+                        </div>
+                      ) : isRoadLegalExpiringSoon ? (
+                        <div className="flex items-center gap-1 text-yellow-500">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span className="text-xs">истекает</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  )}
 
-                    {(!vehicle.insuranceDate && !vehicle.roadLegalUntil) && (
-                      <div className="text-xs text-gray-500">
-                        Нет данных о страховке и допуске
-                      </div>
-                    )}
-                  </div>
+                  {(!vehicle.insuranceDate && !vehicle.roadLegalUntil) && (
+                    <div className="text-xs text-gray-500 mb-3">
+                      Нет данных о страховке и допуске
+                    </div>
+                  )}
 
                   {vehicle.model && (
                     <div className="text-sm text-gray-700 mb-1">
