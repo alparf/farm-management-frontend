@@ -127,3 +127,25 @@ export const COMPATIBILITY_RULES: CompatibilityRule[] = [
   { productType1: 'гербицид', productType2: 'адъювант', compatible: true },
   { productType1: 'удобрение', productType2: 'регулятор роста', compatible: true },
 ];
+
+export interface Equipment {
+  id: number;
+  name: string;
+  type: EquipmentType;
+  model?: string;
+  serialNumber?: string;
+  verificationDate: Date;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type EquipmentType = 
+  | 'весы'
+  | 'ph-метр'
+  | 'термометр'
+  | 'влагоанализатор'
+  | 'анализатор'
+  | 'дозатор'
+  | 'пипетка'
+  | 'другое';

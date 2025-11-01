@@ -1,4 +1,3 @@
-// treatment-form.tsx - ПОЛНЫЙ ФАЙЛ:
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';

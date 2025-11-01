@@ -1,4 +1,3 @@
-// components/stats.tsx
 'use client';
 
 import { ChemicalTreatment } from '@/types';

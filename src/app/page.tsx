@@ -5,21 +5,23 @@ import { useTreatments } from '@/hooks/useTreatments';
 import { useInventory } from '@/hooks/useInventory';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useMaintenance } from '@/hooks/useMaintenance';
+import { useEquipment } from '@/hooks/useEquipment';
 import { CompactTreatmentList } from '@/components/compact-treatment-list';
 import { InventoryList } from '@/components/inventory-list';
 import { InventoryForm } from '@/components/inventory-form';
 import { TreatmentForm } from '@/components/treatment-form';
 import { VehiclesTab } from '@/components/vehicles-tab';
 import { AnalyticsTab } from '@/components/analytics-tab';
+import { EquipmentTab } from '@/components/equipment-tab';
 import { Stats } from '@/components/stats';
 import { FilterSort } from '@/components/filter-sort';
 import { InventoryFilters } from '@/components/inventory-filters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, RefreshCw, Package, Sprout, BarChart3, Car } from 'lucide-react';
+import { Plus, RefreshCw, Package, Sprout, BarChart3, Car, Gauge } from 'lucide-react';
 import { ProductType } from '@/types';
 
-type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles';
+type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles' | 'equipment';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('analytics');
@@ -80,6 +82,17 @@ export default function Home() {
     deleteMaintenance,
     refetch: refetchMaintenance
   } = useMaintenance();
+
+  // Хуки для оборудования
+  const {
+    equipment,
+    isLoading: equipmentLoading,
+    error: equipmentError,
+    addEquipment,
+    updateEquipment,
+    deleteEquipment,
+    refetch: refetchEquipment
+  } = useEquipment();
 
   // Фильтрация обработок
   const filteredTreatments = useMemo(() => {
@@ -158,24 +171,24 @@ export default function Home() {
   }, [inventory, inventorySearch, inventoryTypeFilter, inventorySort, stockFilter]);
 
   // Статистика склада
- const inventoryStats = useMemo(() => {
+  const inventoryStats = useMemo(() => {
     const totalProducts = inventory.length;
     const byType = inventory.reduce((acc, product) => {
       acc[product.type] = (acc[product.type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+      return acc;
+    }, {} as Record<string, number>);
 
-  // Добавляем статистику по низким запасам
-  const lowStockProducts = inventory.filter(product => product.quantity <= 5);
-  const outOfStockProducts = inventory.filter(product => product.quantity === 0);
+    // Добавляем статистику по низким запасам
+    const lowStockProducts = inventory.filter(product => product.quantity <= 5);
+    const outOfStockProducts = inventory.filter(product => product.quantity === 0);
 
-  return { 
-    totalProducts, 
-    byType,
-    lowStockCount: lowStockProducts.length,
-    outOfStockCount: outOfStockProducts.length
-  };
-}, [inventory]);
+    return { 
+      totalProducts, 
+      byType,
+      lowStockCount: lowStockProducts.length,
+      outOfStockCount: outOfStockProducts.length
+    };
+  }, [inventory]);
 
   const handleAddTreatment = async (treatmentData: any) => {
     await addTreatment(treatmentData);
@@ -203,6 +216,9 @@ export default function Home() {
         refetchVehicles();
         refetchMaintenance();
         break;
+      case 'equipment':
+        refetchEquipment();
+        break;
       default:
         refetchTreatments();
     }
@@ -218,7 +234,8 @@ export default function Home() {
         setShowInventoryForm(true);
         break;
       case 'vehicles':
-        // В VehiclesTab есть свои кнопки добавления
+      case 'equipment':
+        // В VehiclesTab и EquipmentTab есть свои кнопки добавления
         break;
       default:
         break;
@@ -232,12 +249,14 @@ export default function Home() {
       case 'inventory':
         return 'Добавить продукт';
       case 'vehicles':
-        return ''; // В VehiclesTab есть свои кнопки
+      case 'equipment':
+        return ''; // В соответствующих табах есть свои кнопки
       default:
         return 'Добавить';
     }
   };
 
+  // Состояния загрузки для каждой вкладки
   if (treatmentsLoading && activeTab === 'treatments') {
     return <LoadingState message="Загрузка обработок..." />;
   }
@@ -248,6 +267,10 @@ export default function Home() {
 
   if (vehiclesLoading && activeTab === 'vehicles') {
     return <LoadingState message="Загрузка техники..." />;
+  }
+
+  if (equipmentLoading && activeTab === 'equipment') {
+    return <LoadingState message="Загрузка оборудования..." />;
   }
 
   return (
@@ -270,60 +293,41 @@ export default function Home() {
       </div>
 
       {/* Вкладки */}
-      <div className="flex border-b border-gray-200 mb-6">
-        <button
-          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'analytics'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
+        <TabButton
+          active={activeTab === 'analytics'}
           onClick={() => setActiveTab('analytics')}
-        >
-          <BarChart3 className="h-4 w-4" />
-          Аналитика
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'treatments'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          icon={<BarChart3 className="h-4 w-4" />}
+          label="Аналитика"
+        />
+        <TabButton
+          active={activeTab === 'treatments'}
           onClick={() => setActiveTab('treatments')}
-        >
-          <Sprout className="h-4 w-4" />
-          Обработки
-          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-            {treatments.length}
-          </span>
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'inventory'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          icon={<Sprout className="h-4 w-4" />}
+          label="Обработки"
+          count={treatments.length}
+        />
+        <TabButton
+          active={activeTab === 'inventory'}
           onClick={() => setActiveTab('inventory')}
-        >
-          <Package className="h-4 w-4" />
-          Склад СЗР
-          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-            {inventory.length}
-          </span>
-        </button>
-        <button
-          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
-            activeTab === 'vehicles'
-              ? 'border-blue-500 text-blue-600'
-              : 'border-transparent text-gray-500 hover:text-gray-700'
-          }`}
+          icon={<Package className="h-4 w-4" />}
+          label="Склад СЗР"
+          count={inventory.length}
+        />
+        <TabButton
+          active={activeTab === 'vehicles'}
           onClick={() => setActiveTab('vehicles')}
-        >
-          <Car className="h-4 w-4" />
-          Техника
-          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-            {vehicles.length}
-          </span>
-        </button>
+          icon={<Car className="h-4 w-4" />}
+          label="Техника"
+          count={vehicles.length}
+        />
+        <TabButton
+          active={activeTab === 'equipment'}
+          onClick={() => setActiveTab('equipment')}
+          icon={<Gauge className="h-4 w-4" />}
+          label="Оборудование"
+          count={equipment.length}
+        />
       </div>
 
       {/* Контент вкладок */}
@@ -452,7 +456,50 @@ export default function Home() {
           onDeleteMaintenance={deleteMaintenance}
         />
       )}
+
+      {activeTab === 'equipment' && (
+        <EquipmentTab
+          equipment={equipment}
+          onAddEquipment={addEquipment}
+          onUpdateEquipment={updateEquipment}
+          onDeleteEquipment={deleteEquipment}
+        />
+      )}
     </div>
+  );
+}
+
+// Компонент кнопки вкладки
+function TabButton({ 
+  active, 
+  onClick, 
+  icon, 
+  label, 
+  count 
+}: { 
+  active: boolean; 
+  onClick: () => void; 
+  icon: React.ReactNode; 
+  label: string; 
+  count?: number; 
+}) {
+  return (
+    <button
+      className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
+        active
+          ? 'border-blue-500 text-blue-600'
+          : 'border-transparent text-gray-500 hover:text-gray-700'
+      }`}
+      onClick={onClick}
+    >
+      {icon}
+      {label}
+      {count !== undefined && (
+        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+          {count}
+        </span>
+      )}
+    </button>
   );
 }
 
