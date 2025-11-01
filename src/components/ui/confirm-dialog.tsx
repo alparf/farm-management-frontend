@@ -38,6 +38,7 @@ export function ConfirmDialog({
           <Button
             variant="outline"
             onClick={onCancel}
+            disabled={false}
           >
             {cancelText}
           </Button>

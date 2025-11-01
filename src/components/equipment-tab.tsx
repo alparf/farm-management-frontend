@@ -1,10 +1,9 @@
-// components/equipment-tab.tsx
 import { useState } from 'react';
 import { Equipment } from '@/types';
 import { EquipmentList } from './equipment-list';
 import { EquipmentForm } from './equipment-form';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Plus, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface EquipmentTabProps {
@@ -22,6 +21,7 @@ export function EquipmentTab({
 }: EquipmentTabProps) {
   const [showForm, setShowForm] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAddEquipment = async (equipmentData: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>) => {
     await onAddEquipment(equipmentData);
@@ -31,6 +31,17 @@ export function EquipmentTab({
   const handleUpdateEquipment = async (id: number, updates: Partial<Equipment>) => {
     await onUpdateEquipment(id, updates);
     setEditingEquipment(null);
+  };
+
+  const handleDeleteEquipment = async (id: number) => {
+    try {
+      setIsDeleting(true);
+      await onDeleteEquipment(id);
+    } catch (error) {
+      console.error('Error deleting equipment:', error);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleEdit = (equipment: Equipment) => {
@@ -92,7 +103,10 @@ export function EquipmentTab({
       {/* Заголовок и кнопка */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Оборудование</h2>
-        <Button onClick={() => setShowForm(true)}>
+        <Button 
+          onClick={() => setShowForm(true)}
+          disabled={isDeleting}
+        >
           <Plus className="mr-2 h-4 w-4" />
           Добавить оборудование
         </Button>
@@ -118,7 +132,7 @@ export function EquipmentTab({
       <EquipmentList
         equipment={equipment}
         onEdit={handleEdit}
-        onDelete={onDeleteEquipment}
+        onDelete={handleDeleteEquipment}
       />
     </div>
   );
