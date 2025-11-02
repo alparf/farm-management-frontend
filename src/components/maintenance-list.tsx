@@ -5,6 +5,7 @@ import { MaintenanceRecord } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ButtonIcons } from '@/components/ui-icons';
 
 interface MaintenanceListProps {
   maintenance: MaintenanceRecord[];
@@ -65,68 +66,75 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
   return (
     <>
       <div className="space-y-4">
-        {maintenance.map((record) => (
-          <div
-            key={record.id}
-            className={`border rounded-lg p-4 transition-colors ${getTypeColor(record.type)}`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="font-semibold text-gray-900">
-                    {record.vehicleName}
-                  </h3>
-                  <span className="text-sm px-2 py-1 rounded-full bg-white bg-opacity-50">
-                    {record.type}
-                  </span>
-                </div>
-                
-                <div className="text-sm text-gray-700 mb-2">
-                  {record.description}
-                </div>
-
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <span>Дата: {record.date.toLocaleDateString('ru-RU')}</span>
-                  {record.hours && (
-                    <span>Моточасы: {record.hours}</span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setExpandedId(expandedId === record.id ? null : record.id)}
-                >
-                  {expandedId === record.id ? 'Скрыть' : 'Подробнее'}
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => requestDelete(record)}
-                >
-                  Удалить
-                </Button>
-              </div>
-            </div>
-
-            {expandedId === record.id && (
-              <div className="mt-4 pt-4 border-t border-gray-300 border-opacity-50">
-                {record.notes && (
-                  <div className="mb-3">
-                    <h4 className="font-medium text-gray-900 mb-1">Примечания:</h4>
-                    <p className="text-sm text-gray-700">{record.notes}</p>
+        {maintenance.map((record) => {
+          const DeleteIcon = ButtonIcons.Delete.icon;
+          
+          return (
+            <div
+              key={record.id}
+              className={`border rounded-lg p-4 transition-colors ${getTypeColor(record.type)}`}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-semibold text-gray-900">
+                      {record.vehicleName}
+                    </h3>
+                    <span className="text-sm px-2 py-1 rounded-full bg-white bg-opacity-50">
+                      {record.type}
+                    </span>
                   </div>
-                )}
+                  
+                  <div className="text-sm text-gray-700 mb-2">
+                    {record.description}
+                  </div>
 
-                <div className="text-xs text-gray-500">
-                  Создано: {record.createdAt.toLocaleDateString('ru-RU')}
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span>Дата: {record.date.toLocaleDateString('ru-RU')}</span>
+                    {record.hours && (
+                      <span>Моточасы: {record.hours}</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 flex-shrink-0 ml-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setExpandedId(expandedId === record.id ? null : record.id)}
+                    className="h-8 text-xs"
+                  >
+                    {expandedId === record.id ? 'Скрыть' : 'Подробнее'}
+                  </Button>
+                  <Button
+                    variant={ButtonIcons.Delete.variant}
+                    size="sm"
+                    onClick={() => requestDelete(record)}
+                    className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                    title={ButtonIcons.Delete.title}
+                  >
+                    <DeleteIcon className={ButtonIcons.Delete.className} />
+                  </Button>
                 </div>
               </div>
-            )}
-          </div>
-        ))}
+
+              {expandedId === record.id && (
+                <div className="mt-4 pt-4 border-t border-gray-300 border-opacity-50">
+                  {record.notes && (
+                    <div className="mb-3">
+                      <h4 className="font-medium text-gray-900 mb-1">Примечания:</h4>
+                      <p className="text-sm text-gray-700">{record.notes}</p>
+                    </div>
+                  )}
+
+                  <div className="text-xs text-gray-500">
+                    Создано: {record.createdAt.toLocaleDateString('ru-RU')}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <ConfirmDialog

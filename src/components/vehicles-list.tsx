@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { Vehicle, VehicleType } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -8,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { DatePicker } from '@/components/ui/date-picker';
+import { ButtonIcons, ButtonSizes } from '@/components/ui-icons';
 import { AlertTriangle, Calendar } from 'lucide-react';
 
 interface VehiclesListProps {
@@ -151,6 +150,9 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {vehicles.map((vehicle) => {
+          const EditIcon = ButtonIcons.Edit.icon;
+          const DeleteIcon = ButtonIcons.Delete.icon;
+          
           const isInsuranceExpired = isDateExpired(vehicle.insuranceDate);
           const isRoadLegalExpired = isDateExpired(vehicle.roadLegalUntil);
           const isInsuranceExpiringSoon = isDateExpiringSoon(vehicle.insuranceDate);
@@ -282,6 +284,26 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                         {vehicle.type}
                       </span>
                     </div>
+                    <div className="flex gap-1 ml-2">
+                      <Button
+                        variant={ButtonIcons.Edit.variant}
+                        size="sm"
+                        onClick={() => startEdit(vehicle)}
+                        className={ButtonSizes.sm}
+                        title={ButtonIcons.Edit.title}
+                      >
+                        <EditIcon className={ButtonIcons.Edit.className} />
+                      </Button>
+                      <Button
+                        variant={ButtonIcons.Delete.variant}
+                        size="sm"
+                        onClick={() => requestDelete(vehicle)}
+                        className={`${ButtonSizes.sm} ${ButtonIcons.Delete.style}`}
+                        title={ButtonIcons.Delete.title}
+                      >
+                        <DeleteIcon className={ButtonIcons.Delete.className} />
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Информация о страховке */}
@@ -354,27 +376,8 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                     </div>
                   )}
 
-                  <div className="text-xs text-gray-500 mb-3">
+                  <div className="text-xs text-gray-500">
                     Добавлено: {vehicle.createdAt.toLocaleDateString('ru-RU')}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => startEdit(vehicle)}
-                      className="flex-1 h-8 text-xs"
-                    >
-                      Редактировать
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => requestDelete(vehicle)}
-                      className="flex-1 h-8 text-xs"
-                    >
-                      Удалить
-                    </Button>
                   </div>
                 </>
               )}

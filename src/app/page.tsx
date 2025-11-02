@@ -7,17 +7,14 @@ import { useVehicles } from '@/hooks/useVehicles';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { useEquipment } from '@/hooks/useEquipment';
 import { CompactTreatmentList } from '@/components/compact-treatment-list';
-import { InventoryList } from '@/components/inventory-list';
-import { InventoryForm } from '@/components/inventory-form';
 import { TreatmentForm } from '@/components/treatment-form';
 import { VehiclesTab } from '@/components/vehicles-tab';
 import { AnalyticsTab } from '@/components/analytics-tab';
 import { EquipmentTab } from '@/components/equipment-tab';
 import { Stats } from '@/components/stats';
 import { FilterSort } from '@/components/filter-sort';
-import { InventoryFilters } from '@/components/inventory-filters';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { InventoryTab } from '@/components/inventory-tab';
 import { Plus, RefreshCw, Package, Sprout, BarChart3, Car, Gauge } from 'lucide-react';
 import { ProductType } from '@/types';
 
@@ -367,77 +364,12 @@ export default function Home() {
       )}
 
       {activeTab === 'inventory' && (
-        <>
-          {inventoryError && <ErrorState error={inventoryError} onRetry={refetchInventory} />}
-
-          {/* Статистика склада */}
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
-            <Card className="bg-blue-50">
-              <CardContent className="p-3">
-                <div className="text-xs text-blue-600 font-medium">Всего</div>
-                <div className="text-lg font-bold text-blue-800">{inventoryStats.totalProducts}</div>
-              </CardContent>
-            </Card>
-            {Object.entries(inventoryStats.byType).map(([type, count]) => (
-              <Card key={type} className="bg-gray-50">
-                <CardContent className="p-3">
-                  <div className="text-xs text-gray-600 font-medium capitalize truncate">
-                    {type}
-                  </div>
-                  <div className="text-lg font-bold text-gray-800">{count}</div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {/* Карточки для низких запасов */}
-            <Card className={`${inventoryStats.lowStockCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50'}`}>
-              <CardContent className="p-3">
-                <div className={`text-xs font-medium ${inventoryStats.lowStockCount > 0 ? 'text-yellow-700' : 'text-gray-600'}`}>
-                  Низкий запас
-                </div>
-                <div className={`text-lg font-bold ${inventoryStats.lowStockCount > 0 ? 'text-yellow-800' : 'text-gray-800'}`}>
-                  {inventoryStats.lowStockCount}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className={`${inventoryStats.outOfStockCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50'}`}>
-              <CardContent className="p-3">
-                <div className={`text-xs font-medium ${inventoryStats.outOfStockCount > 0 ? 'text-red-700' : 'text-gray-600'}`}>
-                  Нет в наличии
-                </div>
-                <div className={`text-lg font-bold ${inventoryStats.outOfStockCount > 0 ? 'text-red-800' : 'text-gray-800'}`}>
-                  {inventoryStats.outOfStockCount}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Фильтры склада */}
-          <InventoryFilters
-            searchQuery={inventorySearch}
-            onSearchChange={setInventorySearch}
-            typeFilter={inventoryTypeFilter}
-            onTypeFilterChange={setInventoryTypeFilter}
-            sortBy={inventorySort}
-            onSortChange={setInventorySort}
-            stockFilter={stockFilter}
-            onStockFilterChange={setStockFilter}
-          />
-
-          {showInventoryForm && (
-            <InventoryForm 
-              onSubmit={handleAddProduct}
-              onCancel={() => setShowInventoryForm(false)}
-            />
-          )}
-
-          <InventoryList 
-            inventory={filteredInventory}
-            onUpdateProduct={updateProduct}
-            onDeleteProduct={deleteProduct}
-            typeFilter={inventoryTypeFilter}
-          />
-        </>
+        <InventoryTab
+          inventory={inventory}
+          onAddProduct={addProduct}
+          onUpdateProduct={updateProduct}
+          onDeleteProduct={deleteProduct}
+        />
       )}
 
       {activeTab === 'analytics' && (

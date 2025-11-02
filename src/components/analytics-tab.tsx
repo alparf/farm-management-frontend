@@ -1,4 +1,3 @@
-// components/analytics-tab.tsx
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +6,7 @@ import { useCultureStats } from '@/hooks/useCultureStats';
 import { CultureSelector } from '@/components/culture-selector';
 import { TimelineChart } from '@/components/timeline-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getCultureIcon, getIconColor } from '@/lib/culture-icons';
 
 interface AnalyticsTabProps {
   treatments: ChemicalTreatment[];
@@ -37,6 +37,16 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
         <>
           {/* Временная шкала */}
           <TimelineChart timelineData={getTimelineData(currentCulture)} />
+
+          {/* Заголовок с иконкой культуры */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className={`${getIconColor(currentCulture)}`}>
+              {getCultureIcon(currentCulture, "h-6 w-6")}
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 capitalize">
+              Аналитика по культуре: {currentCulture}
+            </h2>
+          </div>
 
           {/* Статистика по культуре */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

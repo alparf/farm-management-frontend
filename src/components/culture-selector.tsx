@@ -2,6 +2,7 @@
 
 import { CultureType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { getCultureIcon, getCultureColor, getCultureTextColor, getIconColor } from '@/lib/culture-icons';
 
 interface CultureSelectorProps {
   cultures: CultureType[];
@@ -17,11 +18,11 @@ export function CultureSelector({ cultures, selectedCulture, onCultureChange, st
 
   return (
     <Card className="mb-6">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle className="text-lg">Выберите культуру для анализа</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-2">
           {cultures.map((culture) => {
             const cultureStat = getCultureStats(culture);
             const isSelected = selectedCulture === culture;
@@ -30,17 +31,21 @@ export function CultureSelector({ cultures, selectedCulture, onCultureChange, st
               <button
                 key={culture}
                 onClick={() => onCultureChange(culture)}
-                className={`p-3 rounded-lg border-2 transition-all text-left ${
-                  isSelected
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 bg-white hover:border-gray-300'
-                }`}
+                className={`p-2 rounded-lg border-2 transition-all flex flex-col items-center text-center min-h-[70px] justify-between ${getCultureColor(culture, isSelected)}`}
               >
-                <div className="font-medium text-gray-900 capitalize">
-                  {culture}
+                <div className={`${getIconColor(culture)} mb-1`}>
+                  {getCultureIcon(culture)}
                 </div>
-                <div className="text-xs text-gray-600 mt-1">
-                  Обработок: {cultureStat.completedTreatments}/{cultureStat.totalTreatments}
+                
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className={`font-medium text-xs capitalize mb-1 ${getCultureTextColor(culture)}`}>
+                    {culture}
+                  </div>
+                  
+                  {/* Статистика */}
+                  <div className="text-[10px] text-gray-600 leading-tight">
+                    {cultureStat.completedTreatments}/{cultureStat.totalTreatments}
+                  </div>
                 </div>
               </button>
             );

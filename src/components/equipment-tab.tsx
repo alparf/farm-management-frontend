@@ -3,7 +3,7 @@ import { Equipment } from '@/types';
 import { EquipmentList } from './equipment-list';
 import { EquipmentForm } from './equipment-form';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface EquipmentTabProps {
@@ -59,42 +59,44 @@ export function EquipmentTab({
 
   return (
     <div className="space-y-6">
-      {/* Статистика */}
+      {/* Статистика - ОБНОВЛЕННЫЙ БЛОК */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold">{equipment.length}</div>
-                <div className="text-sm text-gray-600">Всего единиц</div>
+                <p className="text-sm font-medium text-blue-600">Всего единиц</p>
+                <p className="text-2xl font-bold text-blue-800">{equipment.length}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+              <CheckCircle className="h-8 w-8 text-blue-600 opacity-60" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-green-50 border-green-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold">{activeCount}</div>
-                <div className="text-sm text-gray-600">Активных</div>
+                <p className="text-sm font-medium text-green-600">Активных</p>
+                <p className="text-2xl font-bold text-green-800">{activeCount}</p>
               </div>
-              <CheckCircle className="h-8 w-8 text-blue-500" />
+              <CheckCircle className="h-8 w-8 text-green-600 opacity-60" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={expiredCount > 0 ? 'border-red-200' : ''}>
+        <Card className={`${expiredCount > 0 ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className={`text-2xl font-bold ${expiredCount > 0 ? 'text-red-600' : ''}`}>
+                <p className={`text-sm font-medium ${expiredCount > 0 ? 'text-red-600' : 'text-orange-600'}`}>
+                  Просрочено
+                </p>
+                <p className={`text-2xl font-bold ${expiredCount > 0 ? 'text-red-800' : 'text-orange-800'}`}>
                   {expiredCount}
-                </div>
-                <div className="text-sm text-gray-600">Просрочено</div>
+                </p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-500" />
+              <AlertTriangle className={`h-8 w-8 ${expiredCount > 0 ? 'text-red-600' : 'text-orange-600'} opacity-60`} />
             </div>
           </CardContent>
         </Card>

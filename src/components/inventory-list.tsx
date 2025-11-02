@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { ProductInventory, ProductType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { ButtonIcons, ButtonSizes } from '@/components/ui-icons';
 import { AlertTriangle, PackageX, Package } from 'lucide-react';
 
 interface InventoryListProps {
@@ -82,11 +84,26 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
   // Функция для определения статуса запасов
   const getStockStatus = (quantity: number) => {
     if (quantity === 0) {
-      return { status: 'out', icon: PackageX, color: 'text-red-500', text: 'Нет в наличии' };
+      return { 
+        status: 'out', 
+        icon: PackageX, 
+        color: 'text-red-500', 
+        text: 'Нет в наличии' 
+      };
     } else if (quantity <= 5) {
-      return { status: 'low', icon: AlertTriangle, color: 'text-yellow-500', text: 'Низкий запас' };
+      return { 
+        status: 'low', 
+        icon: AlertTriangle, 
+        color: 'text-yellow-500', 
+        text: 'Низкий запас' 
+      };
     } else {
-      return { status: 'normal', icon: Package, color: 'text-green-500', text: '' };
+      return { 
+        status: 'normal', 
+        icon: Package, 
+        color: 'text-green-500', 
+        text: '' 
+      };
     }
   };
 
@@ -94,6 +111,9 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {inventory.map((product) => {
+          const EditIcon = ButtonIcons.Edit.icon;
+          const DeleteIcon = ButtonIcons.Delete.icon;
+          
           const stockStatus = getStockStatus(product.quantity);
           const StatusIcon = stockStatus.icon;
           const isEditing = editingId === product.id;
@@ -103,7 +123,7 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
               key={product.id}
               className={`border rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(product.type)}`}
             >
-              {/* Заголовок карточки с индикаторами запасов */}
+              {/* Заголовок карточки */}
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate text-sm">
@@ -113,7 +133,26 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                     {product.type}
                   </span>
                 </div>
-                <StatusIcon className={`h-4 w-4 ${stockStatus.color}`} />
+                <div className="flex gap-1 ml-2">
+                  <Button
+                    variant={ButtonIcons.Edit.variant}
+                    size="sm"
+                    onClick={() => startEdit(product)}
+                    className={ButtonSizes.sm}
+                    title={ButtonIcons.Edit.title}
+                  >
+                    <EditIcon className={ButtonIcons.Edit.className} />
+                  </Button>
+                  <Button
+                    variant={ButtonIcons.Delete.variant}
+                    size="sm"
+                    onClick={() => requestDelete(product)}
+                    className={`${ButtonSizes.sm} ${ButtonIcons.Delete.style}`}
+                    title={ButtonIcons.Delete.title}
+                  >
+                    <DeleteIcon className={ButtonIcons.Delete.className} />
+                  </Button>
+                </div>
               </div>
 
               {/* Количество */}
@@ -137,75 +176,59 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                     <div className="text-xs text-gray-600">
                       {product.unit}
                     </div>
-                    {/* Текстовый статус запасов с фиксированной высотой */}
-                    <div className="h-5 mt-1">
-                      {stockStatus.text && (
-                        <div className={`text-xs ${
-                          stockStatus.status === 'out' ? 'text-red-600' : 'text-yellow-600'
-                        }`}>
-                          {stockStatus.text}
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Примечания */}
-              {product.notes && (
-                <div className="mb-3">
-                  <p className="text-xs text-gray-600 line-clamp-2">
-                    {product.notes}
-                  </p>
+              {/* Статус запасов с иконкой - БЕЗ ФОНА */}
+              {stockStatus.text && (
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <StatusIcon className={`h-4 w-4 ${stockStatus.color}`} />
+                  <span className={`text-xs font-medium ${
+                    stockStatus.status === 'out' ? 'text-red-700' : 'text-yellow-700'
+                  }`}>
+                    {stockStatus.text}
+                  </span>
                 </div>
               )}
 
-              {/* Дата обновления */}
-              <div className="text-xs text-gray-500 mb-3">
-                Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
+              {/* Нижняя часть карточки - выравнивание по нижнему левому краю */}
+              <div className="mt-auto">
+                {/* Примечания */}
+                {product.notes && (
+                  <div className="mb-2">
+                    <p className="text-xs text-gray-600 line-clamp-2">
+                      {product.notes}
+                    </p>
+                  </div>
+                )}
+
+                {/* Дата обновления - выравнивание по левому краю */}
+                <div className="text-xs text-gray-500 text-left">
+                  Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
+                </div>
               </div>
 
-              {/* Действия */}
-              <div className="flex gap-2">
-                {isEditing ? (
-                  <>
-                    <Button
-                      size="sm"
-                      onClick={() => saveEdit(product.id)}
-                      className="flex-1 h-8 text-xs"
-                    >
-                      ✓
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={cancelEdit}
-                      className="flex-1 h-8 text-xs"
-                    >
-                      ×
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => startEdit(product)}
-                      className="flex-1 h-8 text-xs"
-                    >
-                      Изменить
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => requestDelete(product)}
-                      className="flex-1 h-8 text-xs"
-                    >
-                      Удалить
-                    </Button>
-                  </>
-                )}
-              </div>
+              {/* Действия для режима редактирования */}
+              {isEditing && (
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    size="sm"
+                    onClick={() => saveEdit(product.id)}
+                    className="flex-1 h-8 text-xs"
+                  >
+                    ✓
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={cancelEdit}
+                    className="flex-1 h-8 text-xs"
+                  >
+                    ×
+                  </Button>
+                </div>
+              )}
             </div>
           );
         })}
