@@ -121,7 +121,7 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
           return (
             <div
               key={product.id}
-              className={`border rounded-lg p-4 transition-all hover:shadow-md ${getTypeColor(product.type)}`}
+              className={`border rounded-lg p-4 transition-all hover:shadow-md flex flex-col h-full ${getTypeColor(product.type)}`}
             >
               {/* Заголовок карточки */}
               <div className="flex justify-between items-start mb-3">
@@ -192,18 +192,21 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                 </div>
               )}
 
-              {/* Нижняя часть карточки - выравнивание по нижнему левому краю */}
+              {/* Контент, который должен занимать оставшееся пространство */}
+              <div className="flex-1"></div>
+
+              {/* Нижняя часть карточки - всегда внизу слева */}
               <div className="mt-auto">
                 {/* Примечания */}
                 {product.notes && (
                   <div className="mb-2">
-                    <p className="text-xs text-gray-600 line-clamp-2">
+                    <p className="text-xs text-gray-600 line-clamp-2 text-left">
                       {product.notes}
                     </p>
                   </div>
                 )}
 
-                {/* Дата обновления - выравнивание по левому краю */}
+                {/* Дата обновления - всегда выравнивание по левому краю */}
                 <div className="text-xs text-gray-500 text-left">
                   Обновлено: {product.updatedAt.toLocaleDateString('ru-RU')}
                 </div>
