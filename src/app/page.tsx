@@ -16,14 +16,12 @@ import { FilterSort } from '@/components/filter-sort';
 import { Button } from '@/components/ui/button';
 import { InventoryTab } from '@/components/inventory-tab';
 import { Plus, RefreshCw, Package, Sprout, BarChart3, Car, Gauge } from 'lucide-react';
-import { ProductType } from '@/types';
 
 type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles' | 'equipment';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('analytics');
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
-  const [showInventoryForm, setShowInventoryForm] = useState(false);
   
   // Состояния для фильтров обработок
   const [cultureFilter, setCultureFilter] = useState('');
@@ -31,12 +29,6 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('dueDate');
   const [showCompleted, setShowCompleted] = useState(false);
-  
-  // Состояния для фильтров склада
-  const [inventorySearch, setInventorySearch] = useState('');
-  const [inventoryTypeFilter, setInventoryTypeFilter] = useState<ProductType | ''>('');
-  const [inventorySort, setInventorySort] = useState('name');
-  const [stockFilter, setStockFilter] = useState('all');
 
   // Хуки для данных
   const { 
@@ -122,79 +114,9 @@ export default function Home() {
     return filtered;
   }, [treatments, cultureFilter, productTypeFilter, searchQuery, sortBy, showCompleted]);
 
-  // Фильтрация склада
-  const filteredInventory = useMemo(() => {
-    let filtered = inventory.filter(product => {
-      // Фильтр по поиску
-      if (inventorySearch && !product.name.toLowerCase().includes(inventorySearch.toLowerCase())) {
-        return false;
-      }
-      
-      // Фильтр по типу
-      if (inventoryTypeFilter && product.type !== inventoryTypeFilter) {
-        return false;
-      }
-      
-      // Фильтр по запасам
-      if (stockFilter === 'low' && product.quantity > 5) {
-        return false;
-      }
-      if (stockFilter === 'out' && product.quantity > 0) {
-        return false;
-      }
-      if (stockFilter === 'normal' && product.quantity <= 5) {
-        return false;
-      }
-      
-      return true;
-    });
-
-    // Сортировка
-    filtered.sort((a, b) => {
-      switch (inventorySort) {
-        case 'name':
-          return a.name.localeCompare(b.name);
-        case 'quantity':
-          return b.quantity - a.quantity;
-        case 'type':
-          return a.type.localeCompare(b.type);
-        case 'updatedAt':
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-        default:
-          return 0;
-      }
-    });
-    return filtered;
-  }, [inventory, inventorySearch, inventoryTypeFilter, inventorySort, stockFilter]);
-
-  // Статистика склада
-  const inventoryStats = useMemo(() => {
-    const totalProducts = inventory.length;
-    const byType = inventory.reduce((acc, product) => {
-      acc[product.type] = (acc[product.type] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    // Добавляем статистику по низким запасам
-    const lowStockProducts = inventory.filter(product => product.quantity <= 5);
-    const outOfStockProducts = inventory.filter(product => product.quantity === 0);
-
-    return { 
-      totalProducts, 
-      byType,
-      lowStockCount: lowStockProducts.length,
-      outOfStockCount: outOfStockProducts.length
-    };
-  }, [inventory]);
-
   const handleAddTreatment = async (treatmentData: any) => {
     await addTreatment(treatmentData);
     setShowTreatmentForm(false);
-  };
-
-  const handleAddProduct = async (productData: any) => {
-    await addProduct(productData);
-    setShowInventoryForm(false);
   };
 
   // Функция для кнопки обновления
@@ -221,38 +143,6 @@ export default function Home() {
     }
   };
 
-  // Функция для кнопки добавления
-  const handleAddButton = () => {
-    switch (activeTab) {
-      case 'treatments':
-        setShowTreatmentForm(true);
-        break;
-      case 'inventory':
-        setShowInventoryForm(true);
-        break;
-      case 'vehicles':
-      case 'equipment':
-        // В VehiclesTab и EquipmentTab есть свои кнопки добавления
-        break;
-      default:
-        break;
-    }
-  };
-
-  const getAddButtonText = () => {
-    switch (activeTab) {
-      case 'treatments':
-        return 'Новая обработка';
-      case 'inventory':
-        return 'Добавить продукт';
-      case 'vehicles':
-      case 'equipment':
-        return ''; // В соответствующих табах есть свои кнопки
-      default:
-        return 'Добавить';
-    }
-  };
-
   // Состояния загрузки для каждой вкладки
   if (treatmentsLoading && activeTab === 'treatments') {
     return <LoadingState message="Загрузка обработок..." />;
@@ -272,7 +162,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      {/* Заголовок и вкладки */}
+      {/* Заголовок и кнопка обновления - УБРАЛИ КНОПКУ ДОБАВЛЕНИЯ ОТСЮДА */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Сельхозучет</h1>
         <div className="flex gap-2">
@@ -280,12 +170,7 @@ export default function Home() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Обновить
           </Button>
-          {(activeTab === 'treatments' || activeTab === 'inventory') && (
-            <Button onClick={handleAddButton}>
-              <Plus className="mr-2 h-4 w-4" />
-              {getAddButtonText()}
-            </Button>
-          )}
+          {/* Убрали кнопку добавления из общего заголовка */}
         </div>
       </div>
 
@@ -346,6 +231,17 @@ export default function Home() {
             showCompleted={showCompleted}
             onShowCompletedChange={setShowCompleted}
           />
+
+          {/* Заголовок и кнопка добавления обработок - ПОД ФИЛЬТРАМИ */}
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">
+              Обработки ({filteredTreatments.length} из {treatments.length})
+            </h2>
+            <Button onClick={() => setShowTreatmentForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Новая обработка
+            </Button>
+          </div>
 
           {showTreatmentForm && (
             <TreatmentForm 

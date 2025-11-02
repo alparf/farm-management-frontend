@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Equipment } from '@/types';
+import { useState, useMemo } from 'react';
+import { Equipment, EquipmentType } from '@/types';
 import { EquipmentList } from './equipment-list';
 import { EquipmentForm } from './equipment-form';
+import { EquipmentFilters } from './equipment-filters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, AlertTriangle, CheckCircle } from 'lucide-react';
@@ -22,6 +23,12 @@ export function EquipmentTab({
   const [showForm, setShowForm] = useState(false);
   const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Состояния для фильтров
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<EquipmentType | ''>('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
 
   const handleAddEquipment = async (equipmentData: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>) => {
     await onAddEquipment(equipmentData);
@@ -53,14 +60,72 @@ export function EquipmentTab({
     setEditingEquipment(null);
   };
 
+  // Функции для определения статуса оборудования
+  const isOverdue = (date: Date) => new Date() > date;
+  const isExpiringSoon = (date: Date, daysThreshold: number = 30) => {
+    const today = new Date();
+    const timeDiff = date.getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    return daysDiff > 0 && daysDiff <= daysThreshold;
+  };
+
+  // Фильтрация оборудования
+  const filteredEquipment = useMemo(() => {
+    let filtered = equipment.filter(item => {
+      // Фильтр по поиску
+      if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      // Фильтр по типу
+      if (typeFilter && item.type !== typeFilter) {
+        return false;
+      }
+      
+      // Фильтр по статусу
+      if (statusFilter === 'active' && (isOverdue(item.verificationDate) || isExpiringSoon(item.verificationDate))) {
+        return false;
+      }
+      if (statusFilter === 'expiring' && !isExpiringSoon(item.verificationDate)) {
+        return false;
+      }
+      if (statusFilter === 'overdue' && !isOverdue(item.verificationDate)) {
+        return false;
+      }
+      
+      return true;
+    });
+
+    // Сортировка
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'verificationDate':
+          return a.verificationDate.getTime() - b.verificationDate.getTime();
+        case 'type':
+          return a.type.localeCompare(b.type);
+        case 'updatedAt':
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [equipment, searchQuery, typeFilter, statusFilter, sortBy]);
+
   // Статистика
-  const expiredCount = equipment.filter(item => new Date() > item.verificationDate).length;
-  const activeCount = equipment.length - expiredCount;
+  const expiredCount = equipment.filter(item => isOverdue(item.verificationDate)).length;
+  const expiringSoonCount = equipment.filter(item => 
+    !isOverdue(item.verificationDate) && isExpiringSoon(item.verificationDate)
+  ).length;
+  const activeCount = equipment.length - expiredCount - expiringSoonCount;
 
   return (
     <div className="space-y-6">
-      {/* Статистика - ОБНОВЛЕННЫЙ БЛОК */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Статистика */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -85,6 +150,18 @@ export function EquipmentTab({
           </CardContent>
         </Card>
 
+        <Card className="bg-yellow-50 border-yellow-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-yellow-600">Скоро истекает</p>
+                <p className="text-2xl font-bold text-yellow-800">{expiringSoonCount}</p>
+              </div>
+              <AlertTriangle className="h-8 w-8 text-yellow-600 opacity-60" />
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className={`${expiredCount > 0 ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -102,9 +179,23 @@ export function EquipmentTab({
         </Card>
       </div>
 
+      {/* Фильтры */}
+      <EquipmentFilters
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        typeFilter={typeFilter}
+        onTypeFilterChange={setTypeFilter}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+      />
+
       {/* Заголовок и кнопка */}
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Оборудование</h2>
+        <h2 className="text-2xl font-bold">
+          Оборудование ({filteredEquipment.length} из {equipment.length})
+        </h2>
         <Button 
           onClick={() => setShowForm(true)}
           disabled={isDeleting}
@@ -132,7 +223,7 @@ export function EquipmentTab({
 
       {/* Список оборудования */}
       <EquipmentList
-        equipment={equipment}
+        equipment={filteredEquipment}
         onEdit={handleEdit}
         onDelete={handleDeleteEquipment}
       />

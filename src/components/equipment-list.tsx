@@ -83,7 +83,7 @@ export function EquipmentList({ equipment, onEdit, onDelete }: EquipmentListProp
 
   return (
     <>
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {equipment.map((item) => {
           const EditIcon = ButtonIcons.Edit.icon;
           const DeleteIcon = ButtonIcons.Delete.icon;
@@ -95,69 +95,86 @@ export function EquipmentList({ equipment, onEdit, onDelete }: EquipmentListProp
           return (
             <Card 
               key={item.id} 
-              className={`${getTypeBackground(item.type)} ${getTypeBorderColor(item.type)} transition-all hover:shadow-md`}
+              className={`${getTypeBackground(item.type)} ${getTypeBorderColor(item.type)} transition-all hover:shadow-md flex flex-col h-full`}
             >
-              <CardContent className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg">{item.name}</h3>
+              <CardContent className="p-4 flex flex-col flex-1">
+                {/* Заголовок и кнопки */}
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-sm truncate">{item.name}</h3>
                       {overdue ? (
-                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
                       ) : expiringSoon ? (
-                        <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                        <AlertTriangle className="h-3 w-3 text-yellow-500 flex-shrink-0" />
                       ) : (
-                        <CheckCircle className="h-4 w-4 text-green-500" />
+                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
                       )}
                     </div>
-                    
-                    <div className="text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <span>Тип: {item.type}</span>
-                        {item.model && <span>• Модель: {item.model}</span>}
-                      </div>
-                      {item.serialNumber && <div>Серийный номер: {item.serialNumber}</div>}
+                    <div className="text-xs text-gray-600 capitalize">
+                      {item.type}
+                      {item.model && ` • ${item.model}`}
                     </div>
-                    
-                    <div className={`flex items-center gap-1 text-sm ${
-                      overdue ? 'text-red-600 font-medium' : 
-                      expiringSoon ? 'text-yellow-600' : 'text-gray-600'
-                    }`}>
-                      <Calendar className="h-4 w-4" />
-                      Поверка до: {item.verificationDate.toLocaleDateString('ru-RU')}
-                      {overdue ? (
-                        <span className="ml-2 font-medium">(ПРОСРОЧЕНО)</span>
-                      ) : expiringSoon ? (
-                        <span className="ml-2">(осталось {daysLeft} дней)</span>
-                      ) : (
-                        <span className="ml-2 text-green-600">(активно)</span>
-                      )}
-                    </div>
-                    
-                    {item.notes && (
-                      <div className="text-sm text-gray-600">Примечания: {item.notes}</div>
-                    )}
                   </div>
-                  
-                  <div className="flex gap-2 ml-4">
-                    <Button 
+                  <div className="flex gap-1 ml-2 flex-shrink-0">
+                    <Button
                       variant={ButtonIcons.Edit.variant}
                       size="sm"
                       onClick={() => onEdit(item)}
+                      className={ButtonSizes.sm}
                       title={ButtonIcons.Edit.title}
                     >
                       <EditIcon className={ButtonIcons.Edit.className} />
                     </Button>
-                    <Button 
+                    <Button
                       variant={ButtonIcons.Delete.variant}
-                      size="sm" 
-                      className={`${ButtonIcons.Delete.style}`}
+                      size="sm"
+                      className={`${ButtonSizes.sm} ${ButtonIcons.Delete.style}`}
                       onClick={() => handleDeleteClick(item)}
                       title={ButtonIcons.Delete.title}
                     >
                       <DeleteIcon className={ButtonIcons.Delete.className} />
                     </Button>
                   </div>
+                </div>
+
+                {/* Серийный номер */}
+                {item.serialNumber && (
+                  <div className="text-xs text-gray-600 mb-2">
+                    SN: {item.serialNumber}
+                  </div>
+                )}
+
+                {/* Статус поверки */}
+                <div className={`flex items-center gap-1 text-xs mb-3 ${
+                  overdue ? 'text-red-600 font-medium' : 
+                  expiringSoon ? 'text-yellow-600' : 'text-gray-600'
+                }`}>
+                  <Calendar className="h-3 w-3 flex-shrink-0" />
+                  <span>Поверка: {item.verificationDate.toLocaleDateString('ru-RU')}</span>
+                </div>
+
+                {/* Дополнительная информация о статусе */}
+                <div className="text-xs font-medium mb-3">
+                  {overdue ? (
+                    <span className="text-red-600">ПРОСРОЧЕНО</span>
+                  ) : expiringSoon ? (
+                    <span className="text-yellow-600">Осталось {daysLeft} дней</span>
+                  ) : (
+                    <span className="text-green-600">Активно</span>
+                  )}
+                </div>
+
+                {/* Примечания */}
+                {item.notes && (
+                  <div className="text-xs text-gray-600 line-clamp-2 mb-3 flex-1">
+                    {item.notes}
+                  </div>
+                )}
+
+                {/* Дата обновления */}
+                <div className="text-xs text-gray-500 text-left mt-auto">
+                  Обновлено: {item.updatedAt.toLocaleDateString('ru-RU')}
                 </div>
               </CardContent>
             </Card>
