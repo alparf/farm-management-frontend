@@ -314,12 +314,12 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                       {isInsuranceExpired ? (
                         <div className="flex items-center gap-1 text-red-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-sm">просрочена</span>
+                          <span className="text-xs font-semibold">ПРОСРОЧЕНО</span>
                         </div>
                       ) : isInsuranceExpiringSoon ? (
                         <div className="flex items-center gap-1 text-yellow-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-sm">истекает</span>
+                          <span className="text-xs font-semibold">ИСТЕКАЕТ</span>
                         </div>
                       ) : null}
                     </div>
@@ -333,12 +333,12 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                       {isRoadLegalExpired ? (
                         <div className="flex items-center gap-1 text-red-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-sm">просрочен</span>
+                          <span className="text-xs font-semibold">ПРОСРОЧЕНО</span>
                         </div>
                       ) : isRoadLegalExpiringSoon ? (
                         <div className="flex items-center gap-1 text-yellow-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-sm">истекает</span>
+                          <span className="text-xs font-semibold">ИСТЕКАЕТ</span>
                         </div>
                       ) : null}
                     </div>
