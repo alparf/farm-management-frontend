@@ -162,12 +162,12 @@ export function EquipmentList({ equipment, onEdit, onDelete }: EquipmentListProp
                   ) : expiringSoon ? (
                     <>
                       <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-                      <span>Осталось {daysLeft} дней</span>
+                      <span>ОСТАЛОСЬ{daysLeft} дней</span>
                     </>
                   ) : (
                     <>
                       <CheckCircle className="h-3 w-3 flex-shrink-0" />
-                      <span>Активно</span>
+                      <span>АКТИВНО</span>
                     </>
                   )}
                 </div>
