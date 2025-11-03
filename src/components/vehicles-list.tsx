@@ -308,18 +308,18 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
 
                   {/* Информация о страховке */}
                   {vehicle.insuranceDate && (
-                    <div className="flex items-center gap-2 text-xs text-gray-700 mb-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-700 mb-2">
                       <Calendar className="h-3 w-3" />
                       <span>Страховка: {formatDate(vehicle.insuranceDate)}</span>
                       {isInsuranceExpired ? (
                         <div className="flex items-center gap-1 text-red-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-xs">просрочена</span>
+                          <span className="text-sm">просрочена</span>
                         </div>
                       ) : isInsuranceExpiringSoon ? (
                         <div className="flex items-center gap-1 text-yellow-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-xs">истекает</span>
+                          <span className="text-sm">истекает</span>
                         </div>
                       ) : null}
                     </div>
@@ -327,18 +327,18 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                   
                   {/* Информация о допуске */}
                   {vehicle.roadLegalUntil && (
-                    <div className="flex items-center gap-2 text-xs text-gray-700 mb-3">
+                    <div className="flex items-center gap-2 text-sm text-gray-700 mb-3">
                       <Calendar className="h-3 w-3" />
                       <span>Допуск: {formatDate(vehicle.roadLegalUntil)}</span>
                       {isRoadLegalExpired ? (
                         <div className="flex items-center gap-1 text-red-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-xs">просрочен</span>
+                          <span className="text-sm">просрочен</span>
                         </div>
                       ) : isRoadLegalExpiringSoon ? (
                         <div className="flex items-center gap-1 text-yellow-500">
                           <AlertTriangle className="h-3 w-3" />
-                          <span className="text-xs">истекает</span>
+                          <span className="text-sm">истекает</span>
                         </div>
                       ) : null}
                     </div>

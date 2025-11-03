@@ -29,7 +29,7 @@ export function FilterSort({
   showCompleted,
   onShowCompletedChange,
 }: FilterSortProps) {
-  const cultures = ['пшеница', 'ячмень', 'кукуруза', 'подсолнечник', 'рапс', 'соя', 'горох'];
+  const cultures = ['груша', 'яблоко', 'черешня', 'слива', 'томаты', 'картофель', 'лук', 'свекла', 'морковь', 'капуста', 'другое'];
   const productTypes = ['фунгицид', 'инсектицид', 'гербицид', 'десикант', 'регулятор роста'];
 
   return (
