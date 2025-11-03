@@ -103,13 +103,7 @@ export function EquipmentList({ equipment, onEdit, onDelete }: EquipmentListProp
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-sm truncate">{item.name}</h3>
-                      {overdue ? (
-                        <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
-                      ) : expiringSoon ? (
-                        <AlertTriangle className="h-3 w-3 text-yellow-500 flex-shrink-0" />
-                      ) : (
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0" />
-                      )}
+                      {/* Убрали значок статуса из заголовка */}
                     </div>
                     <div className="text-xs text-gray-600 capitalize">
                       {item.type}
@@ -155,13 +149,26 @@ export function EquipmentList({ equipment, onEdit, onDelete }: EquipmentListProp
                 </div>
 
                 {/* Дополнительная информация о статусе */}
-                <div className="text-xs font-medium mb-3">
+                <div className={`flex items-center gap-1 text-xs font-medium mb-3 ${
+                  overdue ? 'text-red-600' : 
+                  expiringSoon ? 'text-yellow-600' : 'text-green-600'
+                }`}>
+                  {/* Перенесли значок алерта сюда */}
                   {overdue ? (
-                    <span className="text-red-600">ПРОСРОЧЕНО</span>
+                    <>
+                      <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                      <span>ПРОСРОЧЕНО</span>
+                    </>
                   ) : expiringSoon ? (
-                    <span className="text-yellow-600">Осталось {daysLeft} дней</span>
+                    <>
+                      <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+                      <span>Осталось {daysLeft} дней</span>
+                    </>
                   ) : (
-                    <span className="text-green-600">Активно</span>
+                    <>
+                      <CheckCircle className="h-3 w-3 flex-shrink-0" />
+                      <span>Активно</span>
+                    </>
                   )}
                 </div>
 

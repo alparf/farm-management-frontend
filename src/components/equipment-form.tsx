@@ -1,4 +1,3 @@
-// components/equipment-form.tsx
 import { useState } from 'react';
 import { Equipment, EquipmentType } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,6 @@ const equipmentTypes: EquipmentType[] = [
   'влагоанализатор',
   'анализатор',
   'дозатор',
-  'пипетка',
   'другое'
 ];
 
