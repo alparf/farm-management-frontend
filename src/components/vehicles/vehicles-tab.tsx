@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useMemo } from 'react';
 import { Vehicle, MaintenanceRecord, VehicleType } from '@/types';
 import { VehiclesList } from '@/components/vehicles/vehicles-list';
