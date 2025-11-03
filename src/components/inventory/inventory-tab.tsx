@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react';
 import { ProductInventory, ProductType } from '@/types';
-import { InventoryList } from '@/components/inventory-list';
-import { InventoryForm } from '@/components/inventory-form';
-import { InventoryFilters } from '@/components/inventory-filters';
-import { InventoryStats } from '@/components/inventory-stats';
+import { InventoryList } from '@/components/inventory/inventory-list';
+import { InventoryForm } from '@/components/inventory/inventory-form';
+import { InventoryFilters } from '@/components/inventory/inventory-filters';
+import { InventoryStats } from '@/components/inventory/inventory-stats';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 

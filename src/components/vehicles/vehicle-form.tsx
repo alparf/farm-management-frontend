@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { Vehicle, VehicleType } from '@/types';
 import { Button } from '@/components/ui/button';

@@ -1,12 +1,10 @@
-'use client';
-
 import { useState, useMemo } from 'react';
 import { Vehicle, MaintenanceRecord, VehicleType } from '@/types';
-import { VehiclesList } from '@/components/vehicles-list';
-import { MaintenanceList } from '@/components/maintenance-list';
-import { VehicleForm } from '@/components/vehicle-form';
-import { MaintenanceForm } from '@/components/maintenance-form';
-import { VehiclesFilters } from '@/components/vehicles-filters';
+import { VehiclesList } from '@/components/vehicles/vehicles-list';
+import { MaintenanceList } from '@/components/vehicles/maintenance-list';
+import { VehicleForm } from '@/components/vehicles/vehicle-form';
+import { MaintenanceForm } from '@/components/vehicles/maintenance-form';
+import { VehiclesFilters } from '@/components/vehicles/vehicles-filters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Wrench, Car } from 'lucide-react';

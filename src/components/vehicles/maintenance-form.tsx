@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from 'react';
 import { MaintenanceRecord, Vehicle, MaintenanceType } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -18,7 +16,7 @@ interface MaintenanceFormProps {
 export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFormProps) {
   const [vehicleId, setVehicleId] = useState<number>(vehicles[0]?.id || 0);
   const [type, setType] = useState<MaintenanceType>('плановое ТО');
-  const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [hours, setHours] = useState('');
   const [description, setDescription] = useState('');
   const [notes, setNotes] = useState('');
@@ -33,6 +31,12 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
 
     if (!description.trim()) {
       alert('Введите описание обслуживания');
+      return;
+    }
+
+    // Проверяем, что дата установлена
+    if (!date) {
+      alert('Выберите дату обслуживания');
       return;
     }
 
