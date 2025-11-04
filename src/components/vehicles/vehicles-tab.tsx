@@ -7,6 +7,7 @@ import { MaintenanceList } from '@/components/vehicles/maintenance-list';
 import { VehicleForm } from '@/components/vehicles/vehicle-form';
 import { MaintenanceForm } from '@/components/vehicles/maintenance-form';
 import { VehiclesFilters } from '@/components/vehicles/vehicles-filters';
+import { MaintenanceFilters } from '@/components/vehicles/maintenance-filters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, Wrench, Car } from 'lucide-react';
@@ -38,12 +39,17 @@ export function VehiclesTab({
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
   
-  // Состояния для фильтров
+  // Состояния для фильтров техники
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<VehicleType | ''>('');
   const [insuranceFilter, setInsuranceFilter] = useState('');
   const [roadLegalFilter, setRoadLegalFilter] = useState('');
   const [sortBy, setSortBy] = useState('name');
+
+  // Состояния для фильтров обслуживания
+  const [maintenanceSearchQuery, setMaintenanceSearchQuery] = useState('');
+  const [maintenanceTypeFilter, setMaintenanceTypeFilter] = useState<VehicleType | ''>('');
+  const [maintenanceServiceTypeFilter, setMaintenanceServiceTypeFilter] = useState('');
 
   // Фильтрация и сортировка техники
   const filteredVehicles = useMemo(() => {
@@ -139,6 +145,36 @@ export function VehiclesTab({
     return filtered;
   }, [vehicles, searchQuery, typeFilter, insuranceFilter, roadLegalFilter, sortBy]);
 
+  // Фильтрация записей обслуживания
+  const filteredMaintenance = useMemo(() => {
+    let filtered = maintenance.filter(record => {
+      // Фильтр по поиску
+      if (maintenanceSearchQuery && 
+          !record.vehicleName.toLowerCase().includes(maintenanceSearchQuery.toLowerCase()) &&
+          !record.description.toLowerCase().includes(maintenanceSearchQuery.toLowerCase())) {
+        return false;
+      }
+      
+      // Фильтр по типу техники
+      if (maintenanceTypeFilter) {
+        const vehicle = vehicles.find(v => v.id === record.vehicleId);
+        if (!vehicle || vehicle.type !== maintenanceTypeFilter) return false;
+      }
+      
+      // Фильтр по типу обслуживания
+      if (maintenanceServiceTypeFilter && record.type !== maintenanceServiceTypeFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+
+    // Сортировка по дате (новые сверху)
+    filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+    return filtered;
+  }, [maintenance, maintenanceSearchQuery, maintenanceTypeFilter, maintenanceServiceTypeFilter, vehicles]);
+
   const handleAddVehicle = async (vehicleData: any) => {
     await onAddVehicle(vehicleData);
     setShowVehicleForm(false);
@@ -154,6 +190,7 @@ export function VehiclesTab({
     totalVehicles: vehicles.length,
     totalMaintenance: maintenance.length,
     filteredVehicles: filteredVehicles.length,
+    filteredMaintenance: filteredMaintenance.length,
     withoutRoadLegal: vehicles.filter(v => !v.roadLegalUntil).length,
     insuranceStats: {
       total: vehicles.filter(v => {
@@ -321,10 +358,21 @@ export function VehiclesTab({
       {/* Контент вкладки обслуживания */}
       {currentView === 'maintenance' && (
         <>
+          {/* Фильтры обслуживания */}
+          <MaintenanceFilters
+            searchQuery={maintenanceSearchQuery}
+            onSearchChange={setMaintenanceSearchQuery}
+            vehicleTypeFilter={maintenanceTypeFilter}
+            onVehicleTypeFilterChange={setMaintenanceTypeFilter}
+            serviceTypeFilter={maintenanceServiceTypeFilter}
+            onServiceTypeFilterChange={setMaintenanceServiceTypeFilter}
+            vehicles={vehicles}
+          />
+
           {/* Кнопки действий */}
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">
-              Записи обслуживания
+              Записи обслуживания ({filteredMaintenance.length} из {maintenance.length})
             </h2>
             <div className="flex gap-2">
               <Button 
@@ -351,7 +399,7 @@ export function VehiclesTab({
 
           {/* Список обслуживания */}
           <MaintenanceList 
-            maintenance={maintenance}
+            maintenance={filteredMaintenance}
             onUpdateMaintenance={onUpdateMaintenance}
             onDeleteMaintenance={onDeleteMaintenance}
           />
