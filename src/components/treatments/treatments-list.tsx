@@ -26,7 +26,6 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
     treatment: null
   });
 
-  // Функция для получения стилей карточки - убрали цвет фона
   const getCardStyle = (completed: boolean) => {
     return 'bg-white border-gray-200 hover:bg-gray-50';
   };
@@ -167,7 +166,7 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
             <div className="flex items-start gap-3 pr-16">
               {/* Иконка культуры */}
               <div className={`flex-shrink-0 mt-0.5 ${getIconColor(culture)}`}>
-                {getCultureIcon(culture)}
+                {getCultureIcon(culture, "h-6 w-6")}
               </div>
               
               {/* Основная информация */}

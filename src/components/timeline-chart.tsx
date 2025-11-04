@@ -1,3 +1,4 @@
+// [file name]: timeline-chart.tsx
 'use client';
 
 import { TreatmentTimeline } from '@/types';
@@ -15,7 +16,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
     if (treatments.length === 0) {
       const now = new Date();
       const start = new Date(now);
-      start.setMonth(now.getMonth() - 8); // 9 месяцев назад
+      start.setMonth(now.getMonth() - 8);
       return { start, end: now };
     }
 
@@ -23,7 +24,6 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
     const minDate = new Date(Math.min(...dates));
     const maxDate = new Date(Math.max(...dates));
     
-    // Расширяем диапазон на 1 месяц в обе стороны
     const start = new Date(minDate);
     start.setMonth(start.getMonth() - 1);
     const end = new Date(maxDate);
@@ -38,7 +38,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   const getMonths = () => {
     const months = [];
     const current = new Date(start);
-    current.setDate(1); // Начало месяца
+    current.setDate(1);
     
     while (current <= end) {
       months.push({
@@ -56,40 +56,47 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   const months = getMonths();
   const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
-  const getTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      'фунгицид': 'bg-purple-500',
-      'инсектицид': 'bg-red-500',
-      'гербицид': 'bg-orange-500',
-      'десикант': 'bg-yellow-500',
-      'регулятор роста': 'bg-green-500',
-      'удобрение': 'bg-blue-500',
-      'биопрепарат': 'bg-teal-500',
-      'адъювант': 'bg-gray-500',
-    };
-    return colors[type] || 'bg-gray-400';
+const getTypeColor = (type: string) => {
+  const colors: Record<string, string> = {
+    'фунгицид': 'bg-purple-500',
+    'инсектицид': 'bg-red-500',
+    'гербицид': 'bg-orange-500',
+    'десикант': 'bg-yellow-500',
+    'регулятор роста': 'bg-green-500',
+    'удобрение': 'bg-blue-500',
+    'биопрепарат': 'bg-pink-500',
+    'адъювант': 'bg-gray-500',
+    'Баковая смесь': 'bg-teal-500',
   };
+  return colors[type] || 'bg-gray-400';
+};
+
+const getTypeLabel = (type: string, treatment: any) => {
+  if (type === 'Баковая смесь' && treatment.tankMixTypes) {
+    return `Баковая смесь: ${treatment.tankMixTypes.join(', ')}`;
+  }
+  const labels: Record<string, string> = {
+      'фунгицид': 'Фунгициды',
+      'инсектицид': 'Инсектициды',
+      'гербицид': 'Гербициды',
+      'десикант': 'Десиканты',
+      'регулятор роста': 'Регуляторы роста',
+      'удобрение': 'Удобрения',
+      'биопрепарат': 'Биопрепараты',
+      'адъювант': 'Адъюванты',
+      'Баковая смесь': 'Баковая смесь'
+    };
+    return labels[type] || type;
+};
 
   const getTreatmentPosition = (treatmentDate: Date) => {
     const daysFromStart = (treatmentDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
     const position = (daysFromStart / totalDays) * 100;
-    return Math.max(0, Math.min(100, position)); // Ограничиваем от 0 до 100%
+    return Math.max(0, Math.min(100, position));
   };
 
-  // Сортируем обработки по дате для правильного отображения
+  // Сортируем обработки по дате
   const sortedTreatments = [...treatments].sort((a, b) => a.date.getTime() - b.date.getTime());
-
-  // Отладочная информация
-  console.log('Всего обработок:', treatments.length);
-  console.log('Отображаемые обработки:', sortedTreatments.length);
-  sortedTreatments.forEach((treatment, index) => {
-    console.log(`Обработка ${index + 1}:`, {
-      date: treatment.date.toLocaleDateString('ru-RU'),
-      type: treatment.type,
-      products: treatment.products,
-      position: getTreatmentPosition(treatment.date)
-    });
-  });
 
   return (
     <Card>
@@ -98,7 +105,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
           Временная шкала обработок: {culture}
         </CardTitle>
         <div className="text-sm text-gray-500">
-          Всего обработок: {treatments.length} | Отображено: {sortedTreatments.length}
+          Всего обработок: {treatments.length}
         </div>
       </CardHeader>
       <CardContent>
@@ -126,7 +133,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             ))}
           </div>
 
-          {/* Обработки - все на одной линии */}
+          {/* Обработки */}
           <div className="relative h-20">
             {/* Линия времени */}
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-200 transform -translate-y-1/2" />
@@ -165,6 +172,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
                     <div className="text-xs text-gray-500 mt-1">
                       {treatment.products.join(', ')}
                     </div>
+                    
                     <div className={`text-xs mt-1 ${treatment.completed ? 'text-green-600' : 'text-yellow-600'}`}>
                       {treatment.completed ? '✅ Выполнено' : '⏳ Запланировано'}
                     </div>
@@ -200,6 +208,18 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
               <div className="w-3 h-3 bg-yellow-500 rounded-full" />
               <span>Десиканты</span>
             </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-pink-500 rounded-full" />
+              <span>Биопрепараты</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-gray-500 rounded-full" />
+              <span>Адъюванты</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-teal-500 rounded-full" />
+              <span>Баковая смесь</span>
+            </div>
           </div>
 
           {/* Статус выполнения */}
@@ -218,16 +238,6 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
         {treatments.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             Нет выполненных обработок
-          </div>
-        )}
-
-        {/* Отладочная информация */}
-        {treatments.length !== sortedTreatments.length && (
-          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-sm">
-            <div className="font-medium text-yellow-800">Внимание: не все обработки отображаются</div>
-            <div className="text-yellow-700">
-              Всего: {treatments.length}, Отображено: {sortedTreatments.length}
-            </div>
           </div>
         )}
       </CardContent>

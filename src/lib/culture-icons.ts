@@ -1,20 +1,11 @@
-import { Apple, Carrot, Cherry, Grape, Leaf, Sprout, Citrus, Trees, Flower, Cloud } from 'lucide-react';
+// lib/culture-icons.ts
 import { CultureType } from '@/types';
 import React from 'react';
+import { getVegetableIcon } from '@/components/vegetable-icons';
 
-// Иконки для культур
-export const CultureIcons: Record<CultureType, React.ComponentType<{ className?: string }>> = {
-  'яблоко': Apple,
-  'груша': Citrus,
-  'черешня': Cherry,
-  'слива': Grape,
-  'томаты': Flower, 
-  'картофель': Flower,
-  'лук': Sprout,
-  'свекла': Carrot,
-  'морковь': Carrot,
-  'капуста': Leaf,
-  'другое': Trees
+// Иконки для культур (используем наши кастомные иконки напрямую)
+export const getCultureIcon = (culture: CultureType, className: string = "h-4 w-4"): React.ReactElement => {
+  return getVegetableIcon(culture, className);
 };
 
 // Цвета фона для культур
@@ -69,10 +60,4 @@ export const getIconColor = (culture: CultureType): string => {
     'другое': 'text-gray-600'
   };
   return colors[culture];
-};
-
-// Получить иконку для культуры (как компонент)
-export const getCultureIcon = (culture: CultureType, className: string = "h-4 w-4"): React.ReactNode => {
-  const IconComponent = CultureIcons[culture] || Sprout;
-  return React.createElement(IconComponent, { className });
 };

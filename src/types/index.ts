@@ -46,8 +46,10 @@ export interface TreatmentTimeline {
     id: number;
     date: Date;
     products: string[];
-    type: ProductType;
+    type: ProductType | 'Баковая смесь';
     completed: boolean;
+    isTankMix?: boolean;
+    tankMixTypes?: ProductType[];
   }[];
 }
 
@@ -58,6 +60,8 @@ export interface CultureStats {
   plannedTreatments: number;
   lastTreatment?: Date;
   productsUsed: string[];
+  tankMixCount: number;
+  tankMixTypes: ProductType[][];
 }
 
 export interface Vehicle {
