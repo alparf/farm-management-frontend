@@ -26,7 +26,6 @@ export const useMaintenance = () => {
         ...record,
         date: new Date(record.date),
         createdAt: new Date(record.createdAt),
-        updatedAt: new Date(record.updatedAt),
       }));
       
       setMaintenance(processedData);
@@ -39,29 +38,41 @@ export const useMaintenance = () => {
     }
   };
 
-  const addMaintenance = async (maintenanceData: Omit<MaintenanceRecord, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addMaintenance = async (maintenanceData: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => {
     try {
       const baseUrl = getBaseUrl();
+      
+      // Подготавливаем данные для отправки - преобразуем Date в ISO строки
+      const payload = {
+        ...maintenanceData,
+        date: maintenanceData.date.toISOString(), // Преобразуем в ISO строку
+        hours: maintenanceData.hours || null,
+        notes: maintenanceData.notes || null,
+      };
+
+      console.log('Sending maintenance data:', payload);
+
       const response = await fetch(`${baseUrl}/maintenance`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(maintenanceData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
       }
 
       const newRecord = await response.json();
       
-      // Преобразуем даты
+      // Преобразуем даты обратно в Date объекты
       const processedRecord = {
         ...newRecord,
         date: new Date(newRecord.date),
         createdAt: new Date(newRecord.createdAt),
-        updatedAt: new Date(newRecord.updatedAt),
       };
 
       setMaintenance(prev => [...prev, processedRecord]);
@@ -69,6 +80,7 @@ export const useMaintenance = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add maintenance record';
       setError(errorMessage);
+      console.error('Error adding maintenance:', err);
       throw err;
     }
   };
@@ -76,16 +88,24 @@ export const useMaintenance = () => {
   const updateMaintenance = async (id: number, updates: Partial<MaintenanceRecord>) => {
     try {
       const baseUrl = getBaseUrl();
+      
+      // Подготавливаем данные для обновления
+      const payload: any = { ...updates };
+      if (payload.date) payload.date = payload.date.toISOString();
+      if (payload.hours === undefined) payload.hours = null;
+      if (payload.notes === undefined) payload.notes = null;
+
       const response = await fetch(`${baseUrl}/maintenance/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updates),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! status: ${response.status}: ${errorText}`);
       }
 
       const updatedRecord = await response.json();
@@ -95,7 +115,6 @@ export const useMaintenance = () => {
         ...updatedRecord,
         date: new Date(updatedRecord.date),
         createdAt: new Date(updatedRecord.createdAt),
-        updatedAt: new Date(updatedRecord.updatedAt),
       };
 
       setMaintenance(prev => 

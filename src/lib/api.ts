@@ -1,4 +1,3 @@
-// lib/api.ts
 import { API_CONFIG } from './config';
 
 class ApiClient {

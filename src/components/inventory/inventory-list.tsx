@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { ProductInventory, ProductType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ButtonIcons, ButtonSizes } from '@/components/ui-icons';
 import { AlertTriangle, PackageX, Package } from 'lucide-react';
