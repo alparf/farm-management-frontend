@@ -63,7 +63,7 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {maintenance.map((record) => {
           const DeleteIcon = ButtonIcons.Delete.icon;
           
@@ -75,19 +75,19 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
               <div className="flex justify-between items-start">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className="font-semibold text-gray-900 text-sm">
                       {record.vehicleName}
                     </h3>
-                    <span className="text-sm px-2 py-1 rounded-full bg-white bg-opacity-50">
+                    <span className="text-xs px-2 py-1 rounded-full bg-white bg-opacity-50">
                       {record.type}
                     </span>
                   </div>
                   
-                  <div className="text-sm text-gray-700 mb-2">
+                  <div className="text-sm text-gray-700 mb-2 line-clamp-2">
                     {record.description}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-4 text-xs text-gray-600">
                     <span>Дата: {record.date.toLocaleDateString('ru-RU')}</span>
                     {record.hours && (
                       <span>Моточасы: {record.hours}</span>
@@ -95,12 +95,12 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1 flex-shrink-0 ml-4">
+                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setExpandedId(expandedId === record.id ? null : record.id)}
-                    className="h-8 text-xs"
+                    className="h-7 text-xs"
                   >
                     {expandedId === record.id ? 'Скрыть' : 'Подробнее'}
                   </Button>
@@ -108,7 +108,7 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
                     variant={ButtonIcons.Delete.variant}
                     size="sm"
                     onClick={() => requestDelete(record)}
-                    className="h-8 w-8 p-0 text-red-600 hover:bg-red-50"
+                    className="h-7 w-7 p-0 text-red-600 hover:bg-red-50"
                     title={ButtonIcons.Delete.title}
                   >
                     <DeleteIcon className={ButtonIcons.Delete.className} />
@@ -117,11 +117,11 @@ export function MaintenanceList({ maintenance, onUpdateMaintenance, onDeleteMain
               </div>
 
               {expandedId === record.id && (
-                <div className="mt-4 pt-4 border-t border-gray-300 border-opacity-50">
+                <div className="mt-3 pt-3 border-t border-gray-300 border-opacity-50">
                   {record.notes && (
-                    <div className="mb-3">
-                      <h4 className="font-medium text-gray-900 mb-1">Примечания:</h4>
-                      <p className="text-sm text-gray-700">{record.notes}</p>
+                    <div className="mb-2">
+                      <h4 className="font-medium text-gray-900 text-xs mb-1">Примечания:</h4>
+                      <p className="text-xs text-gray-700">{record.notes}</p>
                     </div>
                   )}
 
