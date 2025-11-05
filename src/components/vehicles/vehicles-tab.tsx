@@ -270,8 +270,8 @@ export function VehiclesTab({
         </Card>
         <Card className="bg-red-50">
           <CardContent className="p-3">
-            <div className="text-xs text-red-600 font-medium">Без допуска</div>
-            <div className="text-lg font-bold text-red-800">{stats.withoutRoadLegal}</div>
+            <div className="text-xs text-red-600 font-medium">Просроченный допуск</div>
+            <div className="text-lg font-bold text-red-800">{stats.roadLegalStats.expired}</div>
           </CardContent>
         </Card>
       </div>
