@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ButtonIcons } from '@/components/ui-icons';
-import { Calendar, AlertTriangle, CheckCircle, Scale, Droplets, Thermometer, Microscope, FlaskConical, Syringe, Settings, Save, X } from 'lucide-react';
+import { Calendar, AlertTriangle, CheckCircle, Scale, Droplets, Thermometer, Microscope, FlaskConical, Syringe, Settings, Save, X, StickyNote } from 'lucide-react';
 
 interface EquipmentListProps {
   equipment: Equipment[];
@@ -17,6 +17,9 @@ interface EquipmentListProps {
 
 export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment }: EquipmentListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingNotes, setEditingNotes] = useState<number | null>(null);
+  const [editNotesText, setEditNotesText] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; equipment: Equipment | null }>({
     isOpen: false,
     equipment: null
@@ -112,6 +115,27 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Функции для редактирования примечаний
+  const startEditNotes = (item: Equipment) => {
+    setEditingNotes(item.id);
+    setEditNotesText(item.notes || '');
+  };
+
+  const saveNotes = async (id: number) => {
+    try {
+      await onUpdateEquipment(id, { notes: editNotesText || undefined });
+      setEditingNotes(null);
+      setEditNotesText('');
+    } catch (error) {
+      console.error('Error updating notes:', error);
+    }
+  };
+
+  const cancelEditNotes = () => {
+    setEditingNotes(null);
+    setEditNotesText('');
+  };
+
   const handleDeleteClick = (item: Equipment) => {
     setDeleteConfirm({ isOpen: true, equipment: item });
   };
@@ -132,7 +156,7 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
       <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
         <Settings className="h-12 w-12 mx-auto mb-3 text-gray-300" />
         <p>Оборудование не добавлено</p>
-        <p className="text-sm mt-1">Нажмите "Добавить оборудование" чтобы начать</p>
+        <p className="text-sm mt-1">Нажмите "Новое оборудование" чтобы начать</p>
       </div>
     );
   }
@@ -144,6 +168,8 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
           const DeleteIcon = ButtonIcons.Delete.icon;
           const EditIcon = ButtonIcons.Edit.icon;
           const isEditing = editingId === item.id;
+          const isExpanded = expandedId === item.id;
+          const isEditingNotes = editingNotes === item.id;
           
           const overdue = isOverdue(item.verificationDate);
           const expiringSoon = isExpiringSoon(item.verificationDate);
@@ -237,7 +263,7 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                   // Режим просмотра
                   <>
                     {/* Заголовок с названием и кнопками */}
-                    <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg truncate">
                           {item.name}
@@ -292,7 +318,7 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                     </div>
 
                     {/* Статус с иконкой */}
-                    <div className={`flex items-center gap-1.5 text-xs font-medium mb-3 ${
+                    <div className={`flex items-center gap-1.5 text-xs font-medium mb-2 ${
                       overdue ? 'text-red-600' : 
                       expiringSoon ? 'text-yellow-600' : 'text-green-600'
                     }`}>
@@ -314,18 +340,72 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                       )}
                     </div>
 
-                    {/* Примечания */}
-                    {item.notes && (
-                      <div className="bg-gray-50 rounded-lg p-2 mb-3">
-                        <p className="text-xs text-gray-600 line-clamp-2">
-                          {item.notes}
-                        </p>
-                      </div>
-                    )}
-
                     <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-100">
                       Обновлено: {new Date(item.updatedAt).toLocaleDateString('ru-RU')}
                     </div>
+
+                    {/* Кнопка раскрытия примечаний */}
+                    {item.notes && (
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                        className="w-full mt-2 pt-1 text-center text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1"
+                      >
+                        {isExpanded ? '▲ Скрыть примечания' : '▼ Показать примечания'}
+                      </button>
+                    )}
+
+                    {/* Примечания (раскрываются по клику) */}
+                    {isExpanded && item.notes && (
+                      <div className="mt-3 pt-3 border-t border-gray-100">
+                        <div className="flex items-start gap-2">
+                          <StickyNote className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1">
+                            {isEditingNotes ? (
+                              <div className="space-y-2">
+                                <Textarea
+                                  value={editNotesText}
+                                  onChange={(e) => setEditNotesText(e.target.value)}
+                                  placeholder="Введите примечания..."
+                                  rows={3}
+                                  className="text-sm"
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => saveNotes(item.id)}
+                                    className="gap-1"
+                                  >
+                                    <Save className="h-3.5 w-3.5" />
+                                    Сохранить
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={cancelEditNotes}
+                                    className="gap-1"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                    Отмена
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
+                                  {item.notes}
+                                </p>
+                                <button
+                                  onClick={() => startEditNotes(item)}
+                                  className="text-xs text-blue-500 hover:text-blue-600 mt-1 inline-flex items-center gap-1"
+                                >
+                                  Редактировать
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
