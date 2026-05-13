@@ -1,4 +1,3 @@
-// [file name]: timeline-chart.tsx
 'use client';
 
 import { TreatmentTimeline } from '@/types';
@@ -11,7 +10,6 @@ interface TimelineChartProps {
 export function TimelineChart({ timelineData }: TimelineChartProps) {
   const { culture, treatments } = timelineData;
 
-  // Получаем диапазон дат для таймлайна
   const getTimelineRange = () => {
     if (treatments.length === 0) {
       const now = new Date();
@@ -34,7 +32,6 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
 
   const { start, end } = getTimelineRange();
   
-  // Создаем месяцы для отображения
   const getMonths = () => {
     const months = [];
     const current = new Date(start);
@@ -56,26 +53,26 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   const months = getMonths();
   const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
-const getTypeColor = (type: string) => {
-  const colors: Record<string, string> = {
-    'фунгицид': 'bg-purple-500',
-    'инсектицид': 'bg-red-500',
-    'гербицид': 'bg-orange-500',
-    'десикант': 'bg-yellow-500',
-    'регулятор роста': 'bg-green-500',
-    'удобрение': 'bg-blue-500',
-    'биопрепарат': 'bg-pink-500',
-    'адъювант': 'bg-gray-500',
-    'Баковая смесь': 'bg-teal-500',
+  const getTypeColor = (type: string) => {
+    const colors: Record<string, string> = {
+      'фунгицид': 'bg-purple-500',
+      'инсектицид': 'bg-red-500',
+      'гербицид': 'bg-orange-500',
+      'десикант': 'bg-yellow-500',
+      'регулятор роста': 'bg-green-500',
+      'удобрение': 'bg-blue-500',
+      'биопрепарат': 'bg-pink-500',
+      'адъювант': 'bg-gray-500',
+      'Баковая смесь': 'bg-teal-500',
+    };
+    return colors[type] || 'bg-gray-400';
   };
-  return colors[type] || 'bg-gray-400';
-};
 
-const getTypeLabel = (type: string, treatment: any) => {
-  if (type === 'Баковая смесь' && treatment.tankMixTypes) {
-    return `Баковая смесь: ${treatment.tankMixTypes.join(', ')}`;
-  }
-  const labels: Record<string, string> = {
+  const getTypeLabel = (type: string, treatment: any) => {
+    if (type === 'Баковая смесь' && treatment.tankMixTypes) {
+      return `Баковая смесь: ${treatment.tankMixTypes.join(', ')}`;
+    }
+    const labels: Record<string, string> = {
       'фунгицид': 'Фунгициды',
       'инсектицид': 'Инсектициды',
       'гербицид': 'Гербициды',
@@ -87,7 +84,7 @@ const getTypeLabel = (type: string, treatment: any) => {
       'Баковая смесь': 'Баковая смесь'
     };
     return labels[type] || type;
-};
+  };
 
   const getTreatmentPosition = (treatmentDate: Date) => {
     const daysFromStart = (treatmentDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
@@ -95,7 +92,6 @@ const getTypeLabel = (type: string, treatment: any) => {
     return Math.max(0, Math.min(100, position));
   };
 
-  // Сортируем обработки по дате
   const sortedTreatments = [...treatments].sort((a, b) => a.date.getTime() - b.date.getTime());
 
   return (
@@ -120,7 +116,6 @@ const getTypeLabel = (type: string, treatment: any) => {
                   {month.name.split(' ')[1]}
                 </div>
                 <div className="w-full h-1 bg-gray-200 relative">
-                  {/* Деления на недели */}
                   {[0, 1, 2, 3].map(week => (
                     <div
                       key={week}
@@ -134,8 +129,7 @@ const getTypeLabel = (type: string, treatment: any) => {
           </div>
 
           {/* Обработки */}
-          <div className="relative h-20">
-            {/* Линия времени */}
+          <div className="relative h-[200px]">
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-200 transform -translate-y-1/2" />
             
             {sortedTreatments.map((treatment, index) => {
@@ -150,10 +144,8 @@ const getTypeLabel = (type: string, treatment: any) => {
                     top: '50%'
                   }}
                 >
-                  {/* Линия к оси */}
                   <div className="absolute w-0.5 h-8 bg-gray-300 -top-8 left-1/2 transform -translate-x-1/2" />
                   
-                  {/* Метка обработки */}
                   <div
                     className={`w-4 h-4 rounded-full ${getTypeColor(treatment.type)} border-2 border-white shadow-lg cursor-pointer relative z-10 ${
                       treatment.completed ? 'ring-2 ring-green-400' : 'ring-2 ring-yellow-400'
@@ -161,21 +153,31 @@ const getTypeLabel = (type: string, treatment: any) => {
                     title={`${treatment.type} - ${treatment.date.toLocaleDateString('ru-RU')}`}
                   />
                   
-                  {/* Всплывающая подсказка */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border border-gray-200 rounded-lg p-2 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none min-w-48 z-20">
+                  {/* TOOLTIP - с примечаниями */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border border-gray-200 rounded-lg p-3 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none min-w-64 z-20 max-w-xs">
                     <div className="text-sm font-semibold text-gray-900">
-                      {treatment.date.toLocaleDateString('ru-RU')}
-                    </div>
-                    <div className="text-xs text-gray-600 capitalize">
-                      {treatment.type}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      {treatment.products.join(', ')}
+                      📅 {treatment.date.toLocaleDateString('ru-RU')}
                     </div>
                     
-                    <div className={`text-xs mt-1 ${treatment.completed ? 'text-green-600' : 'text-yellow-600'}`}>
-                      {treatment.completed ? '✅ Выполнено' : '⏳ Запланировано'}
+                    <div className="text-xs text-gray-600 capitalize mt-1">
+                       {getTypeLabel(treatment.type, treatment)}
                     </div>
+                    
+                    <div className="text-xs text-gray-500 mt-1 pb-1 border-b border-gray-100">
+                       {treatment.products.join(', ')}
+                    </div>
+                    
+                    {/* ПРИМЕЧАНИЯ - если оно есть */}
+                    {treatment.notes && treatment.notes.trim() !== '' && (
+                      <div className="text-xs mt-1 pt-1">
+                        <span className="font-medium text-gray-700">📝 Примечания:</span>
+                        <div className="text-gray-600 whitespace-pre-wrap break-words mt-0.5">
+                          {treatment.notes.length > 100 
+                            ? treatment.notes.slice(0, 100) + '...' 
+                            : treatment.notes}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -183,7 +185,7 @@ const getTypeLabel = (type: string, treatment: any) => {
           </div>
 
           {/* Легенда */}
-          <div className="flex flex-wrap gap-4 justify-center text-xs">
+          <div className="flex flex-wrap gap-4 justify-center text-xs pt-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-purple-500 rounded-full" />
               <span>Фунгициды</span>
@@ -205,39 +207,27 @@ const getTypeLabel = (type: string, treatment: any) => {
               <span>Удобрения</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-              <span>Десиканты</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-pink-500 rounded-full" />
-              <span>Биопрепараты</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-500 rounded-full" />
-              <span>Адъюванты</span>
-            </div>
-            <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-teal-500 rounded-full" />
               <span>Баковая смесь</span>
             </div>
           </div>
 
           {/* Статус выполнения */}
-          <div className="flex justify-center gap-6 mt-4">
+          <div className="flex justify-center gap-6">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500 ring-2 ring-green-300" />
-              <span className="text-sm text-gray-600">Выполнено</span>
+              <span className="text-sm text-gray-600"> Выполнено</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-yellow-500 ring-2 ring-yellow-300" />
-              <span className="text-sm text-gray-600">Запланировано</span>
+              <span className="text-sm text-gray-600"> Запланировано</span>
             </div>
           </div>
         </div>
 
         {treatments.length === 0 && (
           <div className="text-center py-8 text-gray-500">
-            Нет выполненных обработок
+            Нет обработок для отображения
           </div>
         )}
       </CardContent>

@@ -1,4 +1,6 @@
-import { useState } from 'react';
+'use client';
+
+import { useState, useEffect } from 'react';
 import { MaintenanceRecord, Vehicle, MaintenanceType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,15 +13,36 @@ interface MaintenanceFormProps {
   onSubmit: (record: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => void;
   onCancel: () => void;
   vehicles: Vehicle[];
+  initialData?: MaintenanceRecord;
+  isEditing?: boolean;
 }
 
-export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFormProps) {
-  const [vehicleId, setVehicleId] = useState<number>(vehicles[0]?.id || 0);
-  const [type, setType] = useState<MaintenanceType>('плановое ТО');
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [hours, setHours] = useState('');
-  const [description, setDescription] = useState('');
-  const [notes, setNotes] = useState('');
+const MAINTENANCE_TYPES: MaintenanceType[] = ['Плановое ТО', 'Внеплановый ремонт'];
+
+export function MaintenanceForm({ 
+  onSubmit, 
+  onCancel, 
+  vehicles, 
+  initialData, 
+  isEditing = false 
+}: MaintenanceFormProps) {
+  const [vehicleId, setVehicleId] = useState<number>(initialData?.vehicleId || vehicles[0]?.id || 0);
+  const [type, setType] = useState<MaintenanceType>(initialData?.type || MAINTENANCE_TYPES[0]);
+  const [date, setDate] = useState<Date | undefined>(initialData?.date ? new Date(initialData.date) : new Date());
+  const [hours, setHours] = useState(initialData?.hours?.toString() || '');
+  const [description, setDescription] = useState(initialData?.description || '');
+  const [notes, setNotes] = useState(initialData?.notes || '');
+
+  useEffect(() => {
+    if (initialData) {
+      setVehicleId(initialData.vehicleId);
+      setType(initialData.type);
+      setDate(new Date(initialData.date));
+      setHours(initialData.hours?.toString() || '');
+      setDescription(initialData.description);
+      setNotes(initialData.notes || '');
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +57,6 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
       return;
     }
 
-    // Проверяем, что дата установлена
     if (!date) {
       alert('Выберите дату обслуживания');
       return;
@@ -60,7 +82,7 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Новая запись обслуживания</CardTitle>
+        <CardTitle>{isEditing ? 'Редактировать запись' : 'Новая запись обслуживания'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -73,11 +95,12 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
                 onChange={(e) => setVehicleId(parseInt(e.target.value))}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                 required
+                disabled={isEditing}
               >
                 <option value="">Выберите технику...</option>
                 {vehicles.map((vehicle) => (
                   <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.name} ({vehicle.type})
+                    {vehicle.name}
                   </option>
                 ))}
               </select>
@@ -91,12 +114,9 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
                 onChange={(e) => setType(e.target.value as MaintenanceType)}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="плановое ТО">Плановое ТО</option>
-                <option value="замена масла">Замена масла</option>
-                <option value="сезонное обслуживание">Сезонное обслуживание</option>
-                <option value="внеплановый ремонт">Внеплановый ремонт</option>
-                <option value="диагностика">Диагностика</option>
-                <option value="другое">Другое</option>
+                {MAINTENANCE_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -126,7 +146,7 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Опишите проведенные работы: что сделали, какие детали заменили и т.д."
+              placeholder="Опишите проведенные работы..."
               rows={4}
               required
             />
@@ -138,7 +158,7 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Дополнительная информация, рекомендации, заметки..."
+              placeholder="Дополнительная информация..."
               rows={3}
             />
           </div>
@@ -148,7 +168,7 @@ export function MaintenanceForm({ onSubmit, onCancel, vehicles }: MaintenanceFor
               Отмена
             </Button>
             <Button type="submit">
-              Создать запись
+              {isEditing ? 'Сохранить' : 'Создать запись'}
             </Button>
           </div>
         </form>

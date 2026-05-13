@@ -1,14 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { ChemicalTreatment, CultureType } from '@/types';
+import { ChemicalTreatment, CultureType, ProductType } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { ButtonIcons, ButtonSizes, CustomIcons } from '@/components/ui-icons';
 import { getCultureIcon, getIconColor, getCultureTextColor } from '@/lib/culture-icons';
-import { Calendar, CheckCircle, Clock } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Save, X, Edit2, MapPin, Package, StickyNote, CalendarDays } from 'lucide-react';
 
 interface CompactTreatmentListProps {
   treatments: ChemicalTreatment[];
@@ -18,6 +20,7 @@ interface CompactTreatmentListProps {
 
 export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTreatment }: CompactTreatmentListProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editingDate, setEditingDate] = useState<number | null>(null);
   const [editingNotes, setEditingNotes] = useState<number | null>(null);
   const [editNotesText, setEditNotesText] = useState('');
@@ -26,8 +29,20 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
     treatment: null
   });
 
+  const [editData, setEditData] = useState<{
+    culture: CultureType;
+    area: string;
+    dueDate: Date;
+    isTankMix: boolean;
+  }>({
+    culture: 'яблоко',
+    area: '',
+    dueDate: new Date(),
+    isTankMix: false,
+  });
+
   const getCardStyle = (completed: boolean) => {
-    return 'bg-white border-gray-200 hover:bg-gray-50';
+    return 'bg-white border-gray-200 hover:shadow-md transition-shadow';
   };
 
   const markAsPending = async (id: number) => {
@@ -68,10 +83,44 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
     setEditNotesText('');
   };
 
+  const startEdit = (treatment: ChemicalTreatment) => {
+    setEditingId(treatment.id);
+    setEditData({
+      culture: treatment.culture,
+      area: treatment.area.toString(),
+      dueDate: treatment.dueDate || new Date(),
+      isTankMix: treatment.isTankMix,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const saveEdit = async (id: number) => {
+    try {
+      await onUpdateTreatment(id, {
+        culture: editData.culture,
+        area: parseFloat(editData.area),
+        dueDate: editData.dueDate,
+        isTankMix: editData.isTankMix,
+      });
+      setEditingId(null);
+    } catch (error) {
+      console.error('Error updating treatment:', error);
+    }
+  };
+
+  const updateEditField = (field: string, value: any) => {
+    setEditData(prev => ({ ...prev, [field]: value }));
+  };
+
   if (treatments.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500 border rounded-lg">
-        Нет созданных обработок
+      <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
+        <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+        <p>Нет созданных обработок</p>
+        <p className="text-sm mt-1">Нажмите "Новая обработка" чтобы добавить</p>
       </div>
     );
   }
@@ -99,238 +148,335 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
     setDeleteConfirm({ isOpen: false, treatment: null });
   };
 
+  const cultures: CultureType[] = ['груша', 'яблоко', 'черешня', 'слива', 'томаты', 'картофель', 'лук', 'свекла', 'морковь', 'капуста', 'другое'];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {treatments.map((treatment) => {
-        const EditIcon = ButtonIcons.Edit.icon;
         const DeleteIcon = ButtonIcons.Delete.icon;
+        const EditIcon = ButtonIcons.Edit.icon;
         const CheckIcon = ButtonIcons.Check.icon;
         const UndoIcon = ButtonIcons.Undo.icon;
         const BeakerIcon = CustomIcons.BeakerIcon;
         const culture = treatment.culture as CultureType;
+        const isEditing = editingId === treatment.id;
+        const isExpanded = expandedId === treatment.id;
 
         return (
           <div
             key={treatment.id}
-            className={`border rounded-lg p-4 transition-colors relative ${getCardStyle(treatment.completed)}`}
+            className={`border rounded-xl overflow-hidden transition-all ${getCardStyle(treatment.completed)}`}
           >
-            {/* Кнопки действий в правом верхнем углу */}
-            <div className="absolute top-3 right-3 flex items-center gap-1">
-              {/* Кнопка выполнения/отмены */}
-              {!treatment.completed ? (
-                <Button
-                  variant={ButtonIcons.Check.variant}
-                  size="sm"
-                  onClick={() => toggleCompleted(treatment.id)}
-                  className={`${ButtonSizes.sm} ${ButtonIcons.Check.style}`}
-                  title={ButtonIcons.Check.title}
-                >
-                  <CheckIcon className={ButtonIcons.Check.className} />
-                </Button>
-              ) : (
-                <Button
-                  variant={ButtonIcons.Undo.variant}
-                  size="sm"
-                  onClick={() => markAsPending(treatment.id)}
-                  className={`${ButtonSizes.sm} ${ButtonIcons.Undo.style}`}
-                  title={ButtonIcons.Undo.title}
-                >
-                  <UndoIcon className={ButtonIcons.Undo.className} />
-                </Button>
-              )}
+            {/* Основная карточка */}
+            <div className="p-4 relative">
+              {/* Кнопки действий */}
+              <div className="absolute top-3 right-3 flex items-center gap-1">
+                {isEditing ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => saveEdit(treatment.id)}
+                      className="h-8 w-8 p-0 text-green-600 hover:bg-green-50"
+                      title="Сохранить"
+                    >
+                      <Save className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={cancelEdit}
+                      className="h-8 w-8 p-0 text-gray-500 hover:bg-gray-100"
+                      title="Отмена"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    {!treatment.completed ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleCompleted(treatment.id)}
+                        className="h-8 w-8 p-0 text-green-600 hover:bg-green-50 border-green-200"
+                        title="Выполнить"
+                      >
+                        <CheckIcon className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => markAsPending(treatment.id)}
+                        className="h-8 w-8 p-0 text-orange-600 hover:bg-orange-50 border-orange-200"
+                        title="Отменить выполнение"
+                      >
+                        <UndoIcon className="h-4 w-4" />
+                      </Button>
+                    )}
 
-              {/* Кнопка редактирования */}
-              <Button
-                variant={ButtonIcons.Edit.variant}
-                size="sm"
-                onClick={() => setExpandedId(expandedId === treatment.id ? null : treatment.id)}
-                className={`${ButtonSizes.sm} hover:bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-300`}
-                title={ButtonIcons.Edit.title}
-              >
-                <EditIcon className={ButtonIcons.Edit.className} />
-              </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => startEdit(treatment)}
+                      className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 border-blue-200"
+                      title="Редактировать"
+                    >
+                      <EditIcon className="h-4 w-4" />
+                    </Button>
 
-              {/* Кнопка удаления */}
-              <Button
-                variant={ButtonIcons.Delete.variant}
-                size="sm"
-                onClick={() => requestDelete(treatment)}
-                className={`${ButtonSizes.sm} ${ButtonIcons.Delete.style} border-red-200 hover:border-red-300`}
-                title={ButtonIcons.Delete.title}
-              >
-                <DeleteIcon className={ButtonIcons.Delete.className} />
-              </Button>
-            </div>
-
-            {/* Основное содержимое */}
-            <div className="flex items-start gap-3 pr-16">
-              {/* Иконка культуры */}
-              <div className={`flex-shrink-0 mt-0.5 ${getIconColor(culture)}`}>
-                {getCultureIcon(culture, "h-6 w-6")}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => requestDelete(treatment)}
+                      className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 border-red-200"
+                      title="Удалить"
+                    >
+                      <DeleteIcon className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
               </div>
-              
-              {/* Основная информация */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className={`font-semibold text-base leading-tight ${getCultureTextColor(culture)}`}>
-                    {treatment.culture}
-                  </span>
-                  <span className="text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded">
-                    {treatment.area} га
-                  </span>
-                  {treatment.isTankMix && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
-                      Баковая смесь
-                    </span>
-                  )}
+
+              {/* Содержимое */}
+              <div className="flex items-start gap-3 pr-28">
+                <div className={`flex-shrink-0 mt-0.5 ${getIconColor(culture)}`}>
+                  {getCultureIcon(culture, "h-7 w-7")}
                 </div>
                 
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-                  <span className="flex items-center gap-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    План: {treatment.dueDate?.toLocaleDateString('ru-RU') || '—'}
-                  </span>
-                  {treatment.actualDate && (
-                    <span className="flex items-center gap-1">
-                      <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-                      Факт: {treatment.actualDate.toLocaleDateString('ru-RU')}
-                    </span>
-                  )}
-                </div>
-
-                {/* Статус */}
-                <div className="flex items-center gap-2 text-sm">
-                  {treatment.completed ? (
-                    <div className="flex items-center gap-1 text-green-600">
-                      <CheckCircle className="h-4 w-4" />
-                      <span>Выполнено</span>
+                <div className="flex-1 min-w-0">
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <div>
+                        <Label className="text-xs text-gray-600">Культура</Label>
+                        <select
+                          value={editData.culture}
+                          onChange={(e) => updateEditField('culture', e.target.value as CultureType)}
+                          className="w-full mt-1 h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                          {cultures.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Площадь (га)</Label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={editData.area}
+                          onChange={(e) => updateEditField('area', e.target.value)}
+                          className="mt-1 h-9"
+                          placeholder="0.0"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Плановая дата</Label>
+                        <DatePicker
+                          value={editData.dueDate}
+                          onChange={(date) => date && updateEditField('dueDate', date)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 pt-1">
+                        <input
+                          type="checkbox"
+                          id={`edit-isTankMix-${treatment.id}`}
+                          checked={editData.isTankMix}
+                          onChange={(e) => updateEditField('isTankMix', e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <Label htmlFor={`edit-isTankMix-${treatment.id}`} className="text-xs text-gray-600 cursor-pointer">
+                          Баковая смесь
+                        </Label>
+                      </div>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-1 text-yellow-600">
-                      <Clock className="h-4 w-4" />
-                      <span>Ожидает выполнения</span>
+                    <>
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h3 className={`font-semibold text-lg ${getCultureTextColor(culture)}`}>
+                          {treatment.culture}
+                        </h3>
+                        <span className="inline-flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full">
+                          <MapPin className="h-3 w-3" />
+                          {treatment.area} га
+                        </span>
+                        {treatment.isTankMix && (
+                          <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                            <BeakerIcon className="h-3 w-3" />
+                            Баковая смесь
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-2">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5" />
+                          План: {treatment.dueDate?.toLocaleDateString('ru-RU') || '—'}
+                        </span>
+                        {treatment.actualDate && (
+                          <span className="flex items-center gap-1.5 text-green-600">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            Факт: {treatment.actualDate.toLocaleDateString('ru-RU')}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {treatment.completed ? (
+                          <span className="inline-flex items-center gap-1 text-sm text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                            <CheckCircle className="h-3.5 w-3.5" />
+                            Выполнено
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-sm text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                            <Clock className="h-3.5 w-3.5" />
+                            Ожидает
+                          </span>
+                        )}
+                        
+                        <span className="inline-flex items-center gap-1 text-sm text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+                          <Package className="h-3.5 w-3.5" />
+                          {treatment.chemicalProducts.length} препарата
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Кнопка раскрытия деталей (только в режиме просмотра) */}
+              {!isEditing && (
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : treatment.id)}
+                  className="w-full mt-3 pt-2 text-center text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1"
+                >
+                  {isExpanded ? (
+                    <>▲ Скрыть детали</>
+                  ) : (
+                    <>▼ Показать детали</>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Детальная информация (стилизована под общий дизайн) */}
+            {!isEditing && isExpanded && (
+              <div className="border-t border-gray-100 bg-gray-50/50 p-4 space-y-4">
+                {/* Препараты */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <Package className="h-4 w-4 text-blue-500" />
+                    Используемые препараты
+                  </h4>
+                  <div className="space-y-1.5">
+                    {treatment.chemicalProducts.map((product, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm bg-white rounded-lg px-3 py-2 border border-gray-100">
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-800">{product.name}</span>
+                          <span className="text-gray-400 text-xs ml-2">({product.productType})</span>
+                        </div>
+                        <span className="text-gray-600 font-mono text-sm bg-gray-50 px-2 py-0.5 rounded">
+                          {product.dosage}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Фактическая дата */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-green-500" />
+                    Фактическая дата выполнения
+                  </h4>
+                  {editingDate === treatment.id ? (
+                    <div className="flex items-center gap-2">
+                      <DatePicker 
+                        value={treatment.actualDate} 
+                        onChange={(date) => updateActualDate(treatment.id, date)}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setEditingDate(null)}
+                        className="h-9 px-3"
+                      >
+                        Готово
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-gray-100">
+                      <span className={treatment.actualDate ? 'text-gray-700' : 'text-gray-400'}>
+                        {treatment.actualDate 
+                          ? treatment.actualDate.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
+                          : 'Не указана'
+                        }
+                      </span>
+                      {treatment.completed && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => setEditingDate(treatment.id)}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          ✏️ Изменить
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Информация о препаратах */}
-                <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
-                  <BeakerIcon className="h-4 w-4" />
-                  <span>{treatment.chemicalProducts.length} препарата</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Раскрывающаяся детальная информация */}
-            {expandedId === treatment.id && (
-              <div className="mt-4 pt-4 border-t border-gray-300 border-opacity-50">
-                <div className="space-y-4">
-                  {/* Препараты */}
-                  <div>
-                    <h5 className="font-medium text-gray-900 mb-2">Препараты:</h5>
+                {/* Примечания */}
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <StickyNote className="h-4 w-4 text-yellow-500" />
+                    Примечания
+                  </h4>
+                  {editingNotes === treatment.id ? (
                     <div className="space-y-2">
-                      {treatment.chemicalProducts.map((product, index) => (
-                        <div key={index} className="flex items-center justify-between text-sm">
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium text-gray-800">{product.name}</span>
-                            <span className="text-gray-600 ml-2">({product.productType})</span>
-                          </div>
-                          <span className="text-gray-700 font-medium ml-2 flex-shrink-0">{product.dosage}</span>
-                        </div>
-                      ))}
+                      <Textarea
+                        value={editNotesText}
+                        onChange={(e) => setEditNotesText(e.target.value)}
+                        placeholder="Введите примечания..."
+                        rows={3}
+                        className="text-sm bg-white"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => saveNotes(treatment.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Сохранить
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={cancelEditNotes}
+                        >
+                          Отмена
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-white rounded-lg px-3 py-2 border border-gray-100 min-h-[60px]">
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
+                        {treatment.notes || <span className="text-gray-400 italic">Нет примечаний</span>}
+                      </p>
+                      <button
+                        onClick={() => startEditNotes(treatment)}
+                        className="text-xs text-blue-500 hover:text-blue-600 mt-1.5 inline-flex items-center gap-1"
+                      >
+                        ✏️ {treatment.notes ? 'Редактировать' : 'Добавить примечание'}
+                      </button>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Управление */}
-                  <div className="space-y-4">
-                    {/* Редактирование даты */}
-                    <div>
-                      <h5 className="font-medium text-gray-900 mb-2">Фактическая дата:</h5>
-                      {editingDate === treatment.id ? (
-                        <div className="flex items-center gap-2">
-                          <DatePicker 
-                            value={treatment.actualDate} 
-                            onChange={(date) => updateActualDate(treatment.id, date)}
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => setEditingDate(null)}
-                          >
-                            ✓
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span className={treatment.actualDate ? 'text-gray-900' : 'text-gray-500'}>
-                            {treatment.actualDate 
-                              ? treatment.actualDate.toLocaleDateString('ru-RU')
-                              : 'Не указана'
-                            }
-                          </span>
-                          {treatment.completed && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setEditingDate(treatment.id)}
-                            >
-                              Изменить дату
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Редактирование примечаний */}
-                    <div>
-                      <h5 className="font-medium text-gray-900 mb-2">Примечания:</h5>
-                      {editingNotes === treatment.id ? (
-                        <div className="space-y-2">
-                          <Textarea
-                            value={editNotesText}
-                            onChange={(e) => setEditNotesText(e.target.value)}
-                            placeholder="Введите примечания..."
-                            rows={3}
-                            className="text-sm"
-                          />
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              onClick={() => saveNotes(treatment.id)}
-                            >
-                              Сохранить
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={cancelEditNotes}
-                            >
-                              Отмена
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-start gap-2">
-                          <div className={`flex-1 p-3 rounded border text-sm ${
-                            treatment.notes 
-                              ? 'bg-gray-50 border-gray-300' 
-                              : 'bg-gray-50 border-gray-200'
-                          }`}>
-                            <p className="text-gray-700">
-                              {treatment.notes || 'Примечания отсутствуют'}
-                            </p>
-                          </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => startEditNotes(treatment)}
-                          >
-                            {treatment.notes ? 'Изменить' : 'Добавить'}
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                {/* Мета-информация */}
+                <div className="text-xs text-gray-400 pt-2 border-t border-gray-200">
+                  Создано: {new Date(treatment.createdAt).toLocaleString('ru-RU')}
                 </div>
               </div>
             )}
@@ -338,7 +484,6 @@ export function CompactTreatmentList({ treatments, onUpdateTreatment, onDeleteTr
         );
       })}
 
-      {/* Диалог подтверждения удаления обработки */}
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         title="Удаление обработки"

@@ -67,12 +67,11 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
     const timelineTreatments = cultureTreatments.flatMap(treatment => {
       const treatments = [];
       
-      // Определяем тип обработки - используем русское название
       let treatmentType: ProductType | 'Баковая смесь';
       let tankMixTypes: ProductType[] = [];
       
       if (treatment.isTankMix) {
-        treatmentType = 'Баковая смесь'; // Используем русское название
+        treatmentType = 'Баковая смесь';
         tankMixTypes = treatment.chemicalProducts
           ?.map(p => p.productType)
           .filter(Boolean) as ProductType[];
@@ -90,6 +89,7 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
           completed: false,
           isTankMix: treatment.isTankMix,
           tankMixTypes: tankMixTypes,
+          notes: treatment.notes, // ✅ ДОБАВЛЕНО
         });
       }
       
@@ -103,6 +103,7 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
           completed: true,
           isTankMix: treatment.isTankMix,
           tankMixTypes: tankMixTypes,
+          notes: treatment.notes, // ✅ ДОБАВЛЕНО
         });
       }
       

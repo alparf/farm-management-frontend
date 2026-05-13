@@ -34,15 +34,11 @@ export function MaintenanceFilters({
     'другая техника'
   ];
 
-  const serviceTypes = [
-    { value: '', label: 'Все типы' },
-    { value: 'плановое ТО', label: 'Плановое ТО' },
-    { value: 'замена масла', label: 'Замена масла' },
-    { value: 'сезонное обслуживание', label: 'Сезонное обслуживание' },
-    { value: 'внеплановый ремонт', label: 'Внеплановый ремонт' },
-    { value: 'диагностика', label: 'Диагностика' },
-    { value: 'другое', label: 'Другое' },
-  ];
+const serviceTypes = [
+  { value: '', label: 'Все типы' },
+  { value: 'Плановое ТО', label: 'Плановое ТО' },
+  { value: 'Внеплановый ремонт', label: 'Внеплановый ремонт' },
+];
 
   return (
     <Card className="mb-6">

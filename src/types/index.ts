@@ -50,6 +50,7 @@ export interface TreatmentTimeline {
     completed: boolean;
     isTankMix?: boolean;
     tankMixTypes?: ProductType[];
+    notes?: string; 
   }[];
 }
 
@@ -99,15 +100,9 @@ export type VehicleType =
   | 'сельхозорудие'
   | 'другая техника';
 
-export type MaintenanceType = 
-  | 'плановое ТО'
-  | 'замена масла'
-  | 'сезонное обслуживание'
-  | 'внеплановый ремонт'
-  | 'диагностика'
-  | 'другое';
+export type MaintenanceType = 'Плановое ТО' | 'Внеплановый ремонт';
 
-  export interface CompatibilityRule {
+export interface CompatibilityRule {
   productType1: ProductType;
   productType2: ProductType;
   compatible: boolean;
