@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
+import { AlertTriangle, X, Save } from 'lucide-react';
 
 interface VehicleFormProps {
   onSubmit: (vehicle: Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -170,10 +171,12 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="gap-1">
+              <X className="h-4 w-4" />
               Отмена
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="gap-1">
+              <Save className="h-4 w-4" />
               Добавить технику
             </Button>
           </div>

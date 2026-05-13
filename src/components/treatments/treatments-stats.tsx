@@ -2,51 +2,55 @@
 
 import { ChemicalTreatment } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle, Clock } from 'lucide-react';
+import { CheckCircle, Clock, MapPin } from 'lucide-react';
 
 interface StatsProps {
   treatments: ChemicalTreatment[];
 }
 
 export function Stats({ treatments }: StatsProps) {
-  const total = treatments.length;
-  const completed = treatments.filter(t => t.completed).length;
-  const pending = total - completed;
+  const totalArea = treatments.reduce((sum, t) => sum + t.area, 0);
+  const completedArea = treatments.filter(t => t.completed).reduce((sum, t) => sum + t.area, 0);
+  const pendingArea = totalArea - completedArea;
+  const percentCompleted = totalArea > 0 ? Math.round((completedArea / totalArea) * 100) : 0;
+  const percentPending = totalArea > 0 ? Math.round((pendingArea / totalArea) * 100) : 0;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-      <Card className="bg-blue-50 border-blue-200">
-        <CardContent className="p-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+      <Card className="bg-cyan-50 border-cyan-200">
+        <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-600">Всего обработок</p>
-              <p className="text-2xl font-bold text-blue-800">{total}</p>
+              <p className="text-xs font-medium text-cyan-600">Общая площадь</p>
+              <p className="text-lg font-bold text-cyan-800">{totalArea.toFixed(1)} га</p>
             </div>
-            <Clock className="h-8 w-8 text-blue-600 opacity-60" />
+            <MapPin className="h-5 w-5 text-cyan-600 opacity-60" />
           </div>
         </CardContent>
       </Card>
 
       <Card className="bg-green-50 border-green-200">
-        <CardContent className="p-4">
+        <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-green-600">Выполнено</p>
-              <p className="text-2xl font-bold text-green-800">{completed}</p>
+              <p className="text-xs font-medium text-green-600">Выполнено по площади</p>
+              <p className="text-lg font-bold text-green-800">{completedArea.toFixed(1)} га</p>
+              <p className="text-xs text-green-600 mt-0.5">{percentCompleted}%</p>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-600 opacity-60" />
+            <CheckCircle className="h-5 w-5 text-green-600 opacity-60" />
           </div>
         </CardContent>
       </Card>
 
       <Card className="bg-orange-50 border-orange-200">
-        <CardContent className="p-4">
+        <CardContent className="p-3">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-orange-600">Ожидают</p>
-              <p className="text-2xl font-bold text-orange-800">{pending}</p>
+              <p className="text-xs font-medium text-orange-600">Ожидает по площади</p>
+              <p className="text-lg font-bold text-orange-800">{pendingArea.toFixed(1)} га</p>
+              <p className="text-xs text-orange-600 mt-0.5">{percentPending}%</p>
             </div>
-            <Clock className="h-8 w-8 text-orange-600 opacity-60" />
+            <Clock className="h-5 w-5 text-orange-600 opacity-60" />
           </div>
         </CardContent>
       </Card>

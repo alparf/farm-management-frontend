@@ -10,7 +10,7 @@ import { VehiclesFilters } from '@/components/vehicles/vehicles-filters';
 import { MaintenanceFilters } from '@/components/vehicles/maintenance-filters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Plus, Wrench, Car } from 'lucide-react';
+import { Plus, Wrench, Car, ShieldOff, RouteOff, AlertTriangle, ShieldCheck, Route } from 'lucide-react';
 
 interface VehiclesTabProps {
   vehicles: Vehicle[];
@@ -39,19 +39,16 @@ export function VehiclesTab({
   const [showVehicleForm, setShowVehicleForm] = useState(false);
   const [showMaintenanceForm, setShowMaintenanceForm] = useState(false);
   
-  // Состояния для фильтров техники
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<VehicleType | ''>('');
   const [insuranceFilter, setInsuranceFilter] = useState('');
   const [roadLegalFilter, setRoadLegalFilter] = useState('');
   const [sortBy, setSortBy] = useState('name');
 
-  // Состояния для фильтров обслуживания
   const [maintenanceSearchQuery, setMaintenanceSearchQuery] = useState('');
   const [maintenanceTypeFilter, setMaintenanceTypeFilter] = useState<VehicleType | ''>('');
   const [maintenanceServiceTypeFilter, setMaintenanceServiceTypeFilter] = useState('');
 
-  // Фильтрация и сортировка техники
   const filteredVehicles = useMemo(() => {
     let filtered = vehicles.filter(vehicle => {
       if (searchQuery && !vehicle.name.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -127,7 +124,6 @@ export function VehiclesTab({
     return filtered;
   }, [vehicles, searchQuery, typeFilter, insuranceFilter, roadLegalFilter, sortBy]);
 
-  // Фильтрация записей обслуживания
   const filteredMaintenance = useMemo(() => {
     let filtered = maintenance.filter(record => {
       if (maintenanceSearchQuery && 
@@ -162,53 +158,117 @@ export function VehiclesTab({
     setShowMaintenanceForm(false);
   };
 
+  // Функции для проверки статуса
+  const isDateExpired = (date?: Date) => {
+    if (!date) return false;
+    return new Date(date) < new Date();
+  };
+
+  const isDateExpiringSoon = (date?: Date, daysThreshold: number = 30) => {
+    if (!date) return false;
+    const today = new Date();
+    const timeDiff = new Date(date).getTime() - today.getTime();
+    const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+    return daysDiff > 0 && daysDiff <= daysThreshold;
+  };
+
+  // Статистика
   const stats = {
     totalVehicles: vehicles.length,
-    totalMaintenance: maintenance.length,
-    insuranceStats: {
-      active: vehicles.filter(v => v.insuranceDate && new Date(v.insuranceDate) >= new Date()).length,
-      expiringSoon: vehicles.filter(v => {
-        if (!v.insuranceDate) return false;
-        const daysUntilExpiry = Math.ceil((new Date(v.insuranceDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
-      }).length,
-    },
-    roadLegalStats: {
-      active: vehicles.filter(v => v.roadLegalUntil && new Date(v.roadLegalUntil) >= new Date()).length,
-      expiringSoon: vehicles.filter(v => {
-        if (!v.roadLegalUntil) return false;
-        const daysUntilExpiry = Math.ceil((new Date(v.roadLegalUntil).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-        return daysUntilExpiry > 0 && daysUntilExpiry <= 30;
-      }).length,
-    },
+    // Без страховки (нет даты или просрочена)
+    withoutInsurance: vehicles.filter(v => {
+      if (!v.insuranceDate) return true;
+      return isDateExpired(v.insuranceDate);
+    }).length,
+    // Без допуска (нет даты или просрочен)
+    withoutRoadLegal: vehicles.filter(v => {
+      if (!v.roadLegalUntil) return true;
+      return isDateExpired(v.roadLegalUntil);
+    }).length,
+    // Истекающие страховки (в течение 30 дней)
+    expiringInsurance: vehicles.filter(v => {
+      if (!v.insuranceDate) return false;
+      return !isDateExpired(v.insuranceDate) && isDateExpiringSoon(v.insuranceDate);
+    }).length,
+    // Истекающие допуски (в течение 30 дней)
+    expiringRoadLegal: vehicles.filter(v => {
+      if (!v.roadLegalUntil) return false;
+      return !isDateExpired(v.roadLegalUntil) && isDateExpiringSoon(v.roadLegalUntil);
+    }).length,
   };
 
   return (
     <div className="space-y-6">
       {/* Статистика */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="bg-blue-50">
           <CardContent className="p-3">
             <div className="text-xs text-blue-600 font-medium">Всего техники</div>
             <div className="text-lg font-bold text-blue-800">{stats.totalVehicles}</div>
           </CardContent>
         </Card>
-        <Card className="bg-green-50">
+
+        <Card className={`${stats.withoutInsurance > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
           <CardContent className="p-3">
-            <div className="text-xs text-green-600 font-medium">Обслуживаний</div>
-            <div className="text-lg font-bold text-green-800">{stats.totalMaintenance}</div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-xs font-medium ${stats.withoutInsurance > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                  Без страховки
+                </div>
+                <div className={`text-lg font-bold ${stats.withoutInsurance > 0 ? 'text-red-800' : 'text-gray-800'}`}>
+                  {stats.withoutInsurance}
+                </div>
+              </div>
+              <ShieldOff className={`h-5 w-5 ${stats.withoutInsurance > 0 ? 'text-red-500' : 'text-gray-400'}`} />
+            </div>
           </CardContent>
         </Card>
-        <Card className="bg-cyan-50">
+
+        <Card className={`${stats.withoutRoadLegal > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
           <CardContent className="p-3">
-            <div className="text-xs text-cyan-600 font-medium">Страховка активна</div>
-            <div className="text-lg font-bold text-cyan-800">{stats.insuranceStats.active}</div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-xs font-medium ${stats.withoutRoadLegal > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                  Без допуска
+                </div>
+                <div className={`text-lg font-bold ${stats.withoutRoadLegal > 0 ? 'text-red-800' : 'text-gray-800'}`}>
+                  {stats.withoutRoadLegal}
+                </div>
+              </div>
+              <RouteOff className={`h-5 w-5 ${stats.withoutRoadLegal > 0 ? 'text-red-500' : 'text-gray-400'}`} />
+            </div>
           </CardContent>
         </Card>
-        <Card className="bg-teal-50">
+
+        <Card className={`${stats.expiringInsurance > 0 ? 'bg-yellow-50' : 'bg-gray-50'}`}>
           <CardContent className="p-3">
-            <div className="text-xs text-teal-600 font-medium">Допуск активен</div>
-            <div className="text-lg font-bold text-teal-800">{stats.roadLegalStats.active}</div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-xs font-medium ${stats.expiringInsurance > 0 ? 'text-yellow-600' : 'text-gray-600'}`}>
+                  Истекает страховка
+                </div>
+                <div className={`text-lg font-bold ${stats.expiringInsurance > 0 ? 'text-yellow-800' : 'text-gray-800'}`}>
+                  {stats.expiringInsurance}
+                </div>
+              </div>
+              <AlertTriangle className={`h-5 w-5 ${stats.expiringInsurance > 0 ? 'text-yellow-500' : 'text-gray-400'}`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className={`${stats.expiringRoadLegal > 0 ? 'bg-yellow-50' : 'bg-gray-50'}`}>
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-xs font-medium ${stats.expiringRoadLegal > 0 ? 'text-yellow-600' : 'text-gray-600'}`}>
+                  Истекает допуск
+                </div>
+                <div className={`text-lg font-bold ${stats.expiringRoadLegal > 0 ? 'text-yellow-800' : 'text-gray-800'}`}>
+                  {stats.expiringRoadLegal}
+                </div>
+              </div>
+              <AlertTriangle className={`h-5 w-5 ${stats.expiringRoadLegal > 0 ? 'text-yellow-500' : 'text-gray-400'}`} />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -330,3 +390,5 @@ export function VehiclesTab({
     </div>
   );
 }
+
+export default VehiclesTab;

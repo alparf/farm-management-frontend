@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
 import { QuickDateSelector } from '@/components/ui/quick-date-selector';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, X, Save } from 'lucide-react';
 
 interface TreatmentFormProps {
   onSubmit: (treatment: Omit<ChemicalTreatment, 'id' | 'createdAt'>) => void;
@@ -418,23 +418,14 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
               + Добавить препарат
             </Button>
           </div>
-
           <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="gap-1">
+              <X className="h-4 w-4" />
               Отмена
             </Button>
-            <Button 
-              type="submit"
-              className={
-                compatibilityWarning.includes('Критические') 
-                  ? 'bg-orange-600 hover:bg-orange-700' 
-                  : ''
-              }
-            >
-              {compatibilityWarning.includes('Критические') 
-                ? 'Создать с предупреждением' 
-                : 'Создать обработку'
-              }
+            <Button type="submit" className="gap-1">
+              <Save className="h-4 w-4" />
+              Добавить обработку
             </Button>
           </div>
         </form>

@@ -103,11 +103,28 @@ export default function Home() {
 
     filtered.sort((a, b) => {
       switch (sortBy) {
-        case 'dueDate': return (a.dueDate?.getTime() || 0) - (b.dueDate?.getTime() || 0);
-        case 'createdAt': return b.createdAt.getTime() - a.createdAt.getTime();
-        case 'culture': return a.culture.localeCompare(b.culture);
-        case 'area': return b.area - a.area;
-        default: return 0;
+        case 'dueDate': 
+          return (a.dueDate?.getTime() || 0) - (b.dueDate?.getTime() || 0);
+        case 'dueDateDesc': 
+          return (b.dueDate?.getTime() || 0) - (a.dueDate?.getTime() || 0);
+        case 'createdAt': 
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        case 'createdAtAsc': 
+          return a.createdAt.getTime() - b.createdAt.getTime();
+        case 'culture': 
+          return a.culture.localeCompare(b.culture);
+        case 'area': 
+          return b.area - a.area;
+        case 'areaAsc': 
+          return a.area - b.area;
+        case 'status':
+          // Ожидающие сначала (false → true)
+          return (a.completed === b.completed) ? 0 : a.completed ? 1 : -1;
+        case 'statusDesc':
+          // Выполненные сначала (true → false)
+          return (a.completed === b.completed) ? 0 : a.completed ? -1 : 1;
+        default: 
+          return 0;
       }
     });
 
@@ -162,7 +179,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      {/* Заголовок и кнопка обновления - УБРАЛИ КНОПКУ ДОБАВЛЕНИЯ ОТСЮДА */}
+      {/* Заголовок и кнопка обновления */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Сельхозучет</h1>
         <div className="flex gap-2">
@@ -170,7 +187,6 @@ export default function Home() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Обновить
           </Button>
-          {/* Убрали кнопку добавления из общего заголовка */}
         </div>
       </div>
 
@@ -232,7 +248,7 @@ export default function Home() {
             onShowCompletedChange={setShowCompleted}
           />
 
-          {/* Заголовок и кнопка добавления обработок - ПОД ФИЛЬТРАМИ */}
+          {/* Заголовок и кнопка добавления обработок */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
               Обработки ({filteredTreatments.length} из {treatments.length})

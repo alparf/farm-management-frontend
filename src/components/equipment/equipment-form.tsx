@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
+import { AlertTriangle, X, Save } from 'lucide-react';
 
 interface EquipmentFormProps {
   equipment?: Equipment;
@@ -134,10 +135,12 @@ export function EquipmentForm({ equipment, onSubmit, onCancel }: EquipmentFormPr
           </div>
 
           <div className="flex gap-2 justify-end">
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} className="gap-1">
+              <X className="h-4 w-4" />
               Отмена
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="gap-1">
+              <Save className="h-4 w-4" />
               {equipment ? 'Сохранить' : 'Добавить'}
             </Button>
           </div>

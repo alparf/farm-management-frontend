@@ -1,8 +1,7 @@
 'use client';
 
 import { CultureType } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCultureIcon, getCultureColor, getCultureTextColor, getIconColor } from '@/lib/culture-icons';
+import { getCultureIcon, getCultureTextColor, getIconColor } from '@/lib/culture-icons';
 
 interface CultureSelectorProps {
   cultures: CultureType[];
@@ -16,42 +15,69 @@ export function CultureSelector({ cultures, selectedCulture, onCultureChange, st
     return stats.find(stat => stat.culture === culture) || { totalTreatments: 0, completedTreatments: 0 };
   };
 
+  const getCardColor = (culture: CultureType, isSelected: boolean) => {
+    if (isSelected) return 'bg-blue-100 border-blue-500 shadow-md';
+    
+    const colors: Record<CultureType, string> = {
+      'яблоко': 'bg-red-50 border-red-200 hover:bg-red-100',
+      'груша': 'bg-green-50 border-green-200 hover:bg-green-100',
+      'черешня': 'bg-pink-50 border-pink-200 hover:bg-pink-100',
+      'слива': 'bg-purple-50 border-purple-200 hover:bg-purple-100',
+      'томаты': 'bg-orange-50 border-orange-200 hover:bg-orange-100',
+      'картофель': 'bg-yellow-50 border-yellow-200 hover:bg-yellow-100',
+      'лук': 'bg-lime-50 border-lime-200 hover:bg-lime-100',
+      'свекла': 'bg-rose-50 border-rose-200 hover:bg-rose-100',
+      'морковь': 'bg-amber-50 border-amber-200 hover:bg-amber-100',
+      'капуста': 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100',
+      'другое': 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+    };
+    return colors[culture] || 'bg-gray-50 border-gray-200 hover:bg-gray-100';
+  };
+
   return (
-    <Card className="mb-6">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg">Выберите культуру для анализа</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 gap-2">
-          {cultures.map((culture) => {
-            const cultureStat = getCultureStats(culture);
-            const isSelected = selectedCulture === culture;
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+      {cultures.map((culture) => {
+        const cultureStat = getCultureStats(culture);
+        const isSelected = selectedCulture === culture;
+        const percentCompleted = cultureStat.totalTreatments > 0 
+          ? Math.round((cultureStat.completedTreatments / cultureStat.totalTreatments) * 100) 
+          : 0;
+        
+        return (
+          <button
+            key={culture}
+            onClick={() => onCultureChange(culture)}
+            className={`border-2 rounded-xl p-3 transition-all text-left hover:shadow-lg ${
+              getCardColor(culture, isSelected)
+            } ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1 shadow-md' : 'shadow-sm'}`}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`${getIconColor(culture)}`}>
+                {getCultureIcon(culture, "h-5 w-5")}
+              </div>
+              <span className={`font-medium text-sm capitalize ${getCultureTextColor(culture)}`}>
+                {culture}
+              </span>
+            </div>
             
-            return (
-              <button
-                key={culture}
-                onClick={() => onCultureChange(culture)}
-                className={`p-2 rounded-lg border-2 transition-all flex flex-col items-center text-center min-h-[70px] justify-between ${getCultureColor(culture, isSelected)}`}
-              >
-                <div className={`${getIconColor(culture)} mb-1`}>
-                  {getCultureIcon(culture)}
-                </div>
-                
-                <div className="flex-1 flex flex-col justify-center">
-                  <div className={`font-medium text-xs capitalize mb-1 ${getCultureTextColor(culture)}`}>
-                    {culture}
-                  </div>
-                  
-                  {/* Статистика */}
-                  <div className="text-[10px] text-gray-600 leading-tight">
-                    {cultureStat.completedTreatments}/{cultureStat.totalTreatments}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+            <div className="text-2xl font-bold text-gray-800">
+              {cultureStat.totalTreatments}
+            </div>
+            
+            <div className="flex items-center justify-between mt-1">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                <span className="text-xs text-gray-600">
+                  {cultureStat.completedTreatments} выполнено
+                </span>
+              </div>
+              <span className="text-xs font-medium text-gray-500">
+                {percentCompleted}%
+              </span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
   );
 }

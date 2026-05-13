@@ -95,10 +95,15 @@ export function FilterSort({
               onChange={(e) => onSortChange(e.target.value)}
               className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
             >
-              <option value="dueDate">По дате обработки</option>
-              <option value="createdAt">По дате создания</option>
-              <option value="culture">По культуре</option>
-              <option value="area">По площади</option>
+              <option value="dueDate">По дате обработки (раньше → позже)</option>
+              <option value="dueDateDesc">По дате обработки (позже → раньше)</option>
+              <option value="createdAt">По дате создания (новые → старые)</option>
+              <option value="createdAtAsc">По дате создания (старые → новые)</option>
+              <option value="culture">По культуре (А → Я)</option>
+              <option value="area">По площади (больше → меньше)</option>
+              <option value="areaAsc">По площади (меньше → больше)</option>
+              <option value="status">По статусу (ожидающие → выполненные)</option>
+              <option value="statusDesc">По статусу (выполненные → ожидающие)</option>
             </select>
           </div>
         </div>

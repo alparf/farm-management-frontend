@@ -25,7 +25,7 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Выбор культуры */}
+      {/* Выбор культуры - теперь сверху */}
       <CultureSelector
         cultures={cultures}
         selectedCulture={currentCulture}
@@ -37,16 +37,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
         <>
           {/* Временная шкала */}
           <TimelineChart timelineData={getTimelineData(currentCulture)} />
-
-          {/* Заголовок с иконкой культуры */}
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`${getIconColor(currentCulture)}`}>
-              {getCultureIcon(currentCulture, "h-8 w-8")}
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 capitalize">
-              Аналитика по культуре: {currentCulture}
-            </h2>
-          </div>
 
           {/* Статистика по культуре */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

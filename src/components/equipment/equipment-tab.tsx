@@ -4,8 +4,8 @@ import { EquipmentList } from './equipment-list';
 import { EquipmentForm } from './equipment-form';
 import { EquipmentFilters } from './equipment-filters';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Plus, AlertTriangle, CheckCircle, Package } from 'lucide-react';
 
 interface EquipmentTabProps {
   equipment: Equipment[];
@@ -21,8 +21,6 @@ export function EquipmentTab({
   onDeleteEquipment 
 }: EquipmentTabProps) {
   const [showForm, setShowForm] = useState(false);
-  const [editingEquipment, setEditingEquipment] = useState<Equipment | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   // Состояния для фильтров
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,29 +33,8 @@ export function EquipmentTab({
     setShowForm(false);
   };
 
-  const handleUpdateEquipment = async (id: number, updates: Partial<Equipment>) => {
-    await onUpdateEquipment(id, updates);
-    setEditingEquipment(null);
-  };
-
-  const handleDeleteEquipment = async (id: number) => {
-    try {
-      setIsDeleting(true);
-      await onDeleteEquipment(id);
-    } catch (error) {
-      console.error('Error deleting equipment:', error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  const handleEdit = (equipment: Equipment) => {
-    setEditingEquipment(equipment);
-  };
-
   const handleCancel = () => {
     setShowForm(false);
-    setEditingEquipment(null);
   };
 
   // Функции для определения статуса оборудования
@@ -125,55 +102,55 @@ export function EquipmentTab({
   return (
     <div className="space-y-6">
       {/* Статистика */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">Всего единиц</p>
-                <p className="text-2xl font-bold text-blue-800">{equipment.length}</p>
+                <div className="text-xs text-blue-600 font-medium">Всего единиц</div>
+                <div className="text-lg font-bold text-blue-800">{equipment.length}</div>
               </div>
-              <CheckCircle className="h-8 w-8 text-blue-600 opacity-60" />
+              <Package className="h-6 w-6 text-blue-600 opacity-60" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-green-50 border-green-200">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600">Активных</p>
-                <p className="text-2xl font-bold text-green-800">{activeCount}</p>
+                <div className="text-xs text-green-600 font-medium">Активных</div>
+                <div className="text-lg font-bold text-green-800">{activeCount}</div>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600 opacity-60" />
+              <CheckCircle className="h-6 w-6 text-green-600 opacity-60" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-yellow-50 border-yellow-200">
-          <CardContent className="p-4">
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-yellow-600">Скоро истекает</p>
-                <p className="text-2xl font-bold text-yellow-800">{expiringSoonCount}</p>
+                <div className="text-xs text-yellow-600 font-medium">Скоро истекает</div>
+                <div className="text-lg font-bold text-yellow-800">{expiringSoonCount}</div>
               </div>
-              <AlertTriangle className="h-8 w-8 text-yellow-600 opacity-60" />
+              <AlertTriangle className="h-6 w-6 text-yellow-600 opacity-60" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${expiredCount > 0 ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'}`}>
-          <CardContent className="p-4">
+        <Card className={`${expiredCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+          <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-sm font-medium ${expiredCount > 0 ? 'text-red-600' : 'text-orange-600'}`}>
+                <div className={`text-xs font-medium ${expiredCount > 0 ? 'text-red-600' : 'text-gray-600'}`}>
                   Просрочено
-                </p>
-                <p className={`text-2xl font-bold ${expiredCount > 0 ? 'text-red-800' : 'text-orange-800'}`}>
+                </div>
+                <div className={`text-lg font-bold ${expiredCount > 0 ? 'text-red-800' : 'text-gray-800'}`}>
                   {expiredCount}
-                </p>
+                </div>
               </div>
-              <AlertTriangle className={`h-8 w-8 ${expiredCount > 0 ? 'text-red-600' : 'text-orange-600'} opacity-60`} />
+              <AlertTriangle className={`h-6 w-6 ${expiredCount > 0 ? 'text-red-600' : 'text-gray-500'} opacity-60`} />
             </div>
           </CardContent>
         </Card>
@@ -196,16 +173,13 @@ export function EquipmentTab({
         <h2 className="text-2xl font-bold">
           Оборудование ({filteredEquipment.length} из {equipment.length})
         </h2>
-        <Button 
-          onClick={() => setShowForm(true)}
-          disabled={isDeleting}
-        >
+        <Button onClick={() => setShowForm(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Добавить оборудование
         </Button>
       </div>
 
-      {/* Формы */}
+      {/* Форма добавления */}
       {showForm && (
         <EquipmentForm
           onSubmit={handleAddEquipment}
@@ -213,19 +187,11 @@ export function EquipmentTab({
         />
       )}
 
-      {editingEquipment && (
-        <EquipmentForm
-          equipment={editingEquipment}
-          onSubmit={(data) => handleUpdateEquipment(editingEquipment.id, data)}
-          onCancel={handleCancel}
-        />
-      )}
-
-      {/* Список оборудования */}
+      {/* Список оборудования - теперь с inline-редактированием */}
       <EquipmentList
         equipment={filteredEquipment}
-        onEdit={handleEdit}
-        onDelete={handleDeleteEquipment}
+        onUpdateEquipment={onUpdateEquipment}
+        onDeleteEquipment={onDeleteEquipment}
       />
     </div>
   );
