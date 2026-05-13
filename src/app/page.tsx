@@ -254,7 +254,6 @@ export default function Home() {
               Обработки ({filteredTreatments.length} из {treatments.length})
             </h2>
             <Button onClick={() => setShowTreatmentForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
               Новая обработка
             </Button>
           </div>

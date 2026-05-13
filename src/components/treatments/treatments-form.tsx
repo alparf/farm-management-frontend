@@ -425,7 +425,7 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
             </Button>
             <Button type="submit" className="gap-1">
               <Save className="h-4 w-4" />
-              Добавить обработку
+              Добавить
             </Button>
           </div>
         </form>

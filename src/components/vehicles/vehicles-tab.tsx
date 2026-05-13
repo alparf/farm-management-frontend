@@ -326,8 +326,7 @@ export function VehiclesTab({
               Учет техники ({filteredVehicles.length} из {vehicles.length})
             </h2>
             <Button onClick={() => setShowVehicleForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить технику
+              Новая техника
             </Button>
           </div>
 
@@ -367,7 +366,6 @@ export function VehiclesTab({
               onClick={() => setShowMaintenanceForm(true)}
               disabled={vehicles.length === 0}
             >
-              <Plus className="mr-2 h-4 w-4" />
               Новая запись
             </Button>
           </div>

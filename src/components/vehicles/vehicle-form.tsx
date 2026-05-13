@@ -177,7 +177,7 @@ export function VehicleForm({ onSubmit, onCancel }: VehicleFormProps) {
             </Button>
             <Button type="submit" className="gap-1">
               <Save className="h-4 w-4" />
-              Добавить технику
+              Добавить
             </Button>
           </div>
         </form>

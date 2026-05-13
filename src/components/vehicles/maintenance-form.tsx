@@ -171,7 +171,7 @@ export function MaintenanceForm({
             </Button>
             <Button type="submit" className="gap-1">
               <Save className="h-4 w-4" />
-              Добавить запись
+              Добавить
             </Button>
           </div>
         </form>

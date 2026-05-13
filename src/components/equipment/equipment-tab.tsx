@@ -174,8 +174,7 @@ export function EquipmentTab({
           Оборудование ({filteredEquipment.length} из {equipment.length})
         </h2>
         <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Добавить оборудование
+          Новое оборудование
         </Button>
       </div>
 

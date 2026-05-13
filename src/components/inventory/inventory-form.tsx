@@ -127,7 +127,7 @@ export function InventoryForm({ onSubmit, onCancel }: InventoryFormProps) {
             </Button>
             <Button type="submit" className="gap-1">
               <Save className="h-4 w-4" />
-              Добавить продукт
+              Добавить
             </Button>
           </div>
         </form>
