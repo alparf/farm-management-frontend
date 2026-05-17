@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ProductInventory, ProductType } from '@/types';
 import { InventoryList } from '@/components/inventory/inventory-list';
 import { InventoryForm } from '@/components/inventory/inventory-form';
@@ -18,6 +18,14 @@ interface InventoryTabProps {
   onRefresh: () => void;
 }
 
+// Ключи для localStorage
+const STORAGE_KEYS = {
+  searchQuery: 'inventory_searchQuery',
+  typeFilter: 'inventory_typeFilter',
+  sortBy: 'inventory_sortBy',
+  stockFilter: 'inventory_stockFilter',
+};
+
 export function InventoryTab({
   inventory,
   onAddProduct,
@@ -29,43 +37,93 @@ export function InventoryTab({
   const [refreshKey, setRefreshKey] = useState(0);
   const [activeSubTab, setActiveSubTab] = useState<'products' | 'transactions'>('products');
   
-  // Состояния для фильтров
-  const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState<ProductType | ''>('');
-  const [sortBy, setSortBy] = useState('name');
-  const [stockFilter, setStockFilter] = useState('all');
+  // Состояния для фильтров с загрузкой из localStorage
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(STORAGE_KEYS.searchQuery) || '';
+    }
+    return '';
+  });
+  
+  const [typeFilter, setTypeFilter] = useState<ProductType | ''>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem(STORAGE_KEYS.typeFilter) as ProductType | '') || '';
+    }
+    return '';
+  });
+  
+  const [sortBy, setSortBy] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(STORAGE_KEYS.sortBy) || 'name';
+    }
+    return 'name';
+  });
+  
+  const [stockFilter, setStockFilter] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(STORAGE_KEYS.stockFilter) || 'all';
+    }
+    return 'all';
+  });
+
+  // Сохраняем фильтры в localStorage при изменении
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.searchQuery, searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.typeFilter, typeFilter);
+  }, [typeFilter]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.sortBy, sortBy);
+  }, [sortBy]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.stockFilter, stockFilter);
+  }, [stockFilter]);
 
   // Фильтрация склада
   const filteredInventory = useMemo(() => {
     let filtered = inventory.filter(product => {
+      // Поиск по названию
       if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
+      // Фильтр по типу
       if (typeFilter && product.type !== typeFilter) {
         return false;
       }
+      // Фильтр по запасам
       if (stockFilter === 'low' && product.quantity > 5) {
         return false;
       }
-      if (stockFilter === 'out' && product.quantity > 0) {
+      if (stockFilter === 'out' && product.quantity !== 0) {
         return false;
       }
-      if (stockFilter === 'normal' && product.quantity <= 5) {
+      if (stockFilter === 'normal' && (product.quantity === 0 || product.quantity <= 5)) {
         return false;
       }
       return true;
     });
 
+    // Сортировка
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return a.name.localeCompare(b.name);
+          return a.name.localeCompare(b.name, 'ru');
+        case 'nameDesc':
+          return b.name.localeCompare(a.name, 'ru');
         case 'quantity':
           return b.quantity - a.quantity;
+        case 'quantityAsc':
+          return a.quantity - b.quantity;
         case 'type':
-          return a.type.localeCompare(b.type);
+          return a.type.localeCompare(b.type, 'ru');
         case 'updatedAt':
           return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case 'updatedAtAsc':
+          return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
         default:
           return 0;
       }
@@ -169,7 +227,7 @@ export function InventoryTab({
             </Button>
           </div>
 
-          {/* История движений - теперь без выбора СЗР, показывает всё */}
+          {/* История движений - показывает все транзакции с фильтрацией внутри */}
           <TransactionHistory refreshKey={refreshKey} />
         </div>
       )}

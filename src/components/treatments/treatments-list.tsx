@@ -274,6 +274,12 @@ export function CompactTreatmentList({
                         <MapPin className="h-3 w-3" />
                         {treatment.area} га
                       </span>
+                      {treatment.isTankMix && (
+                        <span className="inline-flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full">
+                          <Beaker className="h-3 w-3" />
+                          Баковая смесь
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {!isCompleted ? (
@@ -316,16 +322,6 @@ export function CompactTreatmentList({
                         <DeleteIcon className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                  </div>
-
-                  {/* Баковая смесь (отдельно) */}
-                  <div className="flex flex-wrap items-center gap-2 mb-2">
-                    {treatment.isTankMix && (
-                      <span className="inline-flex items-center gap-1 text-sm bg-gray-100 text-gray-700 px-2.5 py-0.5 rounded-full">
-                        <Beaker className="h-3 w-3" />
-                        Баковая смесь
-                      </span>
-                    )}
                   </div>
                   
                   {/* Плановая дата - синий календарик */}

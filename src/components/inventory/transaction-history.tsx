@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useApi } from '@/hooks/useApi';
-import { CalendarDays, Filter, Search, ArrowUpDown, X, Package } from 'lucide-react';
+import { CalendarDays, Search, ArrowUpDown, X, Package, Filter } from 'lucide-react';
 
 interface Transaction {
   id: number;
@@ -47,14 +47,13 @@ export function TransactionHistory({ refreshKey }: TransactionHistoryProps) {
   const [error, setError] = useState<string | null>(null);
   const { getBaseUrl } = useApi();
   
-  // Фильтры
+  // Фильтры - сохраняются между обновлениями
   const [selectedProductId, setSelectedProductId] = useState<number | 'all'>('all');
   const [productTypeFilter, setProductTypeFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState<string>('');
   const [dateTo, setDateTo] = useState<string>('');
-  const [showFilters, setShowFilters] = useState(false);
   
   // Сортировка
   const [sortField, setSortField] = useState<SortField>('date');
@@ -79,7 +78,6 @@ export function TransactionHistory({ refreshKey }: TransactionHistoryProps) {
     try {
       setLoading(true);
       
-      // Загружаем все транзакции
       const transactionsResponse = await fetch(`${baseUrlRef.current}/inventory/transactions/all`);
       
       if (!transactionsResponse.ok) {
@@ -88,12 +86,10 @@ export function TransactionHistory({ refreshKey }: TransactionHistoryProps) {
       
       let allTransactions = await transactionsResponse.json();
       
-      // Загружаем список продуктов для информации
       const productsResponse = await fetch(`${baseUrlRef.current}/inventory`);
       const allProducts = await productsResponse.json();
       setProducts(allProducts);
       
-      // Обогащаем транзакции информацией о продуктах
       allTransactions = allTransactions.map((tx: any) => {
         const product = allProducts.find((p: any) => p.id === tx.productId);
         return {
@@ -137,7 +133,7 @@ export function TransactionHistory({ refreshKey }: TransactionHistoryProps) {
       result = result.filter(tx => tx.type === typeFilter);
     }
     
-    // Фильтр по поиску (описание, название СЗР)
+    // Фильтр по поиску
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       result = result.filter(tx => 
@@ -178,7 +174,7 @@ export function TransactionHistory({ refreshKey }: TransactionHistoryProps) {
           comparison = a.balanceAfter - b.balanceAfter;
           break;
         case 'product':
-          comparison = (a.productName || '').localeCompare(b.productName || '');
+          comparison = (a.productName || '').localeCompare(b.productName || '', 'ru');
           break;
         default:
           comparison = 0;
@@ -274,124 +270,115 @@ export function TransactionHistory({ refreshKey }: TransactionHistoryProps) {
 
   return (
     <div className="space-y-4">
-      {/* Кнопка фильтров */}
-      <div className="flex justify-between items-center">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-          className="gap-2"
-        >
-          <Filter className="h-4 w-4" />
-          Фильтры
+      {/* Панель фильтров - белый фон как в складе */}
+      <div className="bg-white p-4 rounded-lg border border-gray-200 space-y-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Фильтры журнала</span>
+            {hasActiveFilters && (
+              <span className="px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
+                {filteredTransactions.length}/{transactions.length}
+              </span>
+            )}
+          </div>
           {hasActiveFilters && (
-            <span className="ml-1 px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded-full">
-              {filteredTransactions.length}/{transactions.length}
-            </span>
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 h-8">
+              <X className="h-3 w-3" />
+              Сбросить все
+            </Button>
           )}
-        </Button>
-        
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
-            <X className="h-3 w-3" />
-            Сбросить все
-          </Button>
-        )}
-      </div>
+        </div>
 
-      {/* Панель фильтров */}
-      {showFilters && (
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Выбор СЗР */}
-            <div>
-              <Label className="text-xs text-gray-600">СЗР</Label>
-              <select
-                value={selectedProductId}
-                onChange={(e) => setSelectedProductId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="all">Все СЗР</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} ({product.type})
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Тип СЗР */}
-            <div>
-              <Label className="text-xs text-gray-600">Тип СЗР</Label>
-              <select
-                value={productTypeFilter}
-                onChange={(e) => setProductTypeFilter(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="all">Все типы</option>
-                {uniqueProductTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Тип операции */}
-            <div>
-              <Label className="text-xs text-gray-600">Тип операции</Label>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="all">Все операции</option>
-                <option value="IN">Приход</option>
-                <option value="OUT">Расход</option>
-                <option value="ADJUSTMENT">Корректировка</option>
-              </select>
-            </div>
-            
-            {/* Поиск */}
-            <div className="lg:col-span-2">
-              <Label className="text-xs text-gray-600">Поиск</Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Название СЗР, описание, источник..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
-            </div>
-            
-            {/* Дата от */}
-            <div>
-              <Label className="text-xs text-gray-600">Дата от</Label>
-              <input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              />
-            </div>
-            
-            {/* Дата до */}
-            <div>
-              <Label className="text-xs text-gray-600">Дата до</Label>
-              <input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Выбор СЗР */}
+          <div>
+            <Label className="text-xs text-gray-600">СЗР</Label>
+            <select
+              value={selectedProductId}
+              onChange={(e) => setSelectedProductId(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="all">Все СЗР</option>
+              {products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name} ({product.type})
+                </option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Тип СЗР */}
+          <div>
+            <Label className="text-xs text-gray-600">Тип СЗР</Label>
+            <select
+              value={productTypeFilter}
+              onChange={(e) => setProductTypeFilter(e.target.value)}
+              className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="all">Все типы</option>
+              {uniqueProductTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Тип операции */}
+          <div>
+            <Label className="text-xs text-gray-600">Тип операции</Label>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            >
+              <option value="all">Все операции</option>
+              <option value="IN">Приход</option>
+              <option value="OUT">Расход</option>
+              <option value="ADJUSTMENT">Корректировка</option>
+            </select>
+          </div>
+          
+          {/* Поиск */}
+          <div className="lg:col-span-2">
+            <Label className="text-xs text-gray-600">Поиск</Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Название СЗР, описание, источник..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-8"
               />
             </div>
           </div>
           
-          <div className="text-xs text-gray-500">
-            Найдено: {filteredTransactions.length} из {transactions.length} записей
+          {/* Дата от */}
+          <div>
+            <Label className="text-xs text-gray-600">Дата от</Label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            />
+          </div>
+          
+          {/* Дата до */}
+          <div>
+            <Label className="text-xs text-gray-600">Дата до</Label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+            />
           </div>
         </div>
-      )}
+        
+        <div className="text-xs text-gray-500">
+          Найдено: {filteredTransactions.length} из {transactions.length} записей
+        </div>
+      </div>
 
       {/* Таблица с сортировкой */}
       <div className="border rounded-lg overflow-hidden">
