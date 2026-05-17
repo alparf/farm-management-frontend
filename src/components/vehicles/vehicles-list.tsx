@@ -161,7 +161,7 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {vehicles.map((vehicle) => {
           const DeleteIcon = ButtonIcons.Delete.icon;
           const EditIcon = ButtonIcons.Edit.icon;
@@ -284,7 +284,7 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                 ) : (
                   <>
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <h3 className="font-semibold text-lg text-gray-900 truncate">
+                      <h3 className="font-semibold text-base text-gray-900 truncate">
                         {vehicle.name}
                       </h3>
                       <div className="flex items-center gap-1 flex-shrink-0">
@@ -354,7 +354,7 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                             <Shield className="h-3.5 w-3.5" />
                             Страховка:
                           </span>
-                          <span className="text-gray-700">{formatDate(vehicle.insuranceDate)}</span>
+                          <span className="text-gray-700 text-xs">{formatDate(vehicle.insuranceDate)}</span>
                         </div>
                       )}
                       
@@ -364,7 +364,7 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                             <Route className="h-3.5 w-3.5" />
                             Допуск:
                           </span>
-                          <span className="text-gray-700">{formatDate(vehicle.roadLegalUntil)}</span>
+                          <span className="text-gray-700 text-xs">{formatDate(vehicle.roadLegalUntil)}</span>
                         </div>
                       )}
                     </div>
@@ -373,20 +373,20 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                       <div className="bg-gray-50 rounded-lg p-2 space-y-1 text-sm mb-3">
                         {vehicle.model && (
                           <div className="flex gap-2">
-                            <span className="text-gray-500 w-16">Модель:</span>
-                            <span className="text-gray-700">{vehicle.model}</span>
+                            <span className="text-gray-500 w-14 text-xs">Модель:</span>
+                            <span className="text-gray-700 text-xs truncate">{vehicle.model}</span>
                           </div>
                         )}
                         {vehicle.year && (
                           <div className="flex gap-2">
-                            <span className="text-gray-500 w-16">Год:</span>
-                            <span className="text-gray-700">{vehicle.year}</span>
+                            <span className="text-gray-500 w-14 text-xs">Год:</span>
+                            <span className="text-gray-700 text-xs">{vehicle.year}</span>
                           </div>
                         )}
                         {vehicle.vin && (
                           <div className="flex gap-2">
-                            <span className="text-gray-500 w-16">VIN:</span>
-                            <span className="text-gray-700 font-mono text-xs">{vehicle.vin}</span>
+                            <span className="text-gray-500 w-14 text-xs">VIN:</span>
+                            <span className="text-gray-700 font-mono text-xs truncate">{vehicle.vin}</span>
                           </div>
                         )}
                       </div>
