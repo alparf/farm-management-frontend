@@ -30,6 +30,20 @@ export interface TreatmentTimeline {
   treatments: TimelineTreatment[];
 }
 
+export interface LastTreatmentDetails {
+  id: number;
+  date: Date;
+  area: number;
+  isTankMix: boolean;
+  notes?: string;
+  chemicalProducts: {
+    productName: string;
+    type: string;
+    ratePerHa: number;
+    unit: string;
+  }[];
+}
+
 export const useCultureStats = (treatments: ChemicalTreatment[]) => {
   const cultureStats = useMemo((): CultureStats[] => {
     const statsMap = new Map<CultureType, Omit<CultureStats, 'culture'>>();
@@ -126,7 +140,6 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
     const timelineTreatments: TimelineTreatment[] = [];
     
     for (const treatment of cultureTreatments) {
-      // Определяем тип обработки для таймлайна
       let treatmentType: ProductType | 'Баковая смесь';
       let tankMixTypes: ProductType[] = [];
       
@@ -143,7 +156,6 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
         ?.map(p => p.product?.name)
         .filter((name): name is string => Boolean(name)) || [];
       
-      // Добавляем на таймлайн фактическую дату если выполнено, иначе плановую
       if (treatment.completed && treatment.actualDate) {
         timelineTreatments.push({
           id: treatment.id,
@@ -169,7 +181,6 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
       }
     }
     
-    // Сортируем по дате
     timelineTreatments.sort((a, b) => a.date.getTime() - b.date.getTime());
     
     return {
@@ -178,8 +189,35 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
     };
   };
 
+  const getLastTreatmentDetails = (culture: CultureType): LastTreatmentDetails | null => {
+    const cultureTreatments = treatments.filter(t => 
+      t.culture === culture && t.completed === true && t.actualDate
+    );
+    
+    if (cultureTreatments.length === 0) return null;
+    
+    const lastTreatment = cultureTreatments.reduce((latest, current) => {
+      return new Date(current.actualDate!) > new Date(latest.actualDate!) ? current : latest;
+    });
+    
+    return {
+      id: lastTreatment.id,
+      date: new Date(lastTreatment.actualDate!),
+      area: lastTreatment.area,
+      isTankMix: lastTreatment.isTankMix,
+      notes: lastTreatment.notes,
+      chemicalProducts: lastTreatment.chemicalProducts.map(p => ({
+        productName: p.product?.name || `ID: ${p.productId}`,
+        type: p.product?.type || 'unknown',
+        ratePerHa: p.ratePerHa,
+        unit: p.unit
+      }))
+    };
+  };
+
   return {
     cultureStats,
     getTimelineData,
+    getLastTreatmentDetails,
   };
 };

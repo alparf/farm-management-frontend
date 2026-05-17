@@ -6,6 +6,7 @@ import { useCultureStats } from '@/hooks/useCultureStats';
 import { CultureSelector } from '@/components/culture-selector';
 import { TimelineChart } from '@/components/timeline-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Package, CalendarDays, MapPin, Beaker } from 'lucide-react';
 
 interface AnalyticsTabProps {
   treatments: ChemicalTreatment[];
@@ -13,18 +14,21 @@ interface AnalyticsTabProps {
 
 export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
   const [selectedCulture, setSelectedCulture] = useState<CultureType | ''>('');
-  const { cultureStats, getTimelineData } = useCultureStats(treatments);
+  const { cultureStats, getTimelineData, getLastTreatmentDetails } = useCultureStats(treatments);
 
   const cultures = [...new Set(treatments.map(t => t.culture))] as CultureType[];
 
   const currentCulture = selectedCulture || (cultures.length > 0 ? cultures[0] : '');
   const currentCultureStats = cultureStats.find(s => s.culture === currentCulture);
+  
+  // ✅ Проверяем, что currentCulture не пустая строка перед вызовом
+  const lastTreatmentDetails = currentCulture ? getLastTreatmentDetails(currentCulture) : null;
 
   return (
     <div className="space-y-6">
       <CultureSelector
         cultures={cultures}
-        selectedCulture={currentCulture}
+        selectedCulture={selectedCulture}
         onCultureChange={setSelectedCulture}
         stats={cultureStats}
       />
@@ -152,38 +156,95 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
             </Card>
           </div>
 
+          {/* Последняя обработка - расширенная информация */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Последняя обработка</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    {currentCultureStats?.lastTreatment
-                      ? currentCultureStats.lastTreatment.toLocaleDateString('ru-RU', {
+              {lastTreatmentDetails ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <div className="text-sm font-semibold text-gray-900">
+                        📅 {lastTreatmentDetails.date.toLocaleDateString('ru-RU', {
                           day: 'numeric',
                           month: 'long',
                           year: 'numeric'
-                        })
-                      : 'Нет данных'
-                    }
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Дата последней выполненной обработки
-                  </p>
-                </div>
-                {currentCultureStats?.lastTreatment && (
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-green-600">
-                      Выполнено
+                        })}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {Math.floor((new Date().getTime() - lastTreatmentDetails.date.getTime()) / (1000 * 60 * 60 * 24))} дней назад
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      {Math.floor((new Date().getTime() - currentCultureStats.lastTreatment.getTime()) / (1000 * 60 * 60 * 24))} дней назад
-                    </p>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-green-600">
+                        Выполнено
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
+                        <MapPin className="h-3 w-3" />
+                        {lastTreatmentDetails.area} га
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Препараты с дозировками */}
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                      <Package className="h-4 w-4 text-blue-500" />
+                      Использованные препараты
+                    </h4>
+                    <div className="space-y-2">
+                      {lastTreatmentDetails.chemicalProducts.map((product, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                          <div className="flex-1">
+                            <span className="font-medium text-gray-800">
+                              {product.productName}
+                            </span>
+                            <span className="text-gray-400 text-xs ml-2">
+                              ({product.type})
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600 font-mono text-sm bg-white px-2 py-0.5 rounded">
+                              {product.ratePerHa} {product.unit}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Баковая смесь */}
+                  {lastTreatmentDetails.isTankMix && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Beaker className="h-4 w-4 text-indigo-500" />
+                        Баковая смесь
+                      </h4>
+                      <div className="bg-indigo-50 rounded-lg px-3 py-2">
+                        <span className="text-sm text-indigo-700">
+                          Обработка проводилась баковой смесью
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Примечания */}
+                  {lastTreatmentDetails.notes && (
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2">📝 Примечания</h4>
+                      <div className="bg-gray-50 rounded-lg px-3 py-2">
+                        <p className="text-sm text-gray-600">{lastTreatmentDetails.notes}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  Нет выполненных обработок
+                </div>
+              )}
             </CardContent>
           </Card>
         </>
