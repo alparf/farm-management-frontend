@@ -1,6 +1,6 @@
 'use client';
 
-import { TreatmentTimeline } from '@/types';
+import { TreatmentTimeline } from '@/hooks/useCultureStats';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface TimelineChartProps {
@@ -53,7 +53,10 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   const months = getMonths();
   const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
-  const getTypeColor = (type: string) => {
+  const getTypeColor = (type: string, completed: boolean) => {
+    if (completed) {
+      return 'bg-green-500';
+    }
     const colors: Record<string, string> = {
       'фунгицид': 'bg-purple-500',
       'инсектицид': 'bg-red-500',
@@ -101,14 +104,13 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
           Временная шкала обработок: {culture}
         </CardTitle>
         <div className="text-sm text-gray-500">
-          Всего обработок: {treatments.length}
+          Всего обработок: {treatments.length} (выполнено: {treatments.filter(t => t.completed).length})
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Шкала месяцев */}
           <div className="flex justify-between relative pb-12">
-            {months.map((month, index) => (
+            {months.map((month) => (
               <div key={month.name} className="flex flex-col items-center flex-1">
                 <div className="text-xs text-gray-600 text-center mb-2">
                   {month.name.split(' ')[0]}
@@ -128,12 +130,12 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             ))}
           </div>
 
-          {/* Обработки */}
           <div className="relative h-[200px]">
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-blue-200 transform -translate-y-1/2" />
             
             {sortedTreatments.map((treatment, index) => {
               const position = getTreatmentPosition(treatment.date);
+              const colorClass = getTypeColor(treatment.type, treatment.completed);
               
               return (
                 <div
@@ -147,13 +149,12 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
                   <div className="absolute w-0.5 h-8 bg-gray-300 -top-8 left-1/2 transform -translate-x-1/2" />
                   
                   <div
-                    className={`w-4 h-4 rounded-full ${getTypeColor(treatment.type)} border-2 border-white shadow-lg cursor-pointer relative z-10 ${
+                    className={`w-4 h-4 rounded-full ${colorClass} border-2 border-white shadow-lg cursor-pointer relative z-10 ${
                       treatment.completed ? 'ring-2 ring-green-400' : 'ring-2 ring-yellow-400'
                     }`}
-                    title={`${treatment.type} - ${treatment.date.toLocaleDateString('ru-RU')}`}
+                    title={`${treatment.type} - ${treatment.date.toLocaleDateString('ru-RU')} (${treatment.completed ? 'Выполнено' : 'Запланировано'})`}
                   />
                   
-                  {/* TOOLTIP - с примечаниями */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border border-gray-200 rounded-lg p-3 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none min-w-64 z-20 max-w-xs">
                     <div className="text-sm font-semibold text-gray-900">
                       📅 {treatment.date.toLocaleDateString('ru-RU')}
@@ -167,7 +168,6 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
                        {treatment.products.join(', ')}
                     </div>
                     
-                    {/* ПРИМЕЧАНИЯ - если оно есть */}
                     {treatment.notes && treatment.notes.trim() !== '' && (
                       <div className="text-xs mt-1 pt-1">
                         <span className="font-medium text-gray-700">📝 Примечания:</span>
@@ -184,7 +184,6 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             })}
           </div>
 
-          {/* Легенда */}
           <div className="flex flex-wrap gap-4 justify-center text-xs pt-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-purple-500 rounded-full" />
@@ -212,7 +211,6 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             </div>
           </div>
 
-          {/* Статус выполнения */}
           <div className="flex justify-center gap-6">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-500 ring-2 ring-green-300" />

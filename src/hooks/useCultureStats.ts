@@ -1,20 +1,49 @@
+// src/hooks/useCultureStats.ts
 import { useMemo } from 'react';
-import { ChemicalTreatment, CultureType, CultureStats, TreatmentTimeline, ProductType } from '@/types';
+import { ChemicalTreatment, CultureType, ProductType } from '@/types';
+
+export interface CultureStats {
+  culture: CultureType;
+  totalTreatments: number;
+  completedTreatments: number;
+  plannedTreatments: number;
+  lastTreatment: Date | null;
+  nextTreatment: Date | null;
+  productsUsed: string[];
+  tankMixCount: number;
+  tankMixTypes: ProductType[][];
+}
+
+export interface TimelineTreatment {
+  id: number;
+  date: Date;
+  products: string[];
+  type: ProductType | 'Баковая смесь';
+  completed: boolean;
+  isTankMix: boolean;
+  tankMixTypes: ProductType[];
+  notes?: string;
+}
+
+export interface TreatmentTimeline {
+  culture: CultureType;
+  treatments: TimelineTreatment[];
+}
 
 export const useCultureStats = (treatments: ChemicalTreatment[]) => {
-  const cultureStats = useMemo(() => {
-    const statsMap = new Map<CultureType, CultureStats>();
+  const cultureStats = useMemo((): CultureStats[] => {
+    const statsMap = new Map<CultureType, Omit<CultureStats, 'culture'>>();
     
     treatments.forEach(treatment => {
       const culture = treatment.culture as CultureType;
       
       if (!statsMap.has(culture)) {
         statsMap.set(culture, {
-          culture,
           totalTreatments: 0,
           completedTreatments: 0,
           plannedTreatments: 0,
-          lastTreatment: undefined,
+          lastTreatment: null,
+          nextTreatment: null,
           productsUsed: [],
           tankMixCount: 0,
           tankMixTypes: [],
@@ -24,92 +53,123 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
       const stats = statsMap.get(culture)!;
       stats.totalTreatments++;
       
+      // Статус выполнения
       if (treatment.completed) {
         stats.completedTreatments++;
+        
+        // Последняя выполненная обработка (по actualDate)
         if (treatment.actualDate) {
-          const treatmentDate = new Date(treatment.actualDate);
-          if (!stats.lastTreatment || treatmentDate > stats.lastTreatment) {
-            stats.lastTreatment = treatmentDate;
+          const actualDate = new Date(treatment.actualDate);
+          if (!stats.lastTreatment || actualDate > stats.lastTreatment) {
+            stats.lastTreatment = actualDate;
           }
         }
       } else {
         stats.plannedTreatments++;
+        
+        // Ближайшая запланированная обработка (по dueDate)
+        if (treatment.dueDate) {
+          const dueDate = new Date(treatment.dueDate);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          if (dueDate >= today) {
+            if (!stats.nextTreatment || dueDate < stats.nextTreatment) {
+              stats.nextTreatment = dueDate;
+            }
+          }
+        }
       }
       
+      // Уникальные названия препаратов
       treatment.chemicalProducts?.forEach(product => {
-        if (product.name && !stats.productsUsed.includes(product.name)) {
-          stats.productsUsed.push(product.name);
+        const productName = product.product?.name;
+        if (productName && !stats.productsUsed.includes(productName)) {
+          stats.productsUsed.push(productName);
         }
       });
 
+      // Баковая смесь
       if (treatment.isTankMix) {
         stats.tankMixCount++;
         
         const mixTypes = treatment.chemicalProducts
-          ?.map(p => p.productType)
-          .filter(Boolean) as ProductType[];
+          ?.map(p => p.product?.type)
+          .filter((type): type is ProductType => Boolean(type)) || [];
         
-        const typesKey = mixTypes.sort().join(',');
-        if (!stats.tankMixTypes.some(existing => existing.sort().join(',') === typesKey)) {
-          stats.tankMixTypes.push(mixTypes);
+        if (mixTypes.length > 0) {
+          const sortedMixTypes = [...mixTypes].sort();
+          const isDuplicate = stats.tankMixTypes.some(existing => {
+            const sortedExisting = [...existing].sort();
+            return sortedExisting.length === sortedMixTypes.length &&
+              sortedExisting.every((val, idx) => val === sortedMixTypes[idx]);
+          });
+          
+          if (!isDuplicate) {
+            stats.tankMixTypes.push(mixTypes);
+          }
         }
       }
     });
     
-    return Array.from(statsMap.values()).sort((a, b) => 
-      b.totalTreatments - a.totalTreatments
-    );
+    return Array.from(statsMap.entries())
+      .map(([culture, data]) => ({
+        culture,
+        ...data,
+      }))
+      .sort((a, b) => b.totalTreatments - a.totalTreatments);
   }, [treatments]);
 
   const getTimelineData = (culture: CultureType): TreatmentTimeline => {
     const cultureTreatments = treatments.filter(t => t.culture === culture);
     
-    const timelineTreatments = cultureTreatments.flatMap(treatment => {
-      const treatments = [];
-      
+    const timelineTreatments: TimelineTreatment[] = [];
+    
+    for (const treatment of cultureTreatments) {
+      // Определяем тип обработки для таймлайна
       let treatmentType: ProductType | 'Баковая смесь';
       let tankMixTypes: ProductType[] = [];
       
       if (treatment.isTankMix) {
         treatmentType = 'Баковая смесь';
         tankMixTypes = treatment.chemicalProducts
-          ?.map(p => p.productType)
-          .filter(Boolean) as ProductType[];
+          ?.map(p => p.product?.type)
+          .filter((type): type is ProductType => Boolean(type)) || [];
       } else {
-        treatmentType = treatment.chemicalProducts?.[0]?.productType || 'удобрение';
+        treatmentType = treatment.chemicalProducts?.[0]?.product?.type || 'удобрение';
       }
       
-      // Добавляем запланированные обработки
-      if (treatment.dueDate && !treatment.completed) {
-        treatments.push({
-          id: treatment.id,
-          date: new Date(treatment.dueDate),
-          products: treatment.chemicalProducts?.map(p => p.name).filter(Boolean) || [],
-          type: treatmentType,
-          completed: false,
-          isTankMix: treatment.isTankMix,
-          tankMixTypes: tankMixTypes,
-          notes: treatment.notes, // ✅ ДОБАВЛЕНО
-        });
-      }
+      const products = treatment.chemicalProducts
+        ?.map(p => p.product?.name)
+        .filter((name): name is string => Boolean(name)) || [];
       
-      // Добавляем выполненные обработки
-      if (treatment.actualDate && treatment.completed) {
-        treatments.push({
+      // Добавляем на таймлайн фактическую дату если выполнено, иначе плановую
+      if (treatment.completed && treatment.actualDate) {
+        timelineTreatments.push({
           id: treatment.id,
           date: new Date(treatment.actualDate),
-          products: treatment.chemicalProducts?.map(p => p.name).filter(Boolean) || [],
+          products,
           type: treatmentType,
           completed: true,
           isTankMix: treatment.isTankMix,
-          tankMixTypes: tankMixTypes,
-          notes: treatment.notes, // ✅ ДОБАВЛЕНО
+          tankMixTypes,
+          notes: treatment.notes,
+        });
+      } else if (treatment.dueDate) {
+        timelineTreatments.push({
+          id: treatment.id,
+          date: new Date(treatment.dueDate),
+          products,
+          type: treatmentType,
+          completed: false,
+          isTankMix: treatment.isTankMix,
+          tankMixTypes,
+          notes: treatment.notes,
         });
       }
-      
-      return treatments;
-    });
+    }
     
+    // Сортируем по дате
     timelineTreatments.sort((a, b) => a.date.getTime() - b.date.getTime());
     
     return {

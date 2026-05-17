@@ -7,33 +7,49 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { ButtonIcons } from '@/components/ui-icons';
-import { Shield, Bug, Flower2, Droplets, TrendingUp, Sprout, Leaf, Beaker, Package, AlertTriangle, PackageX, Save, X, Edit2 } from 'lucide-react';
+import { Shield, Bug, Flower2, Droplets, TrendingUp, Sprout, Leaf, Beaker, Package, AlertTriangle, PackageX, Save, X, Edit2, Plus, Minus, RefreshCw } from 'lucide-react';
+import { useApi } from '@/hooks/useApi';
 
 interface InventoryListProps {
   inventory: ProductInventory[];
   onUpdateProduct: (id: number, updates: Partial<ProductInventory>) => Promise<void>;
   onDeleteProduct: (id: number) => Promise<void>;
+  onRefresh: () => void;
   typeFilter?: ProductType | '';
+  onSelectProduct?: (id: number, name: string) => void;
 }
 
-export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typeFilter }: InventoryListProps) {
+export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onRefresh, typeFilter, onSelectProduct }: InventoryListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; product: ProductInventory | null }>({
     isOpen: false,
     product: null
   });
+  
+  // Состояния для операций со складом
+  const [stockDialog, setStockDialog] = useState<{
+    open: boolean;
+    type: 'in' | 'out' | 'adjust';
+    productId: number;
+    productName: string;
+    productUnit: string;
+  }>({ open: false, type: 'in', productId: 0, productName: '', productUnit: '' });
+  
+  const [stockQuantity, setStockQuantity] = useState('');
+  const [stockDescription, setStockDescription] = useState('');
+  const [stockLoading, setStockLoading] = useState(false);
+  const { getBaseUrl } = useApi();
 
   const [editData, setEditData] = useState<{
     name: string;
     type: ProductType;
-    quantity: string;
     unit: string;
     notes: string;
   }>({
     name: '',
     type: 'фунгицид',
-    quantity: '',
     unit: 'кг',
     notes: '',
   });
@@ -74,7 +90,6 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
     setEditData({
       name: product.name,
       type: product.type,
-      quantity: product.quantity.toString(),
       unit: product.unit,
       notes: product.notes || '',
     });
@@ -89,11 +104,11 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
       await onUpdateProduct(id, {
         name: editData.name,
         type: editData.type,
-        quantity: parseFloat(editData.quantity),
-        unit: editData.unit as any,
+        unit: editData.unit,
         notes: editData.notes || undefined,
       });
       setEditingId(null);
+      onRefresh();
     } catch (error) {
       console.error('Error updating product:', error);
     }
@@ -115,6 +130,7 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
       try {
         await onDeleteProduct(deleteConfirm.product.id);
         setDeleteConfirm({ isOpen: false, product: null });
+        onRefresh();
       } catch (error) {
         console.error('Error deleting product:', error);
         setDeleteConfirm({ isOpen: false, product: null });
@@ -126,15 +142,76 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
     setDeleteConfirm({ isOpen: false, product: null });
   };
 
-  if (inventory.length === 0) {
-    return (
-      <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
-        <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-        <p>Склад пуст</p>
-        <p className="text-sm mt-1">Нажмите "Добавить продукт" чтобы начать</p>
-      </div>
-    );
-  }
+  const handleProductClick = (product: ProductInventory) => {
+    if (!editingId && onSelectProduct) {
+      onSelectProduct(product.id, product.name);
+    }
+  };
+
+  const handleStockOperation = async () => {
+    setStockLoading(true);
+    try {
+      const baseUrl = getBaseUrl();
+      let url = '';
+      let body = {};
+      
+      if (stockDialog.type === 'in') {
+        url = `${baseUrl}/inventory/${stockDialog.productId}/in`;
+        body = { quantity: parseFloat(stockQuantity), description: stockDescription };
+      } else if (stockDialog.type === 'out') {
+        url = `${baseUrl}/inventory/${stockDialog.productId}/out`;
+        body = { quantity: parseFloat(stockQuantity), description: stockDescription };
+      } else {
+        url = `${baseUrl}/inventory/${stockDialog.productId}/adjust`;
+        body = { newQuantity: parseFloat(stockQuantity), reason: stockDescription };
+      }
+      
+      console.log('Sending request to:', url);
+      console.log('Body:', body);
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      
+      if (!response.ok) {
+        // Пытаемся получить текст ошибки
+        let errorText = '';
+        try {
+          const errorData = await response.json();
+          errorText = errorData.message || JSON.stringify(errorData);
+        } catch {
+          errorText = await response.text();
+        }
+        console.error('Server error response:', errorText);
+        throw new Error(errorText || 'Operation failed');
+      }
+      
+      const result = await response.json();
+      console.log('Operation successful:', result);
+      
+      setStockDialog({ ...stockDialog, open: false });
+      setStockQuantity('');
+      setStockDescription('');
+      onRefresh();
+    } catch (err: any) {
+      console.error('Stock operation error:', err);
+      alert(err.message || 'Ошибка при выполнении операции');
+    } finally {
+      setStockLoading(false);
+    }
+  };
+
+    if (inventory.length === 0) {
+      return (
+        <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
+          <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+          <p>Склад пуст</p>
+          <p className="text-sm mt-1">Нажмите "Добавить продукт" чтобы начать</p>
+        </div>
+      );
+    }
 
   return (
     <>
@@ -150,42 +227,33 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
           return (
             <div
               key={product.id}
-              className="border border-gray-200 rounded-xl overflow-hidden transition-all hover:shadow-md bg-white"
+              className={`border border-gray-200 rounded-xl overflow-hidden transition-all hover:shadow-md bg-white ${!isEditing && onSelectProduct ? 'cursor-pointer' : ''}`}
+              onClick={() => handleProductClick(product)}
             >
               <div className="p-4">
                 {isEditing ? (
                   // Режим редактирования
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-gray-600">Название</Label>
-                      <Input
-                        value={editData.name}
-                        onChange={(e) => updateEditField('name', e.target.value)}
-                        className="mt-1 h-9"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-600">Тип</Label>
-                      <select
-                        value={editData.type}
-                        onChange={(e) => updateEditField('type', e.target.value as ProductType)}
-                        className="w-full mt-1 h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
-                      >
-                        {productTypes.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <div className="space-y-3">
                       <div>
-                        <Label className="text-xs text-gray-600">Количество</Label>
+                        <Label className="text-xs text-gray-600">Название</Label>
                         <Input
-                          type="number"
-                          step="0.01"
-                          value={editData.quantity}
-                          onChange={(e) => updateEditField('quantity', e.target.value)}
+                          value={editData.name}
+                          onChange={(e) => updateEditField('name', e.target.value)}
                           className="mt-1 h-9"
                         />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-600">Тип</Label>
+                        <select
+                          value={editData.type}
+                          onChange={(e) => updateEditField('type', e.target.value as ProductType)}
+                          className="w-full mt-1 h-9 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
+                        >
+                          {productTypes.map((type) => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <Label className="text-xs text-gray-600">Ед. изм.</Label>
@@ -199,35 +267,35 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                           ))}
                         </select>
                       </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-600">Примечания</Label>
-                      <Textarea
-                        value={editData.notes}
-                        onChange={(e) => updateEditField('notes', e.target.value)}
-                        placeholder="Дополнительная информация..."
-                        rows={2}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Button
-                        size="sm"
-                        onClick={() => saveEdit(product.id)}
-                        className="flex-1 h-8 gap-1"
-                      >
-                        <Save className="h-3.5 w-3.5" />
-                        Сохранить
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={cancelEdit}
-                        className="flex-1 h-8 gap-1"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                        Отмена
-                      </Button>
+                      <div>
+                        <Label className="text-xs text-gray-600">Примечания</Label>
+                        <Textarea
+                          value={editData.notes}
+                          onChange={(e) => updateEditField('notes', e.target.value)}
+                          placeholder="Дополнительная информация..."
+                          rows={2}
+                          className="mt-1 text-sm"
+                        />
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <Button
+                          size="sm"
+                          onClick={() => saveEdit(product.id)}
+                          className="flex-1 h-8 gap-1"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                          Сохранить
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={cancelEdit}
+                          className="flex-1 h-8 gap-1"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          Отмена
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -248,7 +316,7 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                           </span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+                      <div className="flex items-center gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="outline"
                           size="sm"
@@ -270,13 +338,44 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
                       </div>
                     </div>
 
-                    {/* Количество */}
-                    <div className="text-center mb-2">
+                    {/* Количество и кнопки операций */}
+                    <div className="text-center mb-3">
                       <div className="text-3xl font-bold text-gray-900">
                         {product.quantity}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 mb-2">
                         {product.unit}
+                      </div>
+                      
+                      {/* Кнопки операций со складом */}
+                      <div className="flex gap-1 justify-center" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setStockDialog({ open: true, type: 'in', productId: product.id, productName: product.name, productUnit: product.unit })}
+                          className="h-7 px-2 text-green-600 hover:bg-green-50 border-green-200"
+                          title="Пополнение склада"
+                        >
+                          Приход
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setStockDialog({ open: true, type: 'out', productId: product.id, productName: product.name, productUnit: product.unit })}
+                          className="h-7 px-2 text-red-600 hover:bg-red-50 border-red-200"
+                          title="Списание со склада"
+                        >
+                          Расход
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setStockDialog({ open: true, type: 'adjust', productId: product.id, productName: product.name, productUnit: product.unit })}
+                          className="h-7 px-2 text-blue-600 hover:bg-blue-50 border-blue-200"
+                          title="Корректировка остатка"
+                        >
+                          Коррекция
+                        </Button>
                       </div>
                     </div>
 
@@ -311,6 +410,58 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, typ
           );
         })}
       </div>
+
+      {/* Диалог операций со складом */}
+      <Dialog open={stockDialog.open} onOpenChange={(open: boolean) => setStockDialog({ ...stockDialog, open })}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {stockDialog.type === 'in' && 'Пополнение склада'}
+              {stockDialog.type === 'out' && 'Списание со склада'}
+              {stockDialog.type === 'adjust' && 'Корректировка остатка'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Препарат</Label>
+              <p className="text-sm font-medium mt-1">{stockDialog.productName}</p>
+            </div>
+            <div>
+              <Label>
+                {stockDialog.type === 'adjust' ? 'Новое количество' : 'Количество'}
+              </Label>
+              <Input
+                type="number"
+                step="0.001"
+                value={stockQuantity}
+                onChange={(e) => setStockQuantity(e.target.value)}
+                placeholder={stockDialog.type === 'adjust' ? 'Новый остаток' : '0.000'}
+                className="mt-1"
+              />
+              <p className="text-xs text-gray-500 mt-1">Единица измерения: {stockDialog.productUnit}</p>
+            </div>
+            <div>
+              <Label>Основание / Примечание</Label>
+              <Textarea
+                value={stockDescription}
+                onChange={(e) => setStockDescription(e.target.value)}
+                placeholder="Например: Инвентаризация, Поступление, Списание..."
+                rows={2}
+                className="mt-1"
+              />
+            </div>
+            <Button onClick={handleStockOperation} disabled={stockLoading} className="w-full">
+              {stockLoading ? 'Выполняется...' : (
+                <>
+                  {stockDialog.type === 'in' && 'Добавить'}
+                  {stockDialog.type === 'out' && 'Списать'}
+                  {stockDialog.type === 'adjust' && 'Установить'}
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}

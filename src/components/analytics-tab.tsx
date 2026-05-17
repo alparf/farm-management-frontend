@@ -6,7 +6,6 @@ import { useCultureStats } from '@/hooks/useCultureStats';
 import { CultureSelector } from '@/components/culture-selector';
 import { TimelineChart } from '@/components/timeline-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getCultureIcon, getIconColor } from '@/lib/culture-icons';
 
 interface AnalyticsTabProps {
   treatments: ChemicalTreatment[];
@@ -18,14 +17,11 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
 
   const cultures = [...new Set(treatments.map(t => t.culture))] as CultureType[];
 
-  // Автоматически выбираем первую культуру если ничего не выбрано
   const currentCulture = selectedCulture || (cultures.length > 0 ? cultures[0] : '');
-
   const currentCultureStats = cultureStats.find(s => s.culture === currentCulture);
 
   return (
     <div className="space-y-6">
-      {/* Выбор культуры - теперь сверху */}
       <CultureSelector
         cultures={cultures}
         selectedCulture={currentCulture}
@@ -35,10 +31,8 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
 
       {currentCulture ? (
         <>
-          {/* Временная шкала */}
           <TimelineChart timelineData={getTimelineData(currentCulture)} />
 
-          {/* Статистика по культуре */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
@@ -97,9 +91,7 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
             </Card>
           </div>
 
-          {/* Используемые препараты и смеси */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Препараты */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Часто используемые препараты</CardTitle>
@@ -122,7 +114,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
               </CardContent>
             </Card>
 
-            {/* Баковая смесь */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Баковая смесь</CardTitle>
@@ -161,7 +152,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
             </Card>
           </div>
 
-          {/* Последняя обработка */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Последняя обработка</CardTitle>

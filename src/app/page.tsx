@@ -38,6 +38,8 @@ export default function Home() {
     addTreatment, 
     updateTreatment,
     deleteTreatment,
+    completeTreatment,
+    uncompleteTreatment,
     refetch: refetchTreatments 
   } = useTreatments();
   
@@ -86,31 +88,43 @@ export default function Home() {
   // Фильтрация обработок
   const filteredTreatments = useMemo(() => {
     let filtered = treatments.filter(treatment => {
+      // Фильтр по статусу
+      if (!showCompleted && treatment.completed) return false;
       if (showCompleted && !treatment.completed) return false;
+      
+      // Фильтр по культуре
       if (cultureFilter && treatment.culture !== cultureFilter) return false;
-      if (productTypeFilter && 
-          !treatment.chemicalProducts.some(p => p.productType === productTypeFilter)) {
-        return false;
+      
+      // Фильтр по типу препарата
+      if (productTypeFilter) {
+        const hasProductType = treatment.chemicalProducts.some(product => {
+          return product.product?.type === productTypeFilter;
+        });
+        if (!hasProductType) return false;
       }
-      if (searchQuery && 
-          !treatment.chemicalProducts.some(p => 
-            p.name.toLowerCase().includes(searchQuery.toLowerCase())
-          )) {
-        return false;
+      
+      // Поиск по названию препарата
+      if (searchQuery) {
+        const matchesSearch = treatment.chemicalProducts.some(product => {
+          return product.product?.name?.toLowerCase().includes(searchQuery.toLowerCase());
+        });
+        if (!matchesSearch) return false;
       }
+      
       return true;
     });
 
+    // Сортировка
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'dueDate': 
-          return (a.dueDate?.getTime() || 0) - (b.dueDate?.getTime() || 0);
+          return (a.dueDate ? new Date(a.dueDate).getTime() : 0) - (b.dueDate ? new Date(b.dueDate).getTime() : 0);
         case 'dueDateDesc': 
-          return (b.dueDate?.getTime() || 0) - (a.dueDate?.getTime() || 0);
+          return (b.dueDate ? new Date(b.dueDate).getTime() : 0) - (a.dueDate ? new Date(a.dueDate).getTime() : 0);
         case 'createdAt': 
-          return b.createdAt.getTime() - a.createdAt.getTime();
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         case 'createdAtAsc': 
-          return a.createdAt.getTime() - b.createdAt.getTime();
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         case 'culture': 
           return a.culture.localeCompare(b.culture);
         case 'area': 
@@ -118,10 +132,8 @@ export default function Home() {
         case 'areaAsc': 
           return a.area - b.area;
         case 'status':
-          // Ожидающие сначала (false → true)
           return (a.completed === b.completed) ? 0 : a.completed ? 1 : -1;
         case 'statusDesc':
-          // Выполненные сначала (true → false)
           return (a.completed === b.completed) ? 0 : a.completed ? -1 : 1;
         default: 
           return 0;
@@ -160,7 +172,7 @@ export default function Home() {
     }
   };
 
-  // Состояния загрузки для каждой вкладки
+  // Состояния загрузки
   if (treatmentsLoading && activeTab === 'treatments') {
     return <LoadingState message="Загрузка обработок..." />;
   }
@@ -179,7 +191,6 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      {/* Заголовок и кнопка обновления */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Сельхозучет</h1>
         <div className="flex gap-2">
@@ -190,7 +201,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Вкладки */}
       <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
         <TabButton
           active={activeTab === 'analytics'}
@@ -228,7 +238,6 @@ export default function Home() {
         />
       </div>
 
-      {/* Контент вкладок */}
       {activeTab === 'treatments' && (
         <>
           {treatmentsError && <ErrorState error={treatmentsError} onRetry={refetchTreatments} />}
@@ -248,12 +257,12 @@ export default function Home() {
             onShowCompletedChange={setShowCompleted}
           />
 
-          {/* Заголовок и кнопка добавления обработок */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">
               Обработки ({filteredTreatments.length} из {treatments.length})
             </h2>
             <Button onClick={() => setShowTreatmentForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
               Новая обработка
             </Button>
           </div>
@@ -270,6 +279,8 @@ export default function Home() {
             treatments={filteredTreatments}
             onUpdateTreatment={updateTreatment}
             onDeleteTreatment={deleteTreatment}
+            onCompleteTreatment={completeTreatment}
+            onUncompleteTreatment={uncompleteTreatment}
           />
         </>
       )}
@@ -280,6 +291,7 @@ export default function Home() {
           onAddProduct={addProduct}
           onUpdateProduct={updateProduct}
           onDeleteProduct={deleteProduct}
+          onRefresh={refetchInventory}
         />
       )}
 
@@ -312,7 +324,6 @@ export default function Home() {
   );
 }
 
-// Компонент кнопки вкладки
 function TabButton({ 
   active, 
   onClick, 
@@ -346,7 +357,6 @@ function TabButton({
   );
 }
 
-// Вспомогательные компоненты
 function LoadingState({ message }: { message: string }) {
   return (
     <div className="container mx-auto p-4">

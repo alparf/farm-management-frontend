@@ -2,17 +2,27 @@
 
 import { CultureType } from '@/types';
 import { getCultureIcon, getCultureTextColor, getIconColor } from '@/lib/culture-icons';
+import { CultureStats } from '@/hooks/useCultureStats';
 
 interface CultureSelectorProps {
   cultures: CultureType[];
   selectedCulture: CultureType | '';
   onCultureChange: (culture: CultureType) => void;
-  stats: Array<{ culture: CultureType; totalTreatments: number; completedTreatments: number }>;
+  stats: CultureStats[];
 }
 
 export function CultureSelector({ cultures, selectedCulture, onCultureChange, stats }: CultureSelectorProps) {
   const getCultureStats = (culture: CultureType) => {
-    return stats.find(stat => stat.culture === culture) || { totalTreatments: 0, completedTreatments: 0 };
+    return stats.find(stat => stat.culture === culture) || { 
+      totalTreatments: 0, 
+      completedTreatments: 0,
+      plannedTreatments: 0,
+      lastTreatment: null,
+      nextTreatment: null,
+      productsUsed: [],
+      tankMixCount: 0,
+      tankMixTypes: []
+    };
   };
 
   const getCardColor = (culture: CultureType, isSelected: boolean) => {
@@ -34,14 +44,17 @@ export function CultureSelector({ cultures, selectedCulture, onCultureChange, st
     return colors[culture] || 'bg-gray-50 border-gray-200 hover:bg-gray-100';
   };
 
+  const getPercentCompleted = (cultureStat: any) => {
+    if (cultureStat.totalTreatments === 0) return 0;
+    return Math.round((cultureStat.completedTreatments / cultureStat.totalTreatments) * 100);
+  };
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
       {cultures.map((culture) => {
         const cultureStat = getCultureStats(culture);
         const isSelected = selectedCulture === culture;
-        const percentCompleted = cultureStat.totalTreatments > 0 
-          ? Math.round((cultureStat.completedTreatments / cultureStat.totalTreatments) * 100) 
-          : 0;
+        const percentCompleted = getPercentCompleted(cultureStat);
         
         return (
           <button

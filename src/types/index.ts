@@ -1,22 +1,35 @@
+// src/types/index.ts
+
 export interface ChemicalProduct {
-  name: string;
-  dosage: string;
-  productType: ProductType;
+  id?: number;
+  productId: number;
+  ratePerHa: number;
+  unit: 'л/га' | 'кг/га';
+  treatmentId?: number;
+  product?: {
+    id: number;
+    name: string;
+    type: ProductType;
+    unit: string;
+    notes?: string;
+    createdAt: Date;
+    updatedAt: Date;
+  };
 }
 
 export interface ChemicalTreatment {
   id: number;
   culture: CultureType;
   area: number;
-  completed: boolean;
-  createdAt: Date;
-  dueDate?: Date;
-  actualDate?: Date;
-  notes?: string;
+  completed: boolean;           // ✅ Статус выполнения
+  dueDate: Date;                // ✅ Плановая дата
+  actualDate?: Date;            // ✅ Фактическая дата выполнения
   isTankMix: boolean;
-  chemicalProducts: ChemicalProduct[];
   hasCompatibilityIssues?: boolean;
   compatibilityWarnings?: string;
+  notes?: string;
+  createdAt: Date;
+  chemicalProducts: ChemicalProduct[];
 }
 
 export interface ProductInventory {
@@ -42,24 +55,25 @@ export type ProductType =
 
 export interface TreatmentTimeline {
   culture: CultureType;
-  treatments: {
+  treatments: Array<{
     id: number;
     date: Date;
     products: string[];
     type: ProductType | 'Баковая смесь';
-    completed: boolean;
-    isTankMix?: boolean;
-    tankMixTypes?: ProductType[];
-    notes?: string; 
-  }[];
+    completed?: boolean;        // ✅ Добавлено для отображения статуса на таймлайне
+    isTankMix: boolean;
+    tankMixTypes: ProductType[];
+    notes?: string;
+  }>;
 }
 
 export interface CultureStats {
   culture: CultureType;
   totalTreatments: number;
-  completedTreatments: number;
+  completedTreatments: number;  // ✅ Добавлено для статистики
   plannedTreatments: number;
-  lastTreatment?: Date;
+  lastTreatment?: Date | null;   // ✅ Добавлено для последней обработки
+  nextTreatment: Date | null;
   productsUsed: string[];
   tankMixCount: number;
   tankMixTypes: ProductType[][];
