@@ -215,9 +215,43 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
     };
   };
 
+  const getNextTreatmentDetails = (culture: CultureType): LastTreatmentDetails | null => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    
+    const cultureTreatments = treatments.filter(t => 
+      t.culture === culture && 
+      t.completed === false && 
+      t.dueDate && 
+      new Date(t.dueDate) >= now
+    );
+    
+    if (cultureTreatments.length === 0) return null;
+    
+    // Находим ближайшую по дате
+    const nextTreatment = cultureTreatments.reduce((nearest, current) => {
+      return new Date(current.dueDate!) < new Date(nearest.dueDate!) ? current : nearest;
+    });
+    
+    return {
+      id: nextTreatment.id,
+      date: new Date(nextTreatment.dueDate!),
+      area: nextTreatment.area,
+      isTankMix: nextTreatment.isTankMix,
+      notes: nextTreatment.notes,
+      chemicalProducts: nextTreatment.chemicalProducts.map(p => ({
+        productName: p.product?.name || `ID: ${p.productId}`,
+        type: p.product?.type || 'unknown',
+        ratePerHa: p.ratePerHa,
+        unit: p.unit
+      }))
+    };
+  };
+
   return {
     cultureStats,
     getTimelineData,
     getLastTreatmentDetails,
+    getNextTreatmentDetails
   };
 };
