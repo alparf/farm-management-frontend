@@ -81,16 +81,11 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
       } else {
         stats.plannedTreatments++;
         
-        // Ближайшая запланированная обработка (по dueDate)
+        // Ближайшая запланированная обработка (по dueDate) - даже если просрочена
         if (treatment.dueDate) {
           const dueDate = new Date(treatment.dueDate);
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          
-          if (dueDate >= today) {
-            if (!stats.nextTreatment || dueDate < stats.nextTreatment) {
-              stats.nextTreatment = dueDate;
-            }
+          if (!stats.nextTreatment || dueDate < stats.nextTreatment) {
+            stats.nextTreatment = dueDate;
           }
         }
       }
@@ -216,19 +211,16 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
   };
 
   const getNextTreatmentDetails = (culture: CultureType): LastTreatmentDetails | null => {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    
+    // Находим все НЕ ВЫПОЛНЕННЫЕ обработки (completed = false)
     const cultureTreatments = treatments.filter(t => 
       t.culture === culture && 
       t.completed === false && 
-      t.dueDate && 
-      new Date(t.dueDate) >= now
+      t.dueDate
     );
     
     if (cultureTreatments.length === 0) return null;
     
-    // Находим ближайшую по дате
+    // Находим самую раннюю по дате (независимо от того, прошла она или нет)
     const nextTreatment = cultureTreatments.reduce((nearest, current) => {
       return new Date(current.dueDate!) < new Date(nearest.dueDate!) ? current : nearest;
     });
@@ -252,6 +244,6 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
     cultureStats,
     getTimelineData,
     getLastTreatmentDetails,
-    getNextTreatmentDetails
+    getNextTreatmentDetails,
   };
 };

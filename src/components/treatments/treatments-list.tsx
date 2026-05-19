@@ -194,7 +194,7 @@ export function CompactTreatmentList({
   const cultures: CultureType[] = ['груша', 'яблоко', 'черешня', 'слива', 'томаты', 'картофель', 'лук', 'свекла', 'морковь', 'капуста', 'другое'];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       {treatments.map((treatment) => {
         const DeleteIcon = ButtonIcons.Delete.icon;
         const EditIcon = ButtonIcons.Edit.icon;
@@ -266,7 +266,7 @@ export function CompactTreatmentList({
                         <div className={`${getIconColor(culture)}`}>
                           {getCultureIcon(culture, "h-6 w-6")}
                         </div>
-                        <h3 className={`font-semibold text-lg ${getCultureTextColor(culture)}`}>
+                        <h3 className={`font-semibold text-base ${getCultureTextColor(culture)}`}>
                           {treatment.culture}
                         </h3>
                       </div>
@@ -418,7 +418,7 @@ export function CompactTreatmentList({
                                 ) : (
                                   <>
                                     <div className="flex-1">
-                                      <span className="font-medium text-gray-800">
+                                      <span className="font-medium text-gray-800 text-sm">
                                         {product.product?.name || `ID препарата: ${product.productId}`}
                                       </span>
                                       <span className="text-gray-400 text-xs ml-2">
@@ -452,7 +452,7 @@ export function CompactTreatmentList({
                           Плановая дата обработки
                         </h4>
                         <div className="bg-gray-50 rounded-lg px-3 py-2">
-                          <span className="text-gray-700">
+                          <span className="text-gray-700 text-sm">
                             {treatment.dueDate 
                               ? new Date(treatment.dueDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
                               : 'Не указана'
@@ -468,7 +468,7 @@ export function CompactTreatmentList({
                           Баковая смесь
                         </h4>
                         <div className="bg-gray-50 rounded-lg px-3 py-2">
-                          <span className="text-gray-700">
+                          <span className="text-gray-700 text-sm">
                             {treatment.isTankMix ? 'Да' : 'Нет'}
                           </span>
                         </div>
@@ -498,7 +498,7 @@ export function CompactTreatmentList({
                             </div>
                           ) : (
                             <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
-                              <span className="text-gray-700">
+                              <span className="text-gray-700 text-sm">
                                 {treatment.actualDate 
                                   ? new Date(treatment.actualDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
                                   : 'Не указана'
