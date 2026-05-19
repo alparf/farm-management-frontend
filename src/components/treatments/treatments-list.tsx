@@ -327,6 +327,7 @@ export function CompactTreatmentList({
                   {/* Плановая дата - синий календарик */}
                   <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-2">
                     <span className="flex items-center gap-1.5 text-blue-600">
+                      <span> </span>
                       <CalendarDays className="h-3.5 w-3.5 text-blue-500" />
                       План: {treatment.dueDate ? new Date(treatment.dueDate).toLocaleDateString('ru-RU') : '—'}
                     </span>
