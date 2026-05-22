@@ -14,11 +14,14 @@ interface InventoryFormProps {
   onCancel: () => void;
 }
 
+// Только литры и килограммы
+const AVAILABLE_UNITS: InventoryUnit[] = ['л', 'кг'];
+
 export function InventoryForm({ onSubmit, onCancel }: InventoryFormProps) {
   const [name, setName] = useState('');
   const [type, setType] = useState<ProductType>('фунгицид');
   const [quantity, setQuantity] = useState('');
-  const [unit, setUnit] = useState<InventoryUnit>('кг');
+  const [unit, setUnit] = useState<InventoryUnit>('л');
   const [notes, setNotes] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,14 +32,31 @@ export function InventoryForm({ onSubmit, onCancel }: InventoryFormProps) {
       return;
     }
 
+    const quantityNum = parseFloat(quantity);
+    if (isNaN(quantityNum) || quantityNum <= 0) {
+      alert('Количество должно быть положительным числом');
+      return;
+    }
+
     onSubmit({
       name,
       type,
-      quantity: parseFloat(quantity),
+      quantity: quantityNum,
       unit,
       notes: notes || undefined,
     });
   };
+
+  const productTypes: ProductType[] = [
+    'фунгицид',
+    'инсектицид', 
+    'гербицид',
+    'десикант',
+    'регулятор роста',
+    'удобрение',
+    'биопрепарат',
+    'адъювант'
+  ];
 
   return (
     <Card className="mb-6">
@@ -65,14 +85,11 @@ export function InventoryForm({ onSubmit, onCancel }: InventoryFormProps) {
                 onChange={(e) => setType(e.target.value as ProductType)}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="фунгицид">Фунгицид</option>
-                <option value="инсектицид">Инсектицид</option>
-                <option value="гербицид">Гербицид</option>
-                <option value="десикант">Десикант</option>
-                <option value="регулятор роста">Регулятор роста</option>
-                <option value="удобрение">Удобрение</option>
-                <option value="биопрепарат">Биопрепарат</option>
-                <option value="адъювант">Адъювант</option>
+                {productTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -83,10 +100,10 @@ export function InventoryForm({ onSubmit, onCancel }: InventoryFormProps) {
               <Input
                 id="quantity"
                 type="number"
-                step="0.01"
+                step="0.001"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                placeholder="0.00"
+                placeholder="0.000"
                 required
               />
             </div>
@@ -99,13 +116,15 @@ export function InventoryForm({ onSubmit, onCancel }: InventoryFormProps) {
                 onChange={(e) => setUnit(e.target.value as InventoryUnit)}
                 className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
               >
-                <option value="кг">кг</option>
-                <option value="л">л</option>
-                <option value="г">г</option>
-                <option value="мл">мл</option>
-                <option value="уп">упаковка</option>
-                <option value="шт">штука</option>
+                {AVAILABLE_UNITS.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit === 'л' ? 'Литры (л)' : 'Килограммы (кг)'}
+                  </option>
+                ))}
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Доступны только литры и килограммы
+              </p>
             </div>
           </div>
 
