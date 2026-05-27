@@ -30,6 +30,7 @@ export function CompactTreatmentList({
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingActualDate, setEditingActualDate] = useState<number | null>(null);
+  const [tempActualDateStr, setTempActualDateStr] = useState<string>('');
   const [editingNotes, setEditingNotes] = useState<number | null>(null);
   const [editingProduct, setEditingProduct] = useState<{ treatmentId: number; productIndex: number } | null>(null);
   const [editNotesText, setEditNotesText] = useState('');
@@ -71,14 +72,13 @@ export function CompactTreatmentList({
     } else {
       await onUpdateTreatment(id, {
         completed: true,
-        actualDate: new Date()
+        actualDate: new Date().toISOString().split('T')[0]
       });
     }
   };
 
-  const updateActualDate = async (id: number, date: Date | undefined) => {
-    await onUpdateTreatment(id, { actualDate: date });
-    setEditingActualDate(null);
+  const updateActualDate = async (id: number, dateStr: string | undefined) => {
+    await onUpdateTreatment(id, { actualDate: dateStr });
   };
 
   const startEditNotes = (treatment: ChemicalTreatment) => {
@@ -193,6 +193,20 @@ export function CompactTreatmentList({
 
   const cultures: CultureType[] = ['груша', 'яблоко', 'черешня', 'слива', 'томаты', 'картофель', 'лук', 'свекла', 'морковь', 'капуста', 'другое'];
 
+  const formatDisplayDate = (dateStr: string | Date | undefined) => {
+    if (!dateStr) return '—';
+    const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+    if (isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const getDateForInput = (dateStr: string | Date | undefined): string => {
+    if (!dateStr) return '';
+    const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       {treatments.map((treatment) => {
@@ -259,7 +273,7 @@ export function CompactTreatmentList({
                 </div>
               ) : (
                 <>
-                  {/* Заголовок с названием, площадью и кнопками в одну строку */}
+                  {/* Заголовок */}
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
@@ -323,39 +337,42 @@ export function CompactTreatmentList({
                       </Button>
                     </div>
                   </div>
-                  
-                  {/* Плановая дата - синий календарик */}
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-2">
-                    <span className="flex items-center gap-1.5 text-blue-600">
-                      <span> </span>
-                      <CalendarDays className="h-3.5 w-3.5 text-blue-500" />
-                      План: {treatment.dueDate ? new Date(treatment.dueDate).toLocaleDateString('ru-RU') : '—'}
-                    </span>
-                    {treatment.actualDate && (
-                      <span className="flex items-center gap-1.5 text-green-600">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Факт: {new Date(treatment.actualDate).toLocaleDateString('ru-RU')}
-                      </span>
-                    )}
-                  </div>
 
-                  <div className="flex items-center gap-2">
-                    {isCompleted ? (
-                      <span className="inline-flex items-center gap-1 text-sm text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                        <CheckCircle className="h-3.5 w-3.5" />
-                        Выполнено
+                  {/* Даты и статус в вертикальном блоке */}
+                  <div className="flex flex-col gap-1 mb-2">
+                    {/* Плановая и фактическая дата - первая строка */}
+                    <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                      <span className="inline-flex items-center gap-1.5 text-blue-600 px-2 py-0.5">
+                        <CalendarDays className="h-3.5 w-3.5 text-blue-500" />
+                        <span>План: {treatment.dueDate ? new Date(treatment.dueDate).toLocaleDateString('ru-RU') : '—'}</span>
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-sm text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
-                        <Clock className="h-3.5 w-3.5" />
-                        Ожидает
+                      {treatment.actualDate && (
+                        <span className="inline-flex items-center gap-1.5 text-green-600 px-2 py-0.5">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          <span>Факт: {formatDisplayDate(treatment.actualDate)}</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Статус и количество препаратов - вторая строка */}
+                    <div className="flex items-center gap-2">
+                      {isCompleted ? (
+                        <span className="inline-flex items-center gap-1 text-sm text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          <span>Выполнено</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-sm text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                          <Clock className="h-3.5 w-3.5" />
+                          <span>Ожидает</span>
+                        </span>
+                      )}
+                      
+                      <span className="inline-flex items-center gap-1 text-sm text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
+                        <Package className="h-3.5 w-3.5" />
+                        <span>{treatment.chemicalProducts.length} препарата</span>
                       </span>
-                    )}
-                    
-                    <span className="inline-flex items-center gap-1 text-sm text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full">
-                      <Package className="h-3.5 w-3.5" />
-                      {treatment.chemicalProducts.length} препарата
-                    </span>
+                    </div>
                   </div>
 
                   {/* Кнопка раскрытия деталей */}
@@ -366,10 +383,9 @@ export function CompactTreatmentList({
                     {isExpanded ? '▲ Скрыть детали' : '▼ Показать детали'}
                   </button>
 
-                  {/* Детальная информация */}
+                  {/* Детали */}
                   {isExpanded && (
                     <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-                      {/* Препараты с возможностью редактирования дозы */}
                       <div>
                         <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <Package className="h-4 w-4 text-blue-500" />
@@ -446,7 +462,6 @@ export function CompactTreatmentList({
                         </div>
                       </div>
 
-                      {/* Плановая дата - в деталях (только просмотр) */}
                       <div>
                         <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <CalendarDays className="h-4 w-4 text-blue-500" />
@@ -462,7 +477,6 @@ export function CompactTreatmentList({
                         </div>
                       </div>
 
-                      {/* Баковая смесь - в деталях (только просмотр) */}
                       <div>
                         <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <Beaker className="h-4 w-4 text-blue-500" />
@@ -475,7 +489,6 @@ export function CompactTreatmentList({
                         </div>
                       </div>
 
-                      {/* Фактическая дата - редактируемая (только для выполненных) */}
                       {isCompleted && (
                         <div>
                           <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
@@ -484,31 +497,48 @@ export function CompactTreatmentList({
                           </h4>
                           {editingActualDate === treatment.id ? (
                             <div className="flex items-center gap-2">
-                              <DatePicker 
-                                value={treatment.actualDate ? new Date(treatment.actualDate) : undefined} 
-                                onChange={(date) => updateActualDate(treatment.id, date)}
+                              <input
+                                type="date"
+                                value={tempActualDateStr}
+                                onChange={(e) => setTempActualDateStr(e.target.value)}
+                                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
                               />
                               <Button 
                                 variant="outline" 
                                 size="sm"
-                                onClick={() => setEditingActualDate(null)}
+                                onClick={async () => {
+                                  await updateActualDate(treatment.id, tempActualDateStr || undefined);
+                                  setEditingActualDate(null);
+                                  setTempActualDateStr('');
+                                }}
                                 className="h-8 px-3"
                               >
-                                Готово
+                                Сохранить
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setEditingActualDate(null);
+                                  setTempActualDateStr('');
+                                }}
+                                className="h-8 px-3"
+                              >
+                                Отмена
                               </Button>
                             </div>
                           ) : (
                             <div className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
                               <span className="text-gray-700 text-sm">
-                                {treatment.actualDate 
-                                  ? new Date(treatment.actualDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })
-                                  : 'Не указана'
-                                }
+                                {treatment.actualDate ? formatDisplayDate(treatment.actualDate) : 'Не указана'}
                               </span>
                               <Button 
                                 variant="ghost" 
                                 size="sm"
-                                onClick={() => setEditingActualDate(treatment.id)}
+                                onClick={() => {
+                                  setEditingActualDate(treatment.id);
+                                  setTempActualDateStr(getDateForInput(treatment.actualDate));
+                                }}
                                 className="text-green-600 hover:text-green-700 h-7"
                               >
                                 <Edit2 className="h-3.5 w-3.5" />
@@ -518,7 +548,6 @@ export function CompactTreatmentList({
                         </div>
                       )}
 
-                      {/* Примечания */}
                       <div>
                         <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                           <StickyNote className="h-4 w-4 text-yellow-500" />

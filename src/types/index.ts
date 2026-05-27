@@ -21,9 +21,9 @@ export interface ChemicalTreatment {
   id: number;
   culture: CultureType;
   area: number;
-  completed: boolean;           // ✅ Статус выполнения
-  dueDate: Date;                // ✅ Плановая дата
-  actualDate?: Date;            // ✅ Фактическая дата выполнения
+  completed: boolean;
+  dueDate: Date;
+  actualDate?: string;
   isTankMix: boolean;
   hasCompatibilityIssues?: boolean;
   compatibilityWarnings?: string;
