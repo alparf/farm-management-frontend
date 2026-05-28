@@ -53,10 +53,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
   const months = getMonths();
   const totalDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
 
-  const getTypeColor = (type: string, completed: boolean) => {
-    if (completed) {
-      return 'bg-green-500';
-    }
+  const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
       'фунгицид': 'bg-purple-500',
       'инсектицид': 'bg-red-500',
@@ -68,7 +65,10 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
       'адъювант': 'bg-gray-500',
       'Баковая смесь': 'bg-teal-500',
     };
-    return colors[type] || 'bg-gray-400';
+    // Приводим тип к нижнему регистру для надёжности (кроме "баковая смесь" – можно оба варианта)
+    const normalizedType = type.toLowerCase();
+    if (normalizedType === 'баковая смесь') return colors['Баковая смесь'];
+    return colors[normalizedType] || 'bg-gray-400';
   };
 
   const getTypeLabel = (type: string, treatment: any) => {
@@ -135,7 +135,7 @@ export function TimelineChart({ timelineData }: TimelineChartProps) {
             
             {sortedTreatments.map((treatment, index) => {
               const position = getTreatmentPosition(treatment.date);
-              const colorClass = getTypeColor(treatment.type, treatment.completed);
+              const colorClass = getTypeColor(treatment.type);
               
               return (
                 <div
