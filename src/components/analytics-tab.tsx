@@ -7,6 +7,7 @@ import { CultureSelector } from '@/components/culture-selector';
 import { TimelineChart } from '@/components/timeline-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package, CalendarDays, MapPin, Beaker, Clock, Calendar } from 'lucide-react';
+import { WeatherCard } from '@/components/weather-card';
 
 interface AnalyticsTabProps {
   treatments: ChemicalTreatment[];
@@ -95,30 +96,10 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
             </Card>
           </div>
 
-          {/* Три колонки */}
+          {/* Три колонки: погода, следующая обработка, последняя обработка */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Часто используемые препараты */}
-            <Card className="flex flex-col">
-              <CardHeader>
-                <CardTitle className="text-lg">Часто используемые препараты</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <div className="flex flex-wrap gap-2">
-                  {currentCultureStats?.productsUsed && currentCultureStats.productsUsed.length > 0 ? (
-                    currentCultureStats.productsUsed.map((product, index) => (
-                      <span
-                        key={index}
-                        className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                      >
-                        {product}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-gray-500">Нет данных о препаратах</span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            {/* Погода */}
+            <WeatherCard />
 
             {/* Следующая запланированная обработка */}
             <Card className="flex flex-col">
