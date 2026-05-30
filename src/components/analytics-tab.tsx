@@ -6,8 +6,8 @@ import { useCultureStats } from '@/hooks/useCultureStats';
 import { CultureSelector } from '@/components/culture-selector';
 import { TimelineChart } from '@/components/timeline-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, CalendarDays, MapPin, Beaker, Clock, Calendar } from 'lucide-react';
-import { WeatherCard } from '@/components/weather-card';
+import { Package, CalendarDays, MapPin, Beaker, Calendar } from 'lucide-react';
+import { ChemicalsUsageStats } from '@/components/chemicals-usage-stats'; // новый компонент
 
 interface AnalyticsTabProps {
   treatments: ChemicalTreatment[];
@@ -96,10 +96,10 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
             </Card>
           </div>
 
-          {/* Три колонки: погода, следующая обработка, последняя обработка */}
+          {/* Три колонки: статистика СЗР, следующая обработка, последняя обработка */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Погода */}
-            <WeatherCard />
+            {/* Статистика применения препаратов */}
+            <ChemicalsUsageStats culture={currentCulture} treatments={treatments} />
 
             {/* Следующая запланированная обработка */}
             <Card className="flex flex-col">
@@ -135,7 +135,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
                       </div>
                     </div>
 
-                    {/* Препараты с дозировками */}
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                         <Package className="h-4 w-4 text-blue-500" />
@@ -162,7 +161,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
                       </div>
                     </div>
 
-                    {/* Баковая смесь */}
                     {nextTreatmentDetails.isTankMix && (
                       <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-3 py-2">
                         <Beaker className="h-4 w-4 text-gray-600" />
@@ -170,7 +168,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
                       </div>
                     )}
 
-                    {/* Примечания */}
                     {nextTreatmentDetails.notes && (
                       <div className="text-sm bg-gray-50 rounded-lg px-3 py-2">
                         <p className="text-gray-600 line-clamp-2">{nextTreatmentDetails.notes}</p>
@@ -219,7 +216,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
                       </div>
                     </div>
 
-                    {/* Препараты с дозировками */}
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                         <Package className="h-4 w-4 text-blue-500" />
@@ -246,7 +242,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
                       </div>
                     </div>
 
-                    {/* Баковая смесь */}
                     {lastTreatmentDetails.isTankMix && (
                       <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-3 py-2">
                         <Beaker className="h-4 w-4 text-gray-600" />
@@ -254,7 +249,6 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
                       </div>
                     )}
 
-                    {/* Примечания */}
                     {lastTreatmentDetails.notes && (
                       <div className="text-sm bg-gray-50 rounded-lg px-3 py-2">
                         <p className="text-gray-600 line-clamp-2">{lastTreatmentDetails.notes}</p>

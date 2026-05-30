@@ -44,6 +44,16 @@ export interface LastTreatmentDetails {
   }[];
 }
 
+export interface ChemicalUsage {
+  productId: number;
+  productName: string;
+  productType: ProductType;
+  totalAmount: number;   // сумма ratePerHa * area
+  totalArea: number;     // общая площадь, на которой применялся
+  treatmentCount: number;
+  unit: string;          // л, кг и т.д.
+}
+
 export const useCultureStats = (treatments: ChemicalTreatment[]) => {
   const cultureStats = useMemo((): CultureStats[] => {
     const statsMap = new Map<CultureType, Omit<CultureStats, 'culture'>>();
@@ -211,7 +221,6 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
   };
 
   const getNextTreatmentDetails = (culture: CultureType): LastTreatmentDetails | null => {
-    // Находим все НЕ ВЫПОЛНЕННЫЕ обработки (completed = false)
     const cultureTreatments = treatments.filter(t => 
       t.culture === culture && 
       t.completed === false && 
@@ -220,7 +229,6 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
     
     if (cultureTreatments.length === 0) return null;
     
-    // Находим самую раннюю по дате (независимо от того, прошла она или нет)
     const nextTreatment = cultureTreatments.reduce((nearest, current) => {
       return new Date(current.dueDate!) < new Date(nearest.dueDate!) ? current : nearest;
     });
@@ -240,10 +248,48 @@ export const useCultureStats = (treatments: ChemicalTreatment[]) => {
     };
   };
 
+  // Новая функция: агрегированная статистика по препаратам для конкретной культуры
+  const getChemicalsUsage = (culture: CultureType): ChemicalUsage[] => {
+    const cultureTreatments = treatments.filter(t => t.culture === culture && t.completed === true);
+    const usageMap = new Map<number, ChemicalUsage>();
+
+    for (const treatment of cultureTreatments) {
+      const area = treatment.area;
+      for (const chem of treatment.chemicalProducts) {
+        const product = chem.product;
+        if (!product) continue;
+        const productId = product.id;
+        const rate = chem.ratePerHa;
+        const amount = rate * area;
+
+        const existing = usageMap.get(productId);
+        if (existing) {
+          existing.totalAmount += amount;
+          existing.totalArea += area;
+          existing.treatmentCount += 1;
+        } else {
+          usageMap.set(productId, {
+            productId,
+            productName: product.name,
+            productType: product.type,
+            totalAmount: amount,
+            totalArea: area,
+            treatmentCount: 1,
+            unit: product.unit,
+          });
+        }
+      }
+    }
+
+    // Сортируем по общему расходу (от большего к меньшему)
+    return Array.from(usageMap.values()).sort((a, b) => b.totalAmount - a.totalAmount);
+  };
+
   return {
     cultureStats,
     getTimelineData,
     getLastTreatmentDetails,
     getNextTreatmentDetails,
+    getChemicalsUsage, // новый метод
   };
 };
