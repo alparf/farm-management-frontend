@@ -117,11 +117,11 @@ export function TreatmentForm({ onSubmit, onCancel, inventory }: TreatmentFormPr
     }
 
     if (errors.length > 0) {
-      setCompatibilityWarning(`❌ КРИТИЧЕСКИЕ ПРОБЛЕМЫ: ${errors.join('; ')}`);
+      setCompatibilityWarning(` КРИТИЧЕСКИЕ ПРОБЛЕМЫ: ${errors.join('; ')}`);
     } else if (warnings.length > 0) {
-      setCompatibilityWarning(`⚠️ ПРЕДУПРЕЖДЕНИЯ: ${warnings.join('; ')}`);
+      setCompatibilityWarning(` ПРЕДУПРЕЖДЕНИЯ: ${warnings.join('; ')}`);
     } else {
-      setCompatibilityWarning('✅ Препараты совместимы');
+      setCompatibilityWarning(' Препараты совместимы');
     }
   }, [isTankMix]);
 
