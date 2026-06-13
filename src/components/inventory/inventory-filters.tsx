@@ -4,6 +4,8 @@ import { ProductType } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
 
 interface InventoryFiltersProps {
   searchQuery: string;
@@ -14,6 +16,7 @@ interface InventoryFiltersProps {
   onSortChange: (sort: string) => void;
   stockFilter: string;
   onStockFilterChange: (filter: string) => void;
+  onGenerateReport?: () => void;
 }
 
 export function InventoryFilters({
@@ -25,6 +28,7 @@ export function InventoryFilters({
   onSortChange,
   stockFilter,
   onStockFilterChange,
+  onGenerateReport,
 }: InventoryFiltersProps) {
   const productTypes: ProductType[] = [
     'фунгицид',
@@ -39,8 +43,14 @@ export function InventoryFilters({
 
   return (
     <Card className="mb-6">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Фильтры склада</CardTitle>
+        {onGenerateReport && (
+          <Button variant="outline" size="sm" onClick={onGenerateReport}>
+            <FileText className="mr-2 h-4 w-4" />
+            Отчет
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

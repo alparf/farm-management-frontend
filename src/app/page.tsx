@@ -16,6 +16,7 @@ import { FilterSort } from '@/components/treatments/treatments-filters';
 import { Button } from '@/components/ui/button';
 import { InventoryTab } from '@/components/inventory/inventory-tab';
 import { Plus, RefreshCw, Package, Sprout, BarChart3, Car, Gauge } from 'lucide-react';
+import { generateTreatmentsReport } from '@/utils/reportTreatments';
 
 type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles' | 'equipment';
 
@@ -172,6 +173,21 @@ export default function Home() {
     }
   };
 
+  // Обработчик отчёта
+  const handleGenerateReport = () => {
+    generateTreatmentsReport({
+      treatments: filteredTreatments,
+      inventory,
+      filters: {
+        searchQuery,
+        cultureFilter,
+        productTypeFilter,
+        showCompleted,
+        sortBy,
+      },
+    });
+  };
+
   // Состояния загрузки
   if (treatmentsLoading && activeTab === 'treatments') {
     return <LoadingState message="Загрузка обработок..." />;
@@ -255,6 +271,7 @@ export default function Home() {
             onSortChange={setSortBy}
             showCompleted={showCompleted}
             onShowCompletedChange={setShowCompleted}
+            onGenerateReport={handleGenerateReport}
           />
 
           <div className="flex justify-between items-center mb-6">
@@ -262,7 +279,6 @@ export default function Home() {
               Обработки ({filteredTreatments.length} из {treatments.length})
             </h2>
             <Button onClick={() => setShowTreatmentForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
               Новая обработка
             </Button>
           </div>

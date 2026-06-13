@@ -3,6 +3,8 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
 
 interface FilterSortProps {
   cultureFilter: string;
@@ -15,6 +17,7 @@ interface FilterSortProps {
   onSortChange: (sort: string) => void;
   showCompleted: boolean;
   onShowCompletedChange: (show: boolean) => void;
+  onGenerateReport?: () => void;
 }
 
 export function FilterSort({
@@ -28,14 +31,21 @@ export function FilterSort({
   onSortChange,
   showCompleted,
   onShowCompletedChange,
+  onGenerateReport,
 }: FilterSortProps) {
   const cultures = ['груша', 'яблоко', 'черешня', 'слива', 'томаты', 'картофель', 'лук', 'свекла', 'морковь', 'капуста', 'другое'];
   const productTypes = ['фунгицид', 'инсектицид', 'гербицид', 'десикант', 'регулятор роста'];
 
   return (
     <Card className="mb-6">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Фильтры и сортировка</CardTitle>
+        {onGenerateReport && (
+          <Button variant="outline" size="sm" onClick={onGenerateReport}>
+            <FileText className="mr-2 h-4 w-4" />
+            Отчет
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
