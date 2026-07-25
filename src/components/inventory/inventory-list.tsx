@@ -7,21 +7,28 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ButtonIcons } from '@/components/ui-icons';
-import { Shield, Bug, Flower2, Droplets, TrendingUp, Sprout, Leaf, Beaker, Package, AlertTriangle, PackageX, Save, X, Edit2, Plus, Minus, RefreshCw } from 'lucide-react';
+import { Shield, Bug, Flower2, Droplets, TrendingUp, Sprout, Leaf, Beaker, Package, AlertTriangle, PackageX, Save, X } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
 
 interface InventoryListProps {
   inventory: ProductInventory[];
   onUpdateProduct: (id: number, updates: Partial<ProductInventory>) => Promise<void>;
   onDeleteProduct: (id: number) => Promise<void>;
-  onRefresh: () => void;
+  onRefresh?: () => void; // опциональный
   typeFilter?: ProductType | '';
   onSelectProduct?: (id: number, name: string) => void;
 }
 
-export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onRefresh, typeFilter, onSelectProduct }: InventoryListProps) {
+export function InventoryList({ 
+  inventory, 
+  onUpdateProduct, 
+  onDeleteProduct, 
+  onRefresh, 
+  typeFilter, 
+  onSelectProduct 
+}: InventoryListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; product: ProductInventory | null }>({
     isOpen: false,
@@ -108,7 +115,7 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onR
         notes: editData.notes || undefined,
       });
       setEditingId(null);
-      onRefresh();
+      if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error updating product:', error);
     }
@@ -130,7 +137,7 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onR
       try {
         await onDeleteProduct(deleteConfirm.product.id);
         setDeleteConfirm({ isOpen: false, product: null });
-        onRefresh();
+        if (onRefresh) onRefresh();
       } catch (error) {
         console.error('Error deleting product:', error);
         setDeleteConfirm({ isOpen: false, product: null });
@@ -166,9 +173,6 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onR
         body = { newQuantity: parseFloat(stockQuantity), reason: stockDescription };
       }
       
-      console.log('Sending request to:', url);
-      console.log('Body:', body);
-      
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -176,7 +180,6 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onR
       });
       
       if (!response.ok) {
-        // Пытаемся получить текст ошибки
         let errorText = '';
         try {
           const errorData = await response.json();
@@ -184,7 +187,6 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onR
         } catch {
           errorText = await response.text();
         }
-        console.error('Server error response:', errorText);
         throw new Error(errorText || 'Operation failed');
       }
       
@@ -194,7 +196,7 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onR
       setStockDialog({ ...stockDialog, open: false });
       setStockQuantity('');
       setStockDescription('');
-      onRefresh();
+      if (onRefresh) onRefresh();
     } catch (err: any) {
       console.error('Stock operation error:', err);
       alert(err.message || 'Ошибка при выполнении операции');
@@ -203,15 +205,15 @@ export function InventoryList({ inventory, onUpdateProduct, onDeleteProduct, onR
     }
   };
 
-    if (inventory.length === 0) {
-      return (
-        <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
-          <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-          <p>Склад пуст</p>
-          <p className="text-sm mt-1">Нажмите "Добавить продукт" чтобы начать</p>
-        </div>
-      );
-    }
+  if (inventory.length === 0) {
+    return (
+      <div className="text-center py-12 text-gray-500 border-2 border-dashed rounded-lg">
+        <Package className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+        <p>Склад пуст</p>
+        <p className="text-sm mt-1">Нажмите "Добавить продукт" чтобы начать</p>
+      </div>
+    );
+  }
 
   return (
     <>

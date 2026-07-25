@@ -24,13 +24,11 @@ interface InventoryStatsProps {
 
 export function InventoryStats({ inventory }: InventoryStatsProps) {
   const stats = useMemo(() => {
-    // Общее количество по типам
     const byType = inventory.reduce((acc, product) => {
       acc[product.type] = (acc[product.type] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
-    // Низкий запас (количество > 0 и <= 5) по типам
     const lowStockByType = inventory.reduce((acc, product) => {
       if (product.quantity > 0 && product.quantity <= 5) {
         acc[product.type] = (acc[product.type] || 0) + 1;
@@ -38,7 +36,6 @@ export function InventoryStats({ inventory }: InventoryStatsProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    // Отсутствие на складе (количество === 0) по типам
     const outOfStockByType = inventory.reduce((acc, product) => {
       if (product.quantity === 0) {
         acc[product.type] = (acc[product.type] || 0) + 1;
@@ -46,11 +43,7 @@ export function InventoryStats({ inventory }: InventoryStatsProps) {
       return acc;
     }, {} as Record<string, number>);
 
-    return { 
-      byType,
-      lowStockByType,
-      outOfStockByType,
-    };
+    return { byType, lowStockByType, outOfStockByType };
   }, [inventory]);
 
   const getTypeConfig = (type: string) => {
@@ -80,7 +73,6 @@ export function InventoryStats({ inventory }: InventoryStatsProps) {
         const lowStock = stats.lowStockByType[type] || 0;
         const outOfStock = stats.outOfStockByType[type] || 0;
         
-        // Пропускаем типы, которых нет на складе
         if (total === 0 && lowStock === 0 && outOfStock === 0) return null;
         
         return (
@@ -98,7 +90,6 @@ export function InventoryStats({ inventory }: InventoryStatsProps) {
                 </span>
               </div>
               
-              {/* Статус запасов с текстовым пояснением */}
               <div className="text-xs">
                 {outOfStock > 0 && (
                   <div className="flex items-center gap-1.5 text-red-600 mt-1">

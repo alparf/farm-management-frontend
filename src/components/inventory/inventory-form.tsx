@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, X, Save } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 
 interface InventoryFormProps {
   onSubmit: (product: Omit<ProductInventory, 'id' | 'createdAt' | 'updatedAt'>) => void;
@@ -61,7 +61,7 @@ export function InventoryForm({ onSubmit, onCancel }: InventoryFormProps) {
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Добавить продукт</CardTitle>
+        <CardTitle>Добавить СЗР</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

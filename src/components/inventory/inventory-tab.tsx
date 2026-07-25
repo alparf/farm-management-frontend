@@ -6,8 +6,9 @@ import { InventoryList } from '@/components/inventory/inventory-list';
 import { InventoryForm } from '@/components/inventory/inventory-form';
 import { InventoryFilters } from '@/components/inventory/inventory-filters';
 import { InventoryStats } from '@/components/inventory/inventory-stats';
+import { TransactionHistory } from '@/components/inventory/transaction-history';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Package, History } from 'lucide-react';
 import { generatePrintWindow } from '@/utils/reportUtils';
 
 interface InventoryTabProps {
@@ -15,8 +16,10 @@ interface InventoryTabProps {
   onAddProduct: (product: Omit<ProductInventory, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   onUpdateProduct: (id: number, updates: Partial<ProductInventory>) => Promise<void>;
   onDeleteProduct: (id: number) => Promise<void>;
-  onRefresh?: () => Promise<void>; // добавляем опциональный проп
+  onRefresh?: () => Promise<void>;
 }
+
+type SubTab = 'list' | 'movements';
 
 export function InventoryTab({
   inventory,
@@ -25,15 +28,14 @@ export function InventoryTab({
   onDeleteProduct,
   onRefresh,
 }: InventoryTabProps) {
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>('list');
   const [showForm, setShowForm] = useState(false);
   
-  // Состояния для фильтров
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<ProductType | ''>('');
   const [sortBy, setSortBy] = useState('name');
   const [stockFilter, setStockFilter] = useState('all');
 
-  // Фильтрация склада
   const filteredInventory = useMemo(() => {
     let filtered = inventory.filter(product => {
       if (searchQuery && !product.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -43,6 +45,7 @@ export function InventoryTab({
       if (stockFilter === 'normal' && product.quantity <= 5) return false;
       return true;
     });
+
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name': return a.name.localeCompare(b.name);
@@ -58,10 +61,9 @@ export function InventoryTab({
   const handleAddProduct = async (productData: any) => {
     await onAddProduct(productData);
     setShowForm(false);
-    if (onRefresh) await onRefresh(); // обновляем данные после добавления
+    if (onRefresh) await onRefresh();
   };
 
-  // Функция для формирования и печати отчета
   const handleGenerateReport = () => {
     const filtersParts = [];
     if (searchQuery) filtersParts.push(`Поиск: "${searchQuery}"`);
@@ -69,15 +71,13 @@ export function InventoryTab({
     if (stockFilter === 'low') filtersParts.push('Низкий запас (≤5)');
     else if (stockFilter === 'out') filtersParts.push('Нет в наличии');
     else if (stockFilter === 'normal') filtersParts.push('Нормальный запас');
-    if (sortBy) {
-      const sortMap: Record<string, string> = {
-        name: 'по названию',
-        quantity: 'по количеству',
-        type: 'по типу',
-        updatedAt: 'по дате обновления'
-      };
-      filtersParts.push(`Сортировка: ${sortMap[sortBy] || sortBy}`);
-    }
+    const sortMap: Record<string, string> = {
+      name: 'по названию',
+      quantity: 'по количеству',
+      type: 'по типу',
+      updatedAt: 'по дате обновления'
+    };
+    if (sortBy) filtersParts.push(`Сортировка: ${sortMap[sortBy] || sortBy}`);
     const filtersText = filtersParts.join(', ');
 
     if (filteredInventory.length === 0) {
@@ -132,35 +132,97 @@ export function InventoryTab({
 
   function escapeHtml(str: string): string {
     if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
+
+  const renderContent = () => {
+    if (activeSubTab === 'list') {
+      return (
+        <>
+          <InventoryStats inventory={inventory} />
+          <InventoryFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            typeFilter={typeFilter}
+            onTypeFilterChange={setTypeFilter}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            stockFilter={stockFilter}
+            onStockFilterChange={setStockFilter}
+            onGenerateReport={handleGenerateReport}
+          />
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">
+              Склад СЗР ({filteredInventory.length} из {inventory.length})
+            </h2>
+            <Button onClick={() => setShowForm(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Добавить СЗР
+            </Button>
+          </div>
+          {showForm && <InventoryForm onSubmit={handleAddProduct} onCancel={() => setShowForm(false)} />}
+          <InventoryList
+            inventory={filteredInventory}
+            onUpdateProduct={onUpdateProduct}
+            onDeleteProduct={onDeleteProduct}
+            typeFilter={typeFilter}
+            onRefresh={onRefresh}
+          />
+        </>
+      );
+    } else {
+      return (
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">История движений по складу</h2>
+            <div className="text-sm text-gray-500">
+              Всего записей: {inventory.reduce((acc, p) => acc + p.quantity, 0)} (общий остаток)
+            </div>
+          </div>
+          <TransactionHistory refreshKey={inventory.length} />
+        </div>
+      );
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <InventoryStats inventory={inventory} />
-      <InventoryFilters
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
-        sortBy={sortBy}
-        onSortChange={setSortBy}
-        stockFilter={stockFilter}
-        onStockFilterChange={setStockFilter}
-        onGenerateReport={handleGenerateReport}
-      />
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Склад СЗР ({filteredInventory.length} из {inventory.length})</h2>
-        <Button onClick={() => setShowForm(true)}><Plus className="mr-2 h-4 w-4" /> Добавить продукт</Button>
+      <div className="flex border-b border-gray-200">
+        <button
+          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeSubTab === 'list'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveSubTab('list')}
+        >
+          <Package className="h-4 w-4" />
+          Список товаров
+          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+            {inventory.length}
+          </span>
+        </button>
+        <button
+          className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
+            activeSubTab === 'movements'
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700'
+          }`}
+          onClick={() => setActiveSubTab('movements')}
+        >
+          <History className="h-4 w-4" />
+          Движения по складу
+          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
+            {inventory.reduce((acc, p) => acc + p.quantity, 0).toFixed(0)}
+          </span>
+        </button>
       </div>
-      {showForm && <InventoryForm onSubmit={handleAddProduct} onCancel={() => setShowForm(false)} />}
-      <InventoryList
-        inventory={filteredInventory}
-        onUpdateProduct={onUpdateProduct}
-        onDeleteProduct={onDeleteProduct}
-        typeFilter={typeFilter}
-        onRefresh={onRefresh || (() => Promise.resolve())}
-      />
+      {renderContent()}
     </div>
   );
 }
