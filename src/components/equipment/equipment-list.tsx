@@ -335,7 +335,7 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                       ) : (
                         <>
                           <CheckCircle className="h-3.5 w-3.5" />
-                          <span>АКТИВНО</span>
+                          <span>ПОВЕРЕННО</span>
                         </>
                       )}
                     </div>
