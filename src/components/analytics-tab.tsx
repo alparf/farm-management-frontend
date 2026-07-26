@@ -6,8 +6,7 @@ import { useCultureStats } from '@/hooks/useCultureStats';
 import { CultureSelector } from '@/components/culture-selector';
 import { TimelineChart } from '@/components/timeline-chart';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package, CalendarDays, MapPin, Beaker, Calendar } from 'lucide-react';
-import { ChemicalsUsageStats } from '@/components/chemicals-usage-stats'; // новый компонент
+import { Package, CalendarDays, MapPin, Beaker, Calendar, CheckCircle } from 'lucide-react';
 
 interface AnalyticsTabProps {
   treatments: ChemicalTreatment[];
@@ -24,6 +23,13 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
   
   const lastTreatmentDetails = currentCulture ? getLastTreatmentDetails(currentCulture) : null;
   const nextTreatmentDetails = currentCulture ? getNextTreatmentDetails(currentCulture) : null;
+
+  // Получаем все выполненные обработки для текущей культуры, сортируем по дате (сначала новые)
+  const completedTreatments = currentCulture
+    ? treatments
+        .filter(t => t.culture === currentCulture && t.completed === true)
+        .sort((a, b) => new Date(b.actualDate || b.dueDate).getTime() - new Date(a.actualDate || a.dueDate).getTime())
+    : [];
 
   return (
     <div className="space-y-6">
@@ -96,12 +102,90 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
             </Card>
           </div>
 
-          {/* Три колонки: статистика СЗР, следующая обработка, последняя обработка */}
+          {/* Три колонки: Последняя обработка, Следующая обработка, Список выполненных */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Статистика применения препаратов */}
-            <ChemicalsUsageStats culture={currentCulture} treatments={treatments} />
+            {/* Последняя обработка (первая) */}
+            <Card className="flex flex-col">
+              <CardHeader>
+                <CardTitle className="text-lg">Последняя обработка</CardTitle>
+              </CardHeader>
+              <CardContent className="flex-1">
+                {lastTreatmentDetails ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <CalendarDays className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-semibold text-gray-900">
+                          {lastTreatmentDetails.date.toLocaleDateString('ru-RU', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          ({Math.floor((new Date().getTime() - lastTreatmentDetails.date.getTime()) / (1000 * 60 * 60 * 24))} дней назад)
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <MapPin className="h-3 w-3" />
+                        {lastTreatmentDetails.area} га
+                      </div>
+                    </div>
 
-            {/* Следующая запланированная обработка */}
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-green-600">
+                        Выполнено
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <Package className="h-4 w-4 text-blue-500" />
+                        Препараты
+                      </h4>
+                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                        {lastTreatmentDetails.chemicalProducts.map((product, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                            <div className="flex-1 min-w-0">
+                              <span className="font-medium text-gray-800 text-sm truncate block">
+                                {product.productName}
+                              </span>
+                              <span className="text-gray-400 text-xs">
+                                ({product.type})
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                              <span className="text-gray-600 font-mono text-xs bg-white px-2 py-0.5 rounded">
+                                {product.ratePerHa} {product.unit}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {lastTreatmentDetails.isTankMix && (
+                      <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-3 py-2">
+                        <Beaker className="h-4 w-4 text-gray-600" />
+                        <span className="text-gray-700">Баковая смесь</span>
+                      </div>
+                    )}
+
+                    {lastTreatmentDetails.notes && (
+                      <div className="text-sm bg-gray-50 rounded-lg px-3 py-2">
+                        <p className="text-gray-600 line-clamp-2">{lastTreatmentDetails.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Нет выполненных обработок
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Следующая обработка (вторая) */}
             <Card className="flex flex-col">
               <CardHeader>
                 <CardTitle className="text-lg">Следующая обработка</CardTitle>
@@ -182,76 +266,45 @@ export function AnalyticsTab({ treatments }: AnalyticsTabProps) {
               </CardContent>
             </Card>
 
-            {/* Последняя обработка */}
+            {/* Выполненные обработки (список, третий блок) */}
             <Card className="flex flex-col">
               <CardHeader>
-                <CardTitle className="text-lg">Последняя обработка</CardTitle>
+                <CardTitle className="text-lg">Выполненные обработки</CardTitle>
               </CardHeader>
               <CardContent className="flex-1">
-                {lastTreatmentDetails ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-semibold text-gray-900">
-                          {lastTreatmentDetails.date.toLocaleDateString('ru-RU', {
-                            day: 'numeric',
-                            month: 'long',
-                            year: 'numeric'
-                          })}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          ({Math.floor((new Date().getTime() - lastTreatmentDetails.date.getTime()) / (1000 * 60 * 60 * 24))} дней назад)
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <MapPin className="h-3 w-3" />
-                        {lastTreatmentDetails.area} га
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-green-600">
-                        Выполнено
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <Package className="h-4 w-4 text-blue-500" />
-                        Препараты
-                      </h4>
-                      <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                        {lastTreatmentDetails.chemicalProducts.map((product, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
-                            <div className="flex-1 min-w-0">
-                              <span className="font-medium text-gray-800 text-sm truncate block">
-                                {product.productName}
-                              </span>
-                              <span className="text-gray-400 text-xs">
-                                ({product.type})
-                              </span>
+                {completedTreatments.length > 0 ? (
+                  <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                    {completedTreatments.slice(0, 10).map((treatment) => {
+                      const date = treatment.actualDate 
+                        ? new Date(treatment.actualDate) 
+                        : treatment.dueDate 
+                          ? new Date(treatment.dueDate) 
+                          : new Date(treatment.createdAt);
+                      const products = treatment.chemicalProducts.map(p => 
+                        p.product?.name || `ID:${p.productId}`
+                      ).slice(0, 3).join(', ') + (treatment.chemicalProducts.length > 3 ? ` +${treatment.chemicalProducts.length - 3}` : '');
+                      return (
+                        <div key={treatment.id} className="border-b border-gray-100 pb-2 last:border-0 last:pb-0">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="text-sm font-medium text-gray-800">
+                                {date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+                              </div>
+                              <div className="text-xs text-gray-500 truncate max-w-[180px]" title={products}>
+                                {products}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                              <span className="text-gray-600 font-mono text-xs bg-white px-2 py-0.5 rounded">
-                                {product.ratePerHa} {product.unit}
-                              </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500">{treatment.area} га</span>
+                              <CheckCircle className="h-4 w-4 text-green-500" />
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {lastTreatmentDetails.isTankMix && (
-                      <div className="flex items-center gap-2 text-sm bg-gray-100 rounded-lg px-3 py-2">
-                        <Beaker className="h-4 w-4 text-gray-600" />
-                        <span className="text-gray-700">Баковая смесь</span>
-                      </div>
-                    )}
-
-                    {lastTreatmentDetails.notes && (
-                      <div className="text-sm bg-gray-50 rounded-lg px-3 py-2">
-                        <p className="text-gray-600 line-clamp-2">{lastTreatmentDetails.notes}</p>
+                        </div>
+                      );
+                    })}
+                    {completedTreatments.length > 10 && (
+                      <div className="text-xs text-gray-400 text-center pt-1">
+                        + ещё {completedTreatments.length - 10} обработок
                       </div>
                     )}
                   </div>

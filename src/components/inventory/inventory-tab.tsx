@@ -161,8 +161,7 @@ export function InventoryTab({
               Склад СЗР ({filteredInventory.length} из {inventory.length})
             </h2>
             <Button onClick={() => setShowForm(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Добавить СЗР
+              Новое СЗР
             </Button>
           </div>
           {showForm && <InventoryForm onSubmit={handleAddProduct} onCancel={() => setShowForm(false)} />}
