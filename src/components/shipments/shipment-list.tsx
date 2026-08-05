@@ -5,7 +5,8 @@ import { Shipment, Client, Product } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Edit2, Trash2, User, Package, Truck, FileText } from 'lucide-react';
+import { Edit2, Trash2, User, Package, Truck, FileText, Eye } from 'lucide-react';
+import { ShipmentDetailsModal } from './shipment-details-modal';
 
 interface ShipmentListProps {
   shipments: Shipment[];
@@ -17,18 +18,18 @@ interface ShipmentListProps {
 
 export function ShipmentList({ shipments, clients, products, onEdit, onDelete }: ShipmentListProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number | null }>({ open: false, id: null });
+  const [detailsModal, setDetailsModal] = useState<{ open: boolean; shipment: Shipment | null }>({ open: false, shipment: null });
 
   const getClientName = (clientId: number) => {
     const client = clients.find(c => c.id === clientId);
     return client?.name || 'Неизвестный клиент';
   };
 
-  // Новая функция расчёта стоимости с учётом возврата
   const getTotalCost = (items: Shipment['items']) => {
     return items.reduce((sum, item) => {
       const quantity = Number(item.quantity) || 0;
       const returnQty = Number(item.returnQuantity) || 0;
-      const netQuantity = quantity - returnQty; // чистое количество (отгружено минус возврат)
+      const netQuantity = quantity - returnQty;
       const price = Number(item.pricePerUnit) || 0;
       return sum + netQuantity * price;
     }, 0);
@@ -80,20 +81,31 @@ export function ShipmentList({ shipments, clients, products, onEdit, onDelete }:
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex flex-col gap-1">
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
                       onClick={() => onEdit(shipment)}
+                      title="Редактировать"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="h-8 w-8 p-0 text-blue-600"
+                      onClick={() => setDetailsModal({ open: true, shipment })}
+                      title="Детали"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="h-8 w-8 p-0 text-red-600"
                       onClick={() => setDeleteConfirm({ open: true, id: shipment.id })}
+                      title="Удалить"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -117,6 +129,13 @@ export function ShipmentList({ shipments, clients, products, onEdit, onDelete }:
         confirmText="Удалить"
         cancelText="Отмена"
         variant="destructive"
+      />
+
+      <ShipmentDetailsModal
+        open={detailsModal.open}
+        onOpenChange={(open) => setDetailsModal({ ...detailsModal, open })}
+        shipment={detailsModal.shipment}
+        products={products}
       />
     </>
   );

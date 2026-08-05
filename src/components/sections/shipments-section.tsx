@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { ShipmentList } from '@/components/shipments/shipment-list';
 import { ShipmentForm } from '@/components/shipments/shipment-form';
 import { ShipmentFilters } from '@/components/shipments/shipment-filters';
+import { generateShipmentsReport } from '@/utils/reportShipments';
 
 export function ShipmentsSection() {
   const [shipments, setShipments] = useState<Shipment[]>([]);
@@ -147,6 +148,20 @@ export function ShipmentsSection() {
     return matchSearch && matchClient && matchDateFrom && matchDateTo;
   });
 
+  const handleGenerateReport = () => {
+    generateShipmentsReport({
+      shipments: filtered,
+      clients,
+      products,
+      filters: {
+        searchQuery,
+        clientFilter,
+        dateFrom,
+        dateTo,
+      },
+    });
+  };
+
   if (loading) return <div className="text-center py-8">Загрузка...</div>;
 
   return (
@@ -171,6 +186,7 @@ export function ShipmentsSection() {
         onDateFromChange={setDateFrom}
         dateTo={dateTo}
         onDateToChange={setDateTo}
+        onGenerateReport={handleGenerateReport}
       />
 
       <div className="flex justify-between items-center">

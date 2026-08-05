@@ -62,29 +62,31 @@ export function ProductStats({ shipments }: ProductStatsProps) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 mb-4">
       {productStats.map((stat, index) => {
         const colorClass = bgColors[index % bgColors.length];
         return (
           <Card key={stat.productId} className={`${colorClass} shadow-sm`}>
-            <CardContent className="p-4">
+            <CardContent className="p-3">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="text-sm font-medium text-gray-700 truncate" title={stat.productName}>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-sm text-gray-800 truncate" title={stat.productName}>
                     {stat.productName}
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">{stat.unit}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">
+                    {stat.unit}
+                  </div>
                 </div>
-                <Box className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                <Box className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
               </div>
-              <div className="mt-3 flex justify-between items-end">
+              <div className="flex justify-between items-end mt-2">
                 <div>
-                  <div className="text-xs text-gray-500">Отгружено</div>
-                  <div className="text-lg font-bold">{stat.netQuantity.toFixed(2)}</div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wide">Отгружено</div>
+                  <div className="text-base font-bold">{stat.netQuantity.toFixed(2)}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-500">Сумма</div>
-                  <div className="text-lg font-bold text-green-700">{stat.totalSum.toFixed(2)} BYN</div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wide">Сумма</div>
+                  <div className="text-base font-bold text-green-700">{stat.totalSum.toFixed(2)} BYN</div>
                 </div>
               </div>
             </CardContent>
