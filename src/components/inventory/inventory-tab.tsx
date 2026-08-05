@@ -144,7 +144,6 @@ export function InventoryTab({
     if (activeSubTab === 'list') {
       return (
         <>
-          <InventoryStats inventory={inventory} />
           <InventoryFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -191,6 +190,10 @@ export function InventoryTab({
 
   return (
     <div className="space-y-6">
+      {/* СТАТИСТИКА – теперь всегда сверху, как в технике */}
+      <InventoryStats inventory={inventory} />
+
+      {/* Панель переключения вкладок */}
       <div className="flex border-b border-gray-200">
         <button
           className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${
@@ -221,6 +224,8 @@ export function InventoryTab({
           </span>
         </button>
       </div>
+
+      {/* Содержимое в зависимости от активной подвкладки */}
       {renderContent()}
     </div>
   );

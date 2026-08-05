@@ -1,4 +1,3 @@
-// src/types/index.ts
 
 export interface ChemicalProduct {
   id?: number;
@@ -60,7 +59,7 @@ export interface TreatmentTimeline {
     date: Date;
     products: string[];
     type: ProductType | 'Баковая смесь';
-    completed?: boolean;        // ✅ Добавлено для отображения статуса на таймлайне
+    completed?: boolean;      
     isTankMix: boolean;
     tankMixTypes: ProductType[];
     notes?: string;
@@ -70,9 +69,9 @@ export interface TreatmentTimeline {
 export interface CultureStats {
   culture: CultureType;
   totalTreatments: number;
-  completedTreatments: number;  // ✅ Добавлено для статистики
+  completedTreatments: number;  
   plannedTreatments: number;
-  lastTreatment?: Date | null;   // ✅ Добавлено для последней обработки
+  lastTreatment?: Date | null;   
   nextTreatment: Date | null;
   productsUsed: string[];
   tankMixCount: number;
@@ -161,3 +160,40 @@ export type EquipmentType =
   | 'анализатор'
   | 'дозатор'
   | 'другое';
+
+  export interface Client {
+  id: number;
+  name: string;
+  phone?: string;
+  address?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  unit: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ShipmentItem {
+  id?: number;
+  productId: number;
+  product?: Product;
+  quantity: number;
+  returnQuantity?: number | null;
+  pricePerUnit: number;
+}
+
+export interface Shipment {
+  id: number;
+  clientId: number;
+  client?: Client;
+  date: Date;
+  notes?: string;
+  items: ShipmentItem[];
+  createdAt: Date;
+  updatedAt: Date;
+}

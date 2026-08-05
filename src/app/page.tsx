@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTreatments } from '@/hooks/useTreatments';
 import { useInventory } from '@/hooks/useInventory';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useMaintenance } from '@/hooks/useMaintenance';
 import { useEquipment } from '@/hooks/useEquipment';
+import { useShipments } from '@/hooks/useShipments';
+import { useTreatmentFilters } from '@/hooks/useTreatmentFilters';
 import { CompactTreatmentList } from '@/components/treatments/treatments-list';
 import { TreatmentForm } from '@/components/treatments/treatments-form';
 import { VehiclesTab } from '@/components/vehicles/vehicles-tab';
@@ -15,195 +17,69 @@ import { Stats } from '@/components/treatments/treatments-stats';
 import { FilterSort } from '@/components/treatments/treatments-filters';
 import { Button } from '@/components/ui/button';
 import { InventoryTab } from '@/components/inventory/inventory-tab';
-import { Plus, RefreshCw, Package, Sprout, BarChart3, Car, Gauge } from 'lucide-react';
+import { ShipmentsTab } from '@/components/shipments/shipments-tab';
+import { TabButton, LoadingState, ErrorState } from '@/components/common';
+import { Plus, RefreshCw, Package, Sprout, BarChart3, Car, Gauge, Truck } from 'lucide-react';
 import { generateTreatmentsReport } from '@/utils/reportTreatments';
 
-type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles' | 'equipment';
+type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles' | 'equipment' | 'shipments';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('analytics');
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
-  
-  // Состояния для фильтров обработок
+
   const [cultureFilter, setCultureFilter] = useState('');
   const [productTypeFilter, setProductTypeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('dueDate');
   const [showCompleted, setShowCompleted] = useState(false);
 
-  // Хуки для данных
-  const { 
-    treatments, 
-    isLoading: treatmentsLoading, 
-    error: treatmentsError, 
-    addTreatment, 
-    updateTreatment,
-    deleteTreatment,
-    completeTreatment,
-    uncompleteTreatment,
-    refetch: refetchTreatments 
-  } = useTreatments();
-  
-  const {
-    inventory,
-    isLoading: inventoryLoading,
-    error: inventoryError,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    refetch: refetchInventory
-  } = useInventory();
-  
-  // Хуки для техники
-  const {
-    vehicles,
-    isLoading: vehiclesLoading,
-    error: vehiclesError,
-    addVehicle,
-    updateVehicle,
-    deleteVehicle,
-    refetch: refetchVehicles
-  } = useVehicles();
+  const { treatments, isLoading: treatmentsLoading, error: treatmentsError, addTreatment, updateTreatment, deleteTreatment, completeTreatment, uncompleteTreatment, refetch: refetchTreatments } = useTreatments();
+  const { inventory, isLoading: inventoryLoading, error: inventoryError, addProduct, updateProduct, deleteProduct, refetch: refetchInventory } = useInventory();
+  const { vehicles, isLoading: vehiclesLoading, error: vehiclesError, addVehicle, updateVehicle, deleteVehicle, refetch: refetchVehicles } = useVehicles();
+  const { maintenance, isLoading: maintenanceLoading, error: maintenanceError, addMaintenance, updateMaintenance, deleteMaintenance, refetch: refetchMaintenance } = useMaintenance();
+  const { equipment, isLoading: equipmentLoading, error: equipmentError, addEquipment, updateEquipment, deleteEquipment, refetch: refetchEquipment } = useEquipment();
+  const { shipments, isLoading: shipmentsLoading, error: shipmentsError, refetch: refetchShipments } = useShipments();
 
-  const {
-    maintenance,
-    isLoading: maintenanceLoading,
-    error: maintenanceError,
-    addMaintenance,
-    updateMaintenance,
-    deleteMaintenance,
-    refetch: refetchMaintenance
-  } = useMaintenance();
-
-  // Хуки для оборудования
-  const {
-    equipment,
-    isLoading: equipmentLoading,
-    error: equipmentError,
-    addEquipment,
-    updateEquipment,
-    deleteEquipment,
-    refetch: refetchEquipment
-  } = useEquipment();
-
-  // Фильтрация обработок
-  const filteredTreatments = useMemo(() => {
-    let filtered = treatments.filter(treatment => {
-      // Фильтр по статусу
-      if (!showCompleted && treatment.completed) return false;
-      if (showCompleted && !treatment.completed) return false;
-      
-      // Фильтр по культуре
-      if (cultureFilter && treatment.culture !== cultureFilter) return false;
-      
-      // Фильтр по типу препарата
-      if (productTypeFilter) {
-        const hasProductType = treatment.chemicalProducts.some(product => {
-          return product.product?.type === productTypeFilter;
-        });
-        if (!hasProductType) return false;
-      }
-      
-      // Поиск по названию препарата
-      if (searchQuery) {
-        const matchesSearch = treatment.chemicalProducts.some(product => {
-          return product.product?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-        });
-        if (!matchesSearch) return false;
-      }
-      
-      return true;
-    });
-
-    // Сортировка
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'dueDate': 
-          return (a.dueDate ? new Date(a.dueDate).getTime() : 0) - (b.dueDate ? new Date(b.dueDate).getTime() : 0);
-        case 'dueDateDesc': 
-          return (b.dueDate ? new Date(b.dueDate).getTime() : 0) - (a.dueDate ? new Date(a.dueDate).getTime() : 0);
-        case 'createdAt': 
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        case 'createdAtAsc': 
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-        case 'culture': 
-          return a.culture.localeCompare(b.culture);
-        case 'area': 
-          return b.area - a.area;
-        case 'areaAsc': 
-          return a.area - b.area;
-        case 'status':
-          return (a.completed === b.completed) ? 0 : a.completed ? 1 : -1;
-        case 'statusDesc':
-          return (a.completed === b.completed) ? 0 : a.completed ? -1 : 1;
-        default: 
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [treatments, cultureFilter, productTypeFilter, searchQuery, sortBy, showCompleted]);
+  const filteredTreatments = useTreatmentFilters({
+    treatments,
+    cultureFilter,
+    productTypeFilter,
+    searchQuery,
+    sortBy,
+    showCompleted,
+  });
 
   const handleAddTreatment = async (treatmentData: any) => {
     await addTreatment(treatmentData);
     setShowTreatmentForm(false);
   };
 
-  // Функция для кнопки обновления
   const handleRefresh = () => {
     switch (activeTab) {
-      case 'treatments':
-        refetchTreatments();
-        break;
-      case 'inventory':
-        refetchInventory();
-        break;
-      case 'analytics':
-        refetchTreatments();
-        break;
-      case 'vehicles':
-        refetchVehicles();
-        refetchMaintenance();
-        break;
-      case 'equipment':
-        refetchEquipment();
-        break;
-      default:
-        refetchTreatments();
+      case 'treatments': refetchTreatments(); break;
+      case 'inventory': refetchInventory(); break;
+      case 'analytics': refetchTreatments(); break;
+      case 'vehicles': refetchVehicles(); refetchMaintenance(); break;
+      case 'equipment': refetchEquipment(); break;
+      case 'shipments': refetchShipments(); break;
+      default: break;
     }
   };
 
-  // Обработчик отчёта
   const handleGenerateReport = () => {
     generateTreatmentsReport({
       treatments: filteredTreatments,
       inventory,
-      filters: {
-        searchQuery,
-        cultureFilter,
-        productTypeFilter,
-        showCompleted,
-        sortBy,
-      },
+      filters: { searchQuery, cultureFilter, productTypeFilter, showCompleted, sortBy },
     });
   };
 
-  // Состояния загрузки
-  if (treatmentsLoading && activeTab === 'treatments') {
-    return <LoadingState message="Загрузка обработок..." />;
-  }
-
-  if (inventoryLoading && activeTab === 'inventory') {
-    return <LoadingState message="Загрузка склада..." />;
-  }
-
-  if (vehiclesLoading && activeTab === 'vehicles') {
-    return <LoadingState message="Загрузка техники..." />;
-  }
-
-  if (equipmentLoading && activeTab === 'equipment') {
-    return <LoadingState message="Загрузка оборудования..." />;
-  }
+  if (treatmentsLoading && activeTab === 'treatments') return <LoadingState message="Загрузка обработок..." />;
+  if (inventoryLoading && activeTab === 'inventory') return <LoadingState message="Загрузка склада..." />;
+  if (vehiclesLoading && activeTab === 'vehicles') return <LoadingState message="Загрузка техники..." />;
+  if (equipmentLoading && activeTab === 'equipment') return <LoadingState message="Загрузка оборудования..." />;
+  if (shipmentsLoading && activeTab === 'shipments') return <LoadingState message="Загрузка отгрузок..." />;
 
   return (
     <div className="container mx-auto p-4">
@@ -217,7 +93,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
+      <div className="flex flex-wrap border-b border-gray-200 mb-6 overflow-x-auto">
         <TabButton
           active={activeTab === 'analytics'}
           onClick={() => setActiveTab('analytics')}
@@ -252,14 +128,19 @@ export default function Home() {
           label="Оборудование"
           count={equipment.length}
         />
+        <TabButton
+          active={activeTab === 'shipments'}
+          onClick={() => setActiveTab('shipments')}
+          icon={<Truck className="h-4 w-4" />}
+          label="Отгрузки"
+          count={shipments.length}
+        />
       </div>
 
       {activeTab === 'treatments' && (
         <>
           {treatmentsError && <ErrorState error={treatmentsError} onRetry={refetchTreatments} />}
-          
           <Stats treatments={treatments} />
-
           <FilterSort
             cultureFilter={cultureFilter}
             onCultureFilterChange={setCultureFilter}
@@ -273,25 +154,18 @@ export default function Home() {
             onShowCompletedChange={setShowCompleted}
             onGenerateReport={handleGenerateReport}
           />
-
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">
-              Обработки ({filteredTreatments.length} из {treatments.length})
-            </h2>
-            <Button onClick={() => setShowTreatmentForm(true)}>
-              Новая обработка
-            </Button>
+            <h2 className="text-2xl font-bold">Обработки ({filteredTreatments.length} из {treatments.length})</h2>
+            <Button onClick={() => setShowTreatmentForm(true)}>Новая обработка</Button>
           </div>
-
           {showTreatmentForm && (
-            <TreatmentForm 
+            <TreatmentForm
               onSubmit={handleAddTreatment}
               onCancel={() => setShowTreatmentForm(false)}
               inventory={inventory}
             />
           )}
-
-          <CompactTreatmentList 
+          <CompactTreatmentList
             treatments={filteredTreatments}
             onUpdateTreatment={updateTreatment}
             onDeleteTreatment={deleteTreatment}
@@ -311,9 +185,7 @@ export default function Home() {
         />
       )}
 
-      {activeTab === 'analytics' && (
-        <AnalyticsTab treatments={treatments} />
-      )}
+      {activeTab === 'analytics' && <AnalyticsTab treatments={treatments} />}
 
       {activeTab === 'vehicles' && (
         <VehiclesTab
@@ -336,68 +208,8 @@ export default function Home() {
           onDeleteEquipment={deleteEquipment}
         />
       )}
-    </div>
-  );
-}
 
-function TabButton({ 
-  active, 
-  onClick, 
-  icon, 
-  label, 
-  count 
-}: { 
-  active: boolean; 
-  onClick: () => void; 
-  icon: React.ReactNode; 
-  label: string; 
-  count?: number; 
-}) {
-  return (
-    <button
-      className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors whitespace-nowrap ${
-        active
-          ? 'border-blue-500 text-blue-600'
-          : 'border-transparent text-gray-500 hover:text-gray-700'
-      }`}
-      onClick={onClick}
-    >
-      {icon}
-      {label}
-      {count !== undefined && (
-        <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-          {count}
-        </span>
-      )}
-    </button>
-  );
-}
-
-function LoadingState({ message }: { message: string }) {
-  return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-center items-center h-64">
-        <div className="flex flex-col items-center gap-2">
-          <RefreshCw className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-gray-600">{message}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ErrorState({ error, onRetry }: { error: string; onRetry: () => void }) {
-  return (
-    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-red-800 font-medium">Ошибка загрузки</h3>
-          <p className="text-red-600 text-sm mt-1">{error}</p>
-        </div>
-        <Button variant="outline" onClick={onRetry}>
-          Повторить
-        </Button>
-      </div>
+      {activeTab === 'shipments' && <ShipmentsTab shipments={shipments} />}
     </div>
   );
 }
