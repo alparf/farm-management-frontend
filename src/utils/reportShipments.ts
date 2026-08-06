@@ -20,10 +20,10 @@ export function generateShipmentsReport({
   products,
   filters,
 }: GenerateShipmentsReportParams) {
-  const filtersParts = [];
+  const filtersParts: string[] = [];
   if (filters.searchQuery) filtersParts.push(`Поиск: "${filters.searchQuery}"`);
   if (filters.clientFilter) {
-    const client = clients.find(c => c.id === parseInt(filters.clientFilter));
+    const client = clients.find(c => c.id === Number(filters.clientFilter));
     if (client) filtersParts.push(`Клиент: ${client.name}`);
   }
   if (filters.dateFrom) filtersParts.push(`Дата от: ${filters.dateFrom}`);
@@ -120,7 +120,7 @@ export function generateShipmentsReport({
   generatePrintWindow('Отчет по отгрузкам', tableHtml, filtersText);
 }
 
-function escapeHtml(str: string): string {
+function escapeHtml(str: string | null | undefined): string {
   if (!str) return '';
   return str
     .replace(/&/g, '&amp;')
