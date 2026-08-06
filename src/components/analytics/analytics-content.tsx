@@ -57,11 +57,12 @@ export function AnalyticsContent({ treatments, shipments }: AnalyticsContentProp
       {/* Блок отгрузок */}
       {hasShipments ? (
         <div className="space-y-6 border-t border-gray-200 pt-8">
+          <h2 className="text-2xl font-bold">Статистика по отгрузкам</h2>
+          <MonthlyShipmentChart shipments={shipments} />
           <div>
-            <h3 className="text-xl font-semibold mb-4">Статистика по отгруженной продукции</h3>
+            <h3 className="text-xl font-semibold mb-4">Статистика по отгруженным продуктам</h3>
             <ProductStats shipments={shipments} />
           </div>
-          <MonthlyShipmentChart shipments={shipments} />
         </div>
       ) : (
         <Card>
