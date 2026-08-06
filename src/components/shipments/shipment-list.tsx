@@ -54,22 +54,24 @@ export function ShipmentList({ shipments, clients, products, onEdit, onDelete }:
             <Card key={shipment.id}>
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg flex items-center gap-2">
-                      <Truck className="h-5 w-5 text-blue-500" />
-                      {new Date(shipment.date).toLocaleDateString('ru-RU', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
+                  <div className="flex-1 min-w-0 pr-2">
+                    <h3 className="font-semibold text-lg flex items-center gap-2 truncate">
+                      <Truck className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                      <span>
+                        {new Date(shipment.date).toLocaleDateString('ru-RU', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </span>
                     </h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                      <User className="h-3.5 w-3.5" />
-                      {getClientName(shipment.clientId)}
+                    <div className="flex items-center gap-2 text-sm text-gray-500 mt-1 truncate">
+                      <User className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="truncate">{getClientName(shipment.clientId)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Package className="h-3.5 w-3.5" />
-                      {shipment.items.length} позиций
+                      <Package className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span>{shipment.items.length} позиций</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mt-1">
                       <span className="text-green-700">{totalCost.toFixed(2)} BYN</span>
@@ -77,37 +79,38 @@ export function ShipmentList({ shipments, clients, products, onEdit, onDelete }:
                     {shipment.notes && (
                       <div className="flex items-start gap-1 text-sm text-gray-600 mt-1">
                         <FileText className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-                        <span className="line-clamp-1">{shipment.notes}</span>
+                        <span className="line-clamp-2 break-words">{shipment.notes}</span>
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col gap-1">
+                  {/* Кнопки идентичны обработкам */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="h-7 w-7 p-0 text-blue-600 hover:bg-blue-50 border-blue-200"
                       onClick={() => onEdit(shipment)}
                       title="Редактировать"
                     >
-                      <Edit2 className="h-4 w-4" />
+                      <Edit2 className="h-3.5 w-3.5" />
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-8 w-8 p-0 text-blue-600"
+                      className="h-7 w-7 p-0 text-gray-600 hover:bg-gray-50 border-gray-200"
                       onClick={() => setDetailsModal({ open: true, shipment })}
                       title="Детали"
                     >
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-3.5 w-3.5" />
                     </Button>
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
-                      className="h-8 w-8 p-0 text-red-600"
+                      className="h-7 w-7 p-0 text-red-600 hover:bg-red-50 border-red-200"
                       onClick={() => setDeleteConfirm({ open: true, id: shipment.id })}
                       title="Удалить"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>

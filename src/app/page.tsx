@@ -185,7 +185,9 @@ export default function Home() {
         />
       )}
 
-      {activeTab === 'analytics' && <AnalyticsTab treatments={treatments} />}
+      {activeTab === 'analytics' && (
+        <AnalyticsTab treatments={treatments} shipments={shipments} />
+      )}
 
       {activeTab === 'vehicles' && (
         <VehiclesTab

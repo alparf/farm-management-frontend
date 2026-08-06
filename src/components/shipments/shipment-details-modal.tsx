@@ -35,12 +35,12 @@ export function ShipmentDetailsModal({ open, onOpenChange, shipment, products }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Детали отгрузки</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+          <div className="grid grid-cols-2 gap-2 text-sm flex-shrink-0">
             <div>
               <span className="font-medium">Дата:</span> {format(new Date(shipment.date), 'dd.MM.yyyy')}
             </div>
@@ -54,39 +54,41 @@ export function ShipmentDetailsModal({ open, onOpenChange, shipment, products }:
             )}
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Товар</TableHead>
-                <TableHead>Кол-во</TableHead>
-                <TableHead>Возврат</TableHead>
-                <TableHead>Цена за ед.</TableHead>
-                <TableHead>Сумма</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {shipment.items.map((item, idx) => {
-                const qty = Number(item.quantity) || 0;
-                const returnQty = Number(item.returnQuantity) || 0;
-                const netQty = qty - returnQty;
-                const price = Number(item.pricePerUnit) || 0;
-                const total = netQty * price;
-                return (
-                  <TableRow key={idx}>
-                    <TableCell>{getProductName(item.productId)}</TableCell>
-                    <TableCell>{qty}</TableCell>
-                    <TableCell>{returnQty > 0 ? returnQty : '—'}</TableCell>
-                    <TableCell>{price.toFixed(2)}</TableCell>
-                    <TableCell>{total.toFixed(2)}</TableCell>
-                  </TableRow>
-                );
-              })}
-              <TableRow>
-                <TableCell colSpan={4} className="text-right font-bold">Итого:</TableCell>
-                <TableCell className="font-bold">{totalCost.toFixed(2)} BYN</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <div className="flex-1 overflow-auto border rounded-lg">
+            <Table>
+              <TableHeader className="sticky top-0 bg-white z-10">
+                <TableRow>
+                  <TableHead>Товар</TableHead>
+                  <TableHead>Кол-во</TableHead>
+                  <TableHead>Возврат</TableHead>
+                  <TableHead>Цена за ед.</TableHead>
+                  <TableHead>Сумма</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {shipment.items.map((item, idx) => {
+                  const qty = Number(item.quantity) || 0;
+                  const returnQty = Number(item.returnQuantity) || 0;
+                  const netQty = qty - returnQty;
+                  const price = Number(item.pricePerUnit) || 0;
+                  const total = netQty * price;
+                  return (
+                    <TableRow key={idx}>
+                      <TableCell>{getProductName(item.productId)}</TableCell>
+                      <TableCell>{qty}</TableCell>
+                      <TableCell>{returnQty > 0 ? returnQty : '—'}</TableCell>
+                      <TableCell>{price.toFixed(2)}</TableCell>
+                      <TableCell>{total.toFixed(2)}</TableCell>
+                    </TableRow>
+                  );
+                })}
+                <TableRow className="sticky bottom-0 bg-white">
+                  <TableCell colSpan={4} className="text-right font-bold">Итого:</TableCell>
+                  <TableCell className="font-bold">{totalCost.toFixed(2)} BYN</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // добавляем useRef
 import { Shipment, Client, Product } from '@/types';
 import { useApi } from '@/hooks/useApi';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,9 @@ export function ShipmentsSection() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const { getBaseUrl } = useApi();
+
+  // Реф для прокрутки к форме
+  const formRef = useRef<HTMLDivElement>(null);
 
   const fetchData = async () => {
     try {
@@ -64,6 +67,19 @@ export function ShipmentsSection() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Эффект для прокрутки к форме, когда она появляется
+  useEffect(() => {
+    if (showForm && formRef.current) {
+      // Даём время на рендер формы
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+    }
+  }, [showForm]);
 
   const handleAdd = async (data: Omit<Shipment, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
@@ -166,15 +182,18 @@ export function ShipmentsSection() {
 
   return (
     <div className="space-y-6">
-      {showForm && (
-        <ShipmentForm
-          onSubmit={editingShipment ? handleUpdate : handleAdd}
-          onCancel={handleCancel}
-          clients={clients}
-          products={products}
-          initialData={editingShipment}
-        />
-      )}
+      {/* Контейнер для формы с рефом */}
+      <div ref={formRef}>
+        {showForm && (
+          <ShipmentForm
+            onSubmit={editingShipment ? handleUpdate : handleAdd}
+            onCancel={handleCancel}
+            clients={clients}
+            products={products}
+            initialData={editingShipment}
+          />
+        )}
+      </div>
 
       <ShipmentFilters
         clients={clients}

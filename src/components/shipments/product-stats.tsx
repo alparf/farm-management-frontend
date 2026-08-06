@@ -14,6 +14,7 @@ export function ProductStats({ shipments }: ProductStatsProps) {
       unit: string;
       netQuantity: number;
       totalSum: number;
+      avgPrice: number; // средневзвешенная цена
     }>();
 
     shipments.forEach(shipment => {
@@ -31,6 +32,7 @@ export function ProductStats({ shipments }: ProductStatsProps) {
           const entry = map.get(productId)!;
           entry.netQuantity += netQty;
           entry.totalSum += sum;
+          // avgPrice пересчитаем после цикла
         } else {
           map.set(productId, {
             productId,
@@ -38,12 +40,19 @@ export function ProductStats({ shipments }: ProductStatsProps) {
             unit: product.unit || 'шт',
             netQuantity: netQty,
             totalSum: sum,
+            avgPrice: 0,
           });
         }
       });
     });
 
-    return Array.from(map.values()).sort((a, b) => b.totalSum - a.totalSum);
+    // Вычисляем средневзвешенную цену для каждого продукта
+    const result = Array.from(map.values()).map(stat => {
+      const avgPrice = stat.netQuantity > 0 ? stat.totalSum / stat.netQuantity : 0;
+      return { ...stat, avgPrice };
+    });
+
+    return result.sort((a, b) => b.totalSum - a.totalSum);
   }, [shipments]);
 
   if (productStats.length === 0) {
@@ -87,6 +96,12 @@ export function ProductStats({ shipments }: ProductStatsProps) {
                 <div className="text-right">
                   <div className="text-[10px] text-gray-500 uppercase tracking-wide">Сумма</div>
                   <div className="text-base font-bold text-green-700">{stat.totalSum.toFixed(2)} BYN</div>
+                </div>
+              </div>
+              {/* Новая строка со средней ценой */}
+              <div className="mt-1 flex justify-end">
+                <div className="text-xs text-gray-500">
+                  Ср. цена: <span className="font-medium text-gray-700">{stat.avgPrice.toFixed(2)} BYN/{stat.unit}</span>
                 </div>
               </div>
             </CardContent>
