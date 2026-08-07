@@ -1,3 +1,4 @@
+// src/components/equipment/equipment-list.tsx
 import { useState } from 'react';
 import { Equipment, EquipmentType } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -17,7 +18,6 @@ interface EquipmentListProps {
 
 export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment }: EquipmentListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
   const [editingNotes, setEditingNotes] = useState<number | null>(null);
   const [editNotesText, setEditNotesText] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; equipment: Equipment | null }>({
@@ -115,7 +115,6 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
-  // Функции для редактирования примечаний
   const startEditNotes = (item: Equipment) => {
     setEditingNotes(item.id);
     setEditNotesText(item.notes || '');
@@ -168,7 +167,6 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
           const DeleteIcon = ButtonIcons.Delete.icon;
           const EditIcon = ButtonIcons.Edit.icon;
           const isEditing = editingId === item.id;
-          const isExpanded = expandedId === item.id;
           const isEditingNotes = editingNotes === item.id;
           
           const overdue = isOverdue(item.verificationDate);
@@ -182,7 +180,6 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
             >
               <div className="p-4">
                 {isEditing ? (
-                  // Режим редактирования
                   <div className="space-y-3">
                     <div>
                       <Label className="text-xs text-gray-600">Название</Label>
@@ -260,9 +257,7 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                     </div>
                   </div>
                 ) : (
-                  // Режим просмотра
                   <>
-                    {/* Заголовок с названием и кнопками */}
                     <div className="flex items-center justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg truncate">
@@ -304,20 +299,17 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                       </div>
                     </div>
 
-                    {/* Серийный номер */}
                     {item.serialNumber && (
                       <div className="text-xs text-gray-500 mb-2">
                         SN: {item.serialNumber}
                       </div>
                     )}
 
-                    {/* Статус поверки - дата */}
                     <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-2">
                       <Calendar className="h-3.5 w-3.5" />
                       <span>Поверка: {item.verificationDate.toLocaleDateString('ru-RU')}</span>
                     </div>
 
-                    {/* Статус с иконкой */}
                     <div className={`flex items-center gap-1.5 text-xs font-medium mb-2 ${
                       overdue ? 'text-red-600' : 
                       expiringSoon ? 'text-yellow-600' : 'text-green-600'
@@ -340,23 +332,9 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                       )}
                     </div>
 
-                    <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-100">
-                      Обновлено: {new Date(item.updatedAt).toLocaleDateString('ru-RU')}
-                    </div>
-
-                    {/* Кнопка раскрытия примечаний */}
+                    {/* Примечания видны всегда */}
                     {item.notes && (
-                      <button
-                        onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                        className="w-full mt-2 pt-1 text-center text-xs text-gray-400 hover:text-gray-600 transition-colors flex items-center justify-center gap-1"
-                      >
-                        {isExpanded ? '▲ Скрыть примечания' : '▼ Показать примечания'}
-                      </button>
-                    )}
-
-                    {/* Примечания (раскрываются по клику) */}
-                    {isExpanded && item.notes && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="mt-2 pt-2 border-t border-gray-100">
                         <div className="flex items-start gap-2">
                           <StickyNote className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
                           <div className="flex-1">
@@ -366,7 +344,7 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                                   value={editNotesText}
                                   onChange={(e) => setEditNotesText(e.target.value)}
                                   placeholder="Введите примечания..."
-                                  rows={3}
+                                  rows={2}
                                   className="text-sm"
                                 />
                                 <div className="flex gap-2">
@@ -406,6 +384,10 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                         </div>
                       </div>
                     )}
+
+                    <div className="text-xs text-gray-400 mt-2 pt-2 border-t border-gray-100">
+                      Обновлено: {new Date(item.updatedAt).toLocaleDateString('ru-RU')}
+                    </div>
                   </>
                 )}
               </div>

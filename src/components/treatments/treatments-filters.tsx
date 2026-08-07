@@ -15,8 +15,6 @@ interface FilterSortProps {
   onSearchChange: (query: string) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
-  showCompleted: boolean;
-  onShowCompletedChange: (show: boolean) => void;
   onGenerateReport?: () => void;
 }
 
@@ -29,8 +27,6 @@ export function FilterSort({
   onSearchChange,
   sortBy,
   onSortChange,
-  showCompleted,
-  onShowCompletedChange,
   onGenerateReport,
 }: FilterSortProps) {
   const cultures = ['груша', 'яблоко', 'черешня', 'слива', 'томаты', 'картофель', 'лук', 'свекла', 'морковь', 'капуста', 'другое'];
@@ -116,19 +112,6 @@ export function FilterSort({
               <option value="statusDesc">По статусу (выполненные → ожидающие)</option>
             </select>
           </div>
-        </div>
-
-        {/* Чекбокс для завершенных обработок */}
-        <div className="mt-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={showCompleted}
-              onChange={(e) => onShowCompletedChange(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="ml-2 text-sm text-gray-700">Показывать завершенные обработки</span>
-          </label>
         </div>
       </CardContent>
     </Card>

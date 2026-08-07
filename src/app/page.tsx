@@ -31,8 +31,7 @@ export default function Home() {
   const [cultureFilter, setCultureFilter] = useState('');
   const [productTypeFilter, setProductTypeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('dueDate');
-  const [showCompleted, setShowCompleted] = useState(false);
+  const [sortBy, setSortBy] = useState('dueDateDesc'); // изменено на dueDateDesc
 
   const { treatments, isLoading: treatmentsLoading, error: treatmentsError, addTreatment, updateTreatment, deleteTreatment, completeTreatment, uncompleteTreatment, refetch: refetchTreatments } = useTreatments();
   const { inventory, isLoading: inventoryLoading, error: inventoryError, addProduct, updateProduct, deleteProduct, refetch: refetchInventory } = useInventory();
@@ -47,7 +46,6 @@ export default function Home() {
     productTypeFilter,
     searchQuery,
     sortBy,
-    showCompleted,
   });
 
   const handleAddTreatment = async (treatmentData: any) => {
@@ -71,7 +69,7 @@ export default function Home() {
     generateTreatmentsReport({
       treatments: filteredTreatments,
       inventory,
-      filters: { searchQuery, cultureFilter, productTypeFilter, showCompleted, sortBy },
+      filters: { searchQuery, cultureFilter, productTypeFilter, sortBy },
     });
   };
 
@@ -150,8 +148,6 @@ export default function Home() {
             onSearchChange={setSearchQuery}
             sortBy={sortBy}
             onSortChange={setSortBy}
-            showCompleted={showCompleted}
-            onShowCompletedChange={setShowCompleted}
             onGenerateReport={handleGenerateReport}
           />
           <div className="flex justify-between items-center mb-6">

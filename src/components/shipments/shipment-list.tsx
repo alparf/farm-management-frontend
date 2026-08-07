@@ -1,3 +1,4 @@
+// src/components/shipments/shipment-list.tsx
 'use client';
 
 import { useState } from 'react';
@@ -5,7 +6,7 @@ import { Shipment, Client, Product } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
-import { Edit2, Trash2, User, Package, Truck, FileText, Eye } from 'lucide-react';
+import { SquarePen, Trash2, User, Package, Truck, FileText, Eye } from 'lucide-react';
 import { ShipmentDetailsModal } from './shipment-details-modal';
 
 interface ShipmentListProps {
@@ -83,7 +84,6 @@ export function ShipmentList({ shipments, clients, products, onEdit, onDelete }:
                       </div>
                     )}
                   </div>
-                  {/* Кнопки идентичны обработкам */}
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <Button
                       variant="outline"
@@ -92,7 +92,7 @@ export function ShipmentList({ shipments, clients, products, onEdit, onDelete }:
                       onClick={() => onEdit(shipment)}
                       title="Редактировать"
                     >
-                      <Edit2 className="h-3.5 w-3.5" />
+                      <SquarePen className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="outline"

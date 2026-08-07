@@ -1,3 +1,4 @@
+// src/hooks/useTreatmentFilters.ts
 import { useMemo } from 'react';
 
 export function useTreatmentFilters({
@@ -6,12 +7,9 @@ export function useTreatmentFilters({
   productTypeFilter,
   searchQuery,
   sortBy,
-  showCompleted,
 }: any) {
   return useMemo(() => {
     let filtered = treatments.filter((treatment: any) => {
-      if (!showCompleted && treatment.completed) return false;
-      if (showCompleted && !treatment.completed) return false;
       if (cultureFilter && treatment.culture !== cultureFilter) return false;
       if (productTypeFilter) {
         const hasProductType = treatment.chemicalProducts.some((product: any) => {
@@ -54,5 +52,5 @@ export function useTreatmentFilters({
     });
 
     return filtered;
-  }, [treatments, cultureFilter, productTypeFilter, searchQuery, sortBy, showCompleted]);
+  }, [treatments, cultureFilter, productTypeFilter, searchQuery, sortBy]);
 }
