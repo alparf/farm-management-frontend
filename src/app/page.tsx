@@ -1,57 +1,34 @@
 'use client';
 
 import { useState } from 'react';
-import { useTreatments } from '@/hooks/useTreatments';
-import { useInventory } from '@/hooks/useInventory';
-import { useVehicles } from '@/hooks/useVehicles';
-import { useMaintenance } from '@/hooks/useMaintenance';
-import { useEquipment } from '@/hooks/useEquipment';
-import { useShipments } from '@/hooks/useShipments';
-import { useTreatmentFilters } from '@/hooks/useTreatmentFilters';
-import { CompactTreatmentList } from '@/components/treatments/treatments-list';
-import { TreatmentForm } from '@/components/treatments/treatments-form';
+import { useAppData } from '@/context/AppDataContext';
+import { TreatmentsTab } from '@/components/treatments/treatments-tab';
 import { VehiclesTab } from '@/components/vehicles/vehicles-tab';
 import { AnalyticsTab } from '@/components/analytics-tab';
 import { EquipmentTab } from '@/components/equipment/equipment-tab';
-import { Stats } from '@/components/treatments/treatments-stats';
-import { FilterSort } from '@/components/treatments/treatments-filters';
-import { Button } from '@/components/ui/button';
 import { InventoryTab } from '@/components/inventory/inventory-tab';
 import { ShipmentsTab } from '@/components/shipments/shipments-tab';
-import { TabButton, LoadingState, ErrorState } from '@/components/common';
-import { Plus, RefreshCw, Package, Sprout, BarChart3, Car, Gauge, Truck } from 'lucide-react';
-import { generateTreatmentsReport } from '@/utils/reportTreatments';
+import { TabButton, LoadingState } from '@/components/common';
+import { RefreshCw, Package, Sprout, BarChart3, Car, Gauge, Truck } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 type TabType = 'treatments' | 'inventory' | 'analytics' | 'vehicles' | 'equipment' | 'shipments';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabType>('analytics');
-  const [showTreatmentForm, setShowTreatmentForm] = useState(false);
-
-  const [cultureFilter, setCultureFilter] = useState('');
-  const [productTypeFilter, setProductTypeFilter] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('dueDateDesc');
-
-  const { treatments, isLoading: treatmentsLoading, error: treatmentsError, addTreatment, updateTreatment, deleteTreatment, completeTreatment, uncompleteTreatment, refetch: refetchTreatments } = useTreatments();
-  const { inventory, isLoading: inventoryLoading, error: inventoryError, addProduct, updateProduct, deleteProduct, refetch: refetchInventory } = useInventory();
-  const { vehicles, isLoading: vehiclesLoading, error: vehiclesError, addVehicle, updateVehicle, deleteVehicle, refetch: refetchVehicles } = useVehicles();
-  const { maintenance, isLoading: maintenanceLoading, error: maintenanceError, addMaintenance, updateMaintenance, deleteMaintenance, refetch: refetchMaintenance } = useMaintenance();
-  const { equipment, isLoading: equipmentLoading, error: equipmentError, addEquipment, updateEquipment, deleteEquipment, refetch: refetchEquipment } = useEquipment();
-  const { shipments, isLoading: shipmentsLoading, error: shipmentsError, refetch: refetchShipments } = useShipments();
-
-  const filteredTreatments = useTreatmentFilters({
+  const {
+    shipments,
     treatments,
-    cultureFilter,
-    productTypeFilter,
-    searchQuery,
-    sortBy,
-  });
-
-  const handleAddTreatment = async (treatmentData: any) => {
-    await addTreatment(treatmentData);
-    setShowTreatmentForm(false);
-  };
+    inventory,
+    vehicles,
+    equipment,
+    refetchShipments,
+    refetchTreatments,
+    refetchInventory,
+    refetchVehicles,
+    refetchEquipment,
+    refetchMaintenance,
+  } = useAppData();
 
   const handleRefresh = () => {
     switch (activeTab) {
@@ -64,20 +41,6 @@ export default function Home() {
       default: break;
     }
   };
-
-  const handleGenerateReport = () => {
-    generateTreatmentsReport({
-      treatments: filteredTreatments,
-      inventory,
-      filters: { searchQuery, cultureFilter, productTypeFilter, sortBy },
-    });
-  };
-
-  if (treatmentsLoading && activeTab === 'treatments') return <LoadingState message="Загрузка обработок..." />;
-  if (inventoryLoading && activeTab === 'inventory') return <LoadingState message="Загрузка склада..." />;
-  if (vehiclesLoading && activeTab === 'vehicles') return <LoadingState message="Загрузка техники..." />;
-  if (equipmentLoading && activeTab === 'equipment') return <LoadingState message="Загрузка оборудования..." />;
-  if (shipmentsLoading && activeTab === 'shipments') return <LoadingState message="Загрузка отгрузок..." />;
 
   return (
     <div className="container mx-auto p-4">
@@ -135,79 +98,12 @@ export default function Home() {
         />
       </div>
 
-      {activeTab === 'treatments' && (
-        <>
-          {treatmentsError && <ErrorState error={treatmentsError} onRetry={refetchTreatments} />}
-          <Stats treatments={treatments} />
-          <FilterSort
-            cultureFilter={cultureFilter}
-            onCultureFilterChange={setCultureFilter}
-            productTypeFilter={productTypeFilter}
-            onProductTypeFilterChange={setProductTypeFilter}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-            onGenerateReport={handleGenerateReport}
-          />
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Обработки ({filteredTreatments.length} из {treatments.length})</h2>
-            <Button onClick={() => setShowTreatmentForm(true)}>Новая обработка</Button>
-          </div>
-          {showTreatmentForm && (
-            <TreatmentForm
-              onSubmit={handleAddTreatment}
-              onCancel={() => setShowTreatmentForm(false)}
-              inventory={inventory}
-            />
-          )}
-          <CompactTreatmentList
-            treatments={filteredTreatments}
-            onUpdateTreatment={updateTreatment}
-            onDeleteTreatment={deleteTreatment}
-            onCompleteTreatment={completeTreatment}
-            onUncompleteTreatment={uncompleteTreatment}
-          />
-        </>
-      )}
-
-      {activeTab === 'inventory' && (
-        <InventoryTab
-          inventory={inventory}
-          onAddProduct={addProduct}
-          onUpdateProduct={updateProduct}
-          onDeleteProduct={deleteProduct}
-          onRefresh={refetchInventory}
-        />
-      )}
-
-      {activeTab === 'analytics' && (
-        <AnalyticsTab shipments={shipments} />
-      )}
-
-      {activeTab === 'vehicles' && (
-        <VehiclesTab
-          vehicles={vehicles}
-          maintenance={maintenance}
-          onAddVehicle={addVehicle}
-          onUpdateVehicle={updateVehicle}
-          onDeleteVehicle={deleteVehicle}
-          onAddMaintenance={addMaintenance}
-          onUpdateMaintenance={updateMaintenance}
-          onDeleteMaintenance={deleteMaintenance}
-        />
-      )}
-
-      {activeTab === 'equipment' && (
-        <EquipmentTab
-          equipment={equipment}
-          onAddEquipment={addEquipment}
-          onUpdateEquipment={updateEquipment}
-          onDeleteEquipment={deleteEquipment}
-        />
-      )}
-
-      {activeTab === 'shipments' && <ShipmentsTab shipments={shipments} />}
+      {activeTab === 'treatments' && <TreatmentsTab />}
+      {activeTab === 'inventory' && <InventoryTab />}
+      {activeTab === 'analytics' && <AnalyticsTab />}
+      {activeTab === 'vehicles' && <VehiclesTab />}
+      {activeTab === 'equipment' && <EquipmentTab />}
+      {activeTab === 'shipments' && <ShipmentsTab />}
     </div>
   );
 }

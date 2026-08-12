@@ -1,16 +1,9 @@
+// src/hooks/useShipments.ts
 import { useState, useEffect } from 'react';
 import { useApi } from './useApi';
 
-// Если у вас есть тип Shipment, импортируйте его, иначе используйте any
-export interface Shipment {
-  id: number;
-  // добавьте другие поля по необходимости
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export const useShipments = () => {
-  const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [shipments, setShipments] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { getBaseUrl } = useApi();
@@ -27,32 +20,29 @@ export const useShipments = () => {
       }
       
       const data = await response.json();
+      console.log('📦 useShipments - raw data length:', data?.length);
       
-      // Проверяем, что пришёл массив
       if (!Array.isArray(data)) {
         throw new Error('Сервер вернул не массив');
       }
 
-      // Преобразуем даты (если есть)
       const processedData = data.map((item: any) => ({
         ...item,
-        createdAt: new Date(item.createdAt),
-        updatedAt: new Date(item.updatedAt),
-        // если есть другие поля с датами, добавьте их
+        date: item.date ? new Date(item.date) : new Date(),
+        createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+        updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
       }));
 
+      console.log('✅ useShipments - processed data length:', processedData.length);
       setShipments(processedData);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch shipments';
       setError(errorMessage);
-      console.error('Error fetching shipments:', err);
+      console.error('❌ useShipments - error:', err);
     } finally {
       setIsLoading(false);
     }
   };
-
-  // Можно добавить методы для добавления/обновления/удаления, если нужно
-  // Но для счётчика достаточно refetch
 
   useEffect(() => {
     fetchShipments();
@@ -64,4 +54,4 @@ export const useShipments = () => {
     error,
     refetch: fetchShipments,
   };
-};
+};  

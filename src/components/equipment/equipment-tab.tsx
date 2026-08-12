@@ -1,4 +1,7 @@
+'use client';
+
 import { useState, useMemo } from 'react';
+import { useEquipment } from '@/hooks/useEquipment';
 import { Equipment, EquipmentType } from '@/types';
 import { EquipmentList } from './equipment-list';
 import { EquipmentForm } from './equipment-form';
@@ -7,37 +10,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Plus, AlertTriangle, CheckCircle, Package } from 'lucide-react';
 
-interface EquipmentTabProps {
-  equipment: Equipment[];
-  onAddEquipment: (equipment: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  onUpdateEquipment: (id: number, updates: Partial<Equipment>) => Promise<void>;
-  onDeleteEquipment: (id: number) => Promise<void>;
-}
-
-export function EquipmentTab({ 
-  equipment, 
-  onAddEquipment, 
-  onUpdateEquipment, 
-  onDeleteEquipment 
-}: EquipmentTabProps) {
+export function EquipmentTab() {
+  const { equipment, isLoading, error, addEquipment, updateEquipment, deleteEquipment, refetch } = useEquipment();
+  
   const [showForm, setShowForm] = useState(false);
-
-  // Состояния для фильтров
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<EquipmentType | ''>('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
 
   const handleAddEquipment = async (equipmentData: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await onAddEquipment(equipmentData);
+    await addEquipment(equipmentData);
     setShowForm(false);
+    refetch();
   };
 
   const handleCancel = () => {
     setShowForm(false);
   };
 
-  // Функции для определения статуса оборудования
   const isOverdue = (date: Date) => new Date() > date;
   const isExpiringSoon = (date: Date, daysThreshold: number = 30) => {
     const today = new Date();
@@ -46,20 +37,14 @@ export function EquipmentTab({
     return daysDiff > 0 && daysDiff <= daysThreshold;
   };
 
-  // Фильтрация оборудования
   const filteredEquipment = useMemo(() => {
     let filtered = equipment.filter(item => {
-      // Фильтр по поиску
       if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
         return false;
       }
-      
-      // Фильтр по типу
       if (typeFilter && item.type !== typeFilter) {
         return false;
       }
-      
-      // Фильтр по статусу
       if (statusFilter === 'active' && (isOverdue(item.verificationDate) || isExpiringSoon(item.verificationDate))) {
         return false;
       }
@@ -69,11 +54,9 @@ export function EquipmentTab({
       if (statusFilter === 'overdue' && !isOverdue(item.verificationDate)) {
         return false;
       }
-      
       return true;
     });
 
-    // Сортировка
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -92,12 +75,13 @@ export function EquipmentTab({
     return filtered;
   }, [equipment, searchQuery, typeFilter, statusFilter, sortBy]);
 
-  // Статистика
   const expiredCount = equipment.filter(item => isOverdue(item.verificationDate)).length;
   const expiringSoonCount = equipment.filter(item => 
     !isOverdue(item.verificationDate) && isExpiringSoon(item.verificationDate)
   ).length;
   const activeCount = equipment.length - expiredCount - expiringSoonCount;
+
+  if (isLoading) return <div className="text-center py-8">Загрузка оборудования...</div>;
 
   return (
     <div className="space-y-6">
@@ -156,7 +140,6 @@ export function EquipmentTab({
         </Card>
       </div>
 
-      {/* Фильтры */}
       <EquipmentFilters
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -168,17 +151,13 @@ export function EquipmentTab({
         onSortChange={setSortBy}
       />
 
-      {/* Заголовок и кнопка */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">
           Оборудование ({filteredEquipment.length} из {equipment.length})
         </h2>
-        <Button onClick={() => setShowForm(true)}>
-          Новое оборудование
-        </Button>
+        <Button onClick={() => setShowForm(true)}>Новое оборудование</Button>
       </div>
 
-      {/* Форма добавления */}
       {showForm && (
         <EquipmentForm
           onSubmit={handleAddEquipment}
@@ -186,11 +165,10 @@ export function EquipmentTab({
         />
       )}
 
-      {/* Список оборудования - теперь с inline-редактированием */}
       <EquipmentList
         equipment={filteredEquipment}
-        onUpdateEquipment={onUpdateEquipment}
-        onDeleteEquipment={onDeleteEquipment}
+        onUpdateEquipment={updateEquipment}
+        onDeleteEquipment={deleteEquipment}
       />
     </div>
   );

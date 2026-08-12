@@ -6,13 +6,14 @@ import { ChemicalTreatment, CultureType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { getCultureIcon, getIconColor, getCultureTextColor } from '@/lib/culture-icons';
-import { CalendarDays, Edit2, Save, X, CheckCircle, Clock, Beaker, MapPin } from 'lucide-react';
+import { CalendarDays, Edit2, Save, X, CheckCircle, Clock, Beaker, MapPin, StickyNote } from 'lucide-react';
 import { ButtonIcons } from '@/components/ui-icons';
 
 interface TreatmentCardProps {
   treatment: ChemicalTreatment;
-  onUpdateTreatment: (id: number, updates: Partial<ChemicalTreatment>) => Promise<void>;
+  onUpdateTreatment: (id: number, updates: Partial<ChemicalTreatment>) => Promise<void>; // добавили
   onDeleteTreatment: (id: number) => Promise<void>;
   onCompleteTreatment?: (id: number) => Promise<void>;
   onUncompleteTreatment?: (id: number) => Promise<void>;
@@ -29,6 +30,10 @@ interface TreatmentCardProps {
 
 export function TreatmentCard({
   treatment,
+  onUpdateTreatment, // добавили в пропсы
+  onDeleteTreatment,
+  onCompleteTreatment,
+  onUncompleteTreatment,
   isEditing,
   editData,
   onEditChange,
@@ -46,12 +51,31 @@ export function TreatmentCard({
   const CheckIcon = ButtonIcons.Check.icon;
   const UndoIcon = ButtonIcons.Undo.icon;
   const cultures: CultureType[] = ['груша', 'яблоко', 'черешня', 'слива', 'томаты', 'картофель', 'лук', 'свекла', 'морковь', 'капуста', 'другое'];
+  
+  // Состояние для редактирования примечаний
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [editNotesText, setEditNotesText] = useState(treatment.notes || '');
 
   const formatDisplayDate = (dateStr: string | Date | undefined) => {
     if (!dateStr) return '—';
     const date = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
     if (isNaN(date.getTime())) return '—';
     return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const handleSaveNotes = async () => {
+    await onUpdateTreatment(treatment.id, { notes: editNotesText || undefined });
+    setIsEditingNotes(false);
+  };
+
+  const handleCancelNotes = () => {
+    setEditNotesText(treatment.notes || '');
+    setIsEditingNotes(false);
+  };
+
+  const startEditNotes = () => {
+    setEditNotesText(treatment.notes || '');
+    setIsEditingNotes(true);
   };
 
   return (
@@ -211,6 +235,57 @@ export function TreatmentCard({
                 </div>
               </div>
             )}
+
+            {/* Примечания */}
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              <div className="flex items-start gap-2">
+                <StickyNote className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  {isEditingNotes ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={editNotesText}
+                        onChange={(e) => setEditNotesText(e.target.value)}
+                        placeholder="Введите примечания..."
+                        rows={2}
+                        className="text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleSaveNotes}
+                          className="gap-1"
+                        >
+                          <Save className="h-3.5 w-3.5" />
+                          Сохранить
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleCancelNotes}
+                          className="gap-1"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          Отмена
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
+                        {treatment.notes || <span className="text-gray-400 italic">Нет примечаний</span>}
+                      </p>
+                      <button
+                        onClick={startEditNotes}
+                        className="text-xs text-blue-500 hover:text-blue-600 mt-1 inline-flex items-center gap-1"
+                      >
+                        {treatment.notes ? 'Редактировать' : 'Добавить примечание'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
           </>
         )}
       </div>

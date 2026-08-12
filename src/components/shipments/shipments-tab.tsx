@@ -1,20 +1,21 @@
+'use client';
+
 import { useState } from 'react';
+import { useAppData } from '@/context/AppDataContext';
 import { Truck, Users, Box } from 'lucide-react';
-import { ClientStats } from './client-stats';          // новый импорт
+import { ClientStats } from './client-stats';
 import { ShipmentsSection } from '@/components/sections/shipments-section';
 import { ClientsSection } from '@/components/sections/clients-section';
 import { ProductsSection } from '@/components/sections/products-section';
 
-interface ShipmentsTabProps {
-  shipments: any[];
-}
-
-export function ShipmentsTab({ shipments }: ShipmentsTabProps) {
+export function ShipmentsTab() {
+  const { shipments, shipmentsLoading } = useAppData();
   const [subTab, setSubTab] = useState<'shipments' | 'clients' | 'products'>('shipments');
+
+  if (shipmentsLoading) return <div className="text-center py-8">Загрузка отгрузок...</div>;
 
   return (
     <div>
-      {/* Статистика по клиентам вместо продуктов */}
       <ClientStats shipments={shipments} />
 
       <div className="flex gap-4 border-b border-gray-200 mt-6 mb-4">
