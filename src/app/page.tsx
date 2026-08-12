@@ -31,7 +31,7 @@ export default function Home() {
   const [cultureFilter, setCultureFilter] = useState('');
   const [productTypeFilter, setProductTypeFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('dueDateDesc'); // изменено на dueDateDesc
+  const [sortBy, setSortBy] = useState('dueDateDesc');
 
   const { treatments, isLoading: treatmentsLoading, error: treatmentsError, addTreatment, updateTreatment, deleteTreatment, completeTreatment, uncompleteTreatment, refetch: refetchTreatments } = useTreatments();
   const { inventory, isLoading: inventoryLoading, error: inventoryError, addProduct, updateProduct, deleteProduct, refetch: refetchInventory } = useInventory();
@@ -57,7 +57,7 @@ export default function Home() {
     switch (activeTab) {
       case 'treatments': refetchTreatments(); break;
       case 'inventory': refetchInventory(); break;
-      case 'analytics': refetchTreatments(); break;
+      case 'analytics': refetchShipments(); break;
       case 'vehicles': refetchVehicles(); refetchMaintenance(); break;
       case 'equipment': refetchEquipment(); break;
       case 'shipments': refetchShipments(); break;
@@ -182,7 +182,7 @@ export default function Home() {
       )}
 
       {activeTab === 'analytics' && (
-        <AnalyticsTab treatments={treatments} shipments={shipments} />
+        <AnalyticsTab shipments={shipments} />
       )}
 
       {activeTab === 'vehicles' && (

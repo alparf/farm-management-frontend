@@ -45,18 +45,15 @@ export function AnalyticsContent({ shipments = [] }: AnalyticsContentProps) {
 
   return (
     <div className="space-y-6">
-      {/* Сводная статистика — первая */}
-      <StatsOverview shipments={filteredShipments} />
-
-      {/* Период — под статистикой */}
       <PeriodSelector
         shipments={shipments}
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
         selectedMonth={selectedMonth}
         onMonthChange={setSelectedMonth}
-        filteredCount={filteredShipments.length}
       />
+
+      <StatsOverview shipments={filteredShipments} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ProductAnalytics shipments={filteredShipments} />
