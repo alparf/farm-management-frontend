@@ -22,7 +22,7 @@ export interface ChemicalTreatment {
   area: number;
   completed: boolean;
   dueDate: Date;
-  actualDate?: string;
+  actualDate?: Date;
   isTankMix: boolean;
   hasCompatibilityIssues?: boolean;
   compatibilityWarnings?: string;

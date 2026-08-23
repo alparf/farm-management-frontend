@@ -26,9 +26,15 @@ export function CompactTreatmentList({
   const [editData, setEditData] = useState<{
     culture: any;
     area: string;
+    dueDate: string;
+    actualDate: string;
+    notes: string;
   }>({
     culture: 'яблоко',
     area: '',
+    dueDate: '',
+    actualDate: '',
+    notes: '',
   });
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; treatment: ChemicalTreatment | null }>({
     isOpen: false,
@@ -40,6 +46,9 @@ export function CompactTreatmentList({
     setEditData({
       culture: treatment.culture,
       area: treatment.area.toString(),
+      dueDate: treatment.dueDate ? new Date(treatment.dueDate).toISOString().split('T')[0] : '',
+      actualDate: treatment.actualDate ? new Date(treatment.actualDate).toISOString().split('T')[0] : '',
+      notes: treatment.notes || '',
     });
   };
 
@@ -49,10 +58,25 @@ export function CompactTreatmentList({
 
   const saveEdit = async (id: number) => {
     try {
-      await onUpdateTreatment(id, {
+      const updates: Partial<ChemicalTreatment> = {
         culture: editData.culture,
         area: parseFloat(editData.area),
-      });
+        notes: editData.notes || undefined,
+      };
+
+      if (editData.dueDate) {
+        updates.dueDate = new Date(editData.dueDate);
+      } else {
+        updates.dueDate = undefined;
+      }
+
+      if (editData.actualDate) {
+        updates.actualDate = new Date(editData.actualDate);
+      } else {
+        updates.actualDate = undefined;
+      }
+
+      await onUpdateTreatment(id, updates);
       setEditingId(null);
     } catch (error) {
       console.error('Error updating treatment:', error);
@@ -69,7 +93,7 @@ export function CompactTreatmentList({
     } else {
       await onUpdateTreatment(id, {
         completed: true,
-        actualDate: new Date().toISOString().split('T')[0]
+        actualDate: new Date() // передаём Date
       });
     }
   };
