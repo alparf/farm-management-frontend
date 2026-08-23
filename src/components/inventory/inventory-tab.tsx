@@ -9,7 +9,8 @@ import { InventoryFilters } from './inventory-filters';
 import { InventoryStats } from './inventory-stats';
 import { TransactionHistory } from './transaction-history';
 import { Button } from '@/components/ui/button';
-import { Package, History } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Package, History, PackageX, AlertTriangle } from 'lucide-react';
 import { generatePrintWindow } from '@/utils/reportUtils';
 
 type SubTab = 'list' | 'movements';
@@ -23,6 +24,26 @@ export function InventoryTab() {
   const [typeFilter, setTypeFilter] = useState<ProductType | ''>('');
   const [sortBy, setSortBy] = useState('name');
   const [stockFilter, setStockFilter] = useState('all');
+
+  // Функции для применения фильтров при клике на карточку статистики
+  const applyStockFilter = (filter: string) => {
+    setStockFilter(filter);
+    setSearchQuery('');
+    setTypeFilter('');
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('');
+    setStockFilter('all');
+  };
+
+  // Функция для применения фильтра по типу продукта
+  const applyTypeFilter = (type: ProductType) => {
+    setTypeFilter(type);
+    setSearchQuery('');
+    setStockFilter('all');
+  };
 
   const filteredInventory = useMemo(() => {
     let filtered = inventory.filter(product => {
@@ -45,6 +66,12 @@ export function InventoryTab() {
     });
     return filtered;
   }, [inventory, searchQuery, typeFilter, sortBy, stockFilter]);
+
+  // Подсчет статистики
+  const totalItems = inventory.length;
+  const lowStockCount = inventory.filter(p => p.quantity > 0 && p.quantity <= 5).length;
+  const outOfStockCount = inventory.filter(p => p.quantity === 0).length;
+  const normalStockCount = inventory.filter(p => p.quantity > 5).length;
 
   const handleAddProduct = async (productData: any) => {
     await addProduct(productData);
@@ -132,7 +159,92 @@ export function InventoryTab() {
 
   return (
     <div className="space-y-6">
-      <InventoryStats inventory={inventory} />
+      {/* Статистика - кликабельные карточки */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Всего позиций */}
+        <Card 
+          className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={clearAllFilters}
+        >
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-blue-600 font-medium">Всего позиций</div>
+                <div className="text-lg font-bold text-blue-800">{totalItems}</div>
+              </div>
+              <Package className="h-6 w-6 text-blue-600 opacity-60" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Нормальный запас */}
+        <Card 
+          className="bg-green-50 border-green-200 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => applyStockFilter('normal')}
+        >
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-xs text-green-600 font-medium">Нормальный запас</div>
+                <div className="text-lg font-bold text-green-800">{normalStockCount}</div>
+              </div>
+              <Package className="h-6 w-6 text-green-600 opacity-60" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Низкий запас */}
+        <Card 
+          className={`${lowStockCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'} cursor-pointer hover:shadow-md transition-shadow`}
+          onClick={() => {
+            if (lowStockCount > 0) {
+              applyStockFilter('low');
+            }
+          }}
+        >
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-xs font-medium ${lowStockCount > 0 ? 'text-yellow-600' : 'text-gray-600'}`}>
+                  Низкий запас
+                </div>
+                <div className={`text-lg font-bold ${lowStockCount > 0 ? 'text-yellow-800' : 'text-gray-800'}`}>
+                  {lowStockCount}
+                </div>
+              </div>
+              <AlertTriangle className={`h-6 w-6 ${lowStockCount > 0 ? 'text-yellow-600' : 'text-gray-500'} opacity-60`} />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Нет в наличии */}
+        <Card 
+          className={`${outOfStockCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'} cursor-pointer hover:shadow-md transition-shadow`}
+          onClick={() => {
+            if (outOfStockCount > 0) {
+              applyStockFilter('out');
+            }
+          }}
+        >
+          <CardContent className="p-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className={`text-xs font-medium ${outOfStockCount > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                  Нет в наличии
+                </div>
+                <div className={`text-lg font-bold ${outOfStockCount > 0 ? 'text-red-800' : 'text-gray-800'}`}>
+                  {outOfStockCount}
+                </div>
+              </div>
+              <PackageX className={`h-6 w-6 ${outOfStockCount > 0 ? 'text-red-600' : 'text-gray-500'} opacity-60`} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Статистика по типам продуктов - кликабельные карточки */}
+      <InventoryStats inventory={inventory} onTypeClick={applyTypeFilter} />
+
       <div className="flex border-b border-gray-200">
         <button
           className={`flex items-center gap-2 px-4 py-2 font-medium border-b-2 transition-colors ${

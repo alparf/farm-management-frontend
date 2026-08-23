@@ -22,6 +22,13 @@ export function TreatmentsTab() {
   const { treatments, isLoading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment, uncompleteTreatment, refetch } = useTreatments();
   const { inventory } = useInventory();
 
+  // Функция для применения фильтра по культуре
+  const applyCultureFilter = (culture: string) => {
+    setCultureFilter(culture);
+    setSearchQuery('');
+    setProductTypeFilter('');
+  };
+
   const filteredTreatments = useTreatmentFilters({
     treatments,
     cultureFilter,
@@ -48,7 +55,13 @@ export function TreatmentsTab() {
   return (
     <>
       {error && <ErrorState error={error} onRetry={refetch} />}
-      <Stats treatments={treatments} />
+      
+      {/* Статистика по культурам с общей статистикой */}
+      <Stats 
+        treatments={treatments} 
+        onCultureClick={applyCultureFilter}
+      />
+
       <FilterSort
         cultureFilter={cultureFilter}
         onCultureFilterChange={setCultureFilter}
@@ -60,10 +73,12 @@ export function TreatmentsTab() {
         onSortChange={setSortBy}
         onGenerateReport={handleGenerateReport}
       />
+
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Обработки ({filteredTreatments.length} из {treatments.length})</h2>
         <Button onClick={() => setShowTreatmentForm(true)}>Новая обработка</Button>
       </div>
+
       {showTreatmentForm && (
         <TreatmentForm
           onSubmit={handleAddTreatment}
@@ -71,6 +86,7 @@ export function TreatmentsTab() {
           inventory={inventory}
         />
       )}
+
       <CompactTreatmentList
         treatments={filteredTreatments}
         onUpdateTreatment={updateTreatment}

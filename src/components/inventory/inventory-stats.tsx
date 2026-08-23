@@ -20,9 +20,10 @@ import {
 
 interface InventoryStatsProps {
   inventory: ProductInventory[];
+  onTypeClick?: (type: ProductType) => void;
 }
 
-export function InventoryStats({ inventory }: InventoryStatsProps) {
+export function InventoryStats({ inventory, onTypeClick }: InventoryStatsProps) {
   const stats = useMemo(() => {
     const byType = inventory.reduce((acc, product) => {
       acc[product.type] = (acc[product.type] || 0) + 1;
@@ -65,6 +66,12 @@ export function InventoryStats({ inventory }: InventoryStatsProps) {
     'регулятор роста', 'удобрение', 'биопрепарат', 'адъювант'
   ];
 
+  const handleCardClick = (type: ProductType) => {
+    if (onTypeClick) {
+      onTypeClick(type);
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {productTypes.map((type) => {
@@ -73,10 +80,17 @@ export function InventoryStats({ inventory }: InventoryStatsProps) {
         const lowStock = stats.lowStockByType[type] || 0;
         const outOfStock = stats.outOfStockByType[type] || 0;
         
-        if (total === 0 && lowStock === 0 && outOfStock === 0) return null;
+        // Показываем только типы, у которых есть продукты
+        if (total === 0) return null;
+        
+        const hasIssues = lowStock > 0 || outOfStock > 0;
         
         return (
-          <Card key={type} className={config.bgColor}>
+          <Card 
+            key={type} 
+            className={`${config.bgColor} ${onTypeClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+            onClick={() => handleCardClick(type)}
+          >
             <CardContent className="p-3">
               <div className="flex items-center gap-2 mb-2">
                 <div className={`${config.textColor}`}>

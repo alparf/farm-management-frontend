@@ -173,8 +173,6 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
           const isInsuranceExpiringSoon = isDateExpiringSoon(vehicle.insuranceDate);
           const isRoadLegalExpiringSoon = isDateExpiringSoon(vehicle.roadLegalUntil);
           
-          const hasExpiryWarnings = isInsuranceExpired || isRoadLegalExpired || isInsuranceExpiringSoon || isRoadLegalExpiringSoon;
-          
           return (
             <div
               key={vehicle.id}
@@ -318,35 +316,6 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                       </span>
                     </div>
 
-                    {hasExpiryWarnings && (
-                      <div className="space-y-1 mb-2">
-                        {isInsuranceExpired && (
-                          <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                            <AlertTriangle className="h-3 w-3" />
-                            Страховка просрочена!
-                          </div>
-                        )}
-                        {isInsuranceExpiringSoon && !isInsuranceExpired && (
-                          <div className="flex items-center gap-1.5 text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
-                            <AlertTriangle className="h-3 w-3" />
-                            Страховка истекает
-                          </div>
-                        )}
-                        {isRoadLegalExpired && (
-                          <div className="flex items-center gap-1.5 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
-                            <AlertTriangle className="h-3 w-3" />
-                            Допуск просрочен!
-                          </div>
-                        )}
-                        {isRoadLegalExpiringSoon && !isRoadLegalExpired && (
-                          <div className="flex items-center gap-1.5 text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded">
-                            <AlertTriangle className="h-3 w-3" />
-                            Допуск истекает
-                          </div>
-                        )}
-                      </div>
-                    )}
-
                     <div className="space-y-1.5 mb-3">
                       {vehicle.insuranceDate && (
                         <div className="flex items-center justify-between text-sm">
@@ -354,7 +323,11 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                             <Shield className="h-3.5 w-3.5" />
                             Страховка:
                           </span>
-                          <span className="text-gray-700 text-xs">{formatDate(vehicle.insuranceDate)}</span>
+                          <span className={`text-xs flex items-center gap-1.5 ${isInsuranceExpired ? 'text-red-600 font-medium' : isInsuranceExpiringSoon ? 'text-yellow-600' : 'text-gray-700'}`}>
+                            {formatDate(vehicle.insuranceDate)}
+                            {isInsuranceExpired && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                            {isInsuranceExpiringSoon && !isInsuranceExpired && <AlertTriangle className="h-3 w-3 text-yellow-500" />}
+                          </span>
                         </div>
                       )}
                       
@@ -364,7 +337,11 @@ export function VehiclesList({ vehicles, onUpdateVehicle, onDeleteVehicle }: Veh
                             <Route className="h-3.5 w-3.5" />
                             Допуск:
                           </span>
-                          <span className="text-gray-700 text-xs">{formatDate(vehicle.roadLegalUntil)}</span>
+                          <span className={`text-xs flex items-center gap-1.5 ${isRoadLegalExpired ? 'text-red-600 font-medium' : isRoadLegalExpiringSoon ? 'text-yellow-600' : 'text-gray-700'}`}>
+                            {formatDate(vehicle.roadLegalUntil)}
+                            {isRoadLegalExpired && <AlertTriangle className="h-3 w-3 text-red-500" />}
+                            {isRoadLegalExpiringSoon && !isRoadLegalExpired && <AlertTriangle className="h-3 w-3 text-yellow-500" />}
+                          </span>
                         </div>
                       )}
                     </div>

@@ -5,7 +5,7 @@ import { ProductInventory, ProductType } from '@/types';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Package } from 'lucide-react';
 import { useApi } from '@/hooks/useApi';
-import { InventoryItem } from './Inventory-item';
+import { InventoryItem } from './inventory-item';
 import { StockAdjustDialog } from './stock-adjust-dialog';
 
 interface InventoryListProps {

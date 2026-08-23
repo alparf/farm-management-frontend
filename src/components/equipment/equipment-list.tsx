@@ -18,8 +18,6 @@ interface EquipmentListProps {
 
 export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment }: EquipmentListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingNotes, setEditingNotes] = useState<number | null>(null);
-  const [editNotesText, setEditNotesText] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; equipment: Equipment | null }>({
     isOpen: false,
     equipment: null
@@ -115,26 +113,6 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
     setEditData(prev => ({ ...prev, [field]: value }));
   };
 
-  const startEditNotes = (item: Equipment) => {
-    setEditingNotes(item.id);
-    setEditNotesText(item.notes || '');
-  };
-
-  const saveNotes = async (id: number) => {
-    try {
-      await onUpdateEquipment(id, { notes: editNotesText || undefined });
-      setEditingNotes(null);
-      setEditNotesText('');
-    } catch (error) {
-      console.error('Error updating notes:', error);
-    }
-  };
-
-  const cancelEditNotes = () => {
-    setEditingNotes(null);
-    setEditNotesText('');
-  };
-
   const handleDeleteClick = (item: Equipment) => {
     setDeleteConfirm({ isOpen: true, equipment: item });
   };
@@ -167,7 +145,6 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
           const DeleteIcon = ButtonIcons.Delete.icon;
           const EditIcon = ButtonIcons.Edit.icon;
           const isEditing = editingId === item.id;
-          const isEditingNotes = editingNotes === item.id;
           
           const overdue = isOverdue(item.verificationDate);
           const expiringSoon = isExpiringSoon(item.verificationDate);
@@ -332,54 +309,15 @@ export function EquipmentList({ equipment, onUpdateEquipment, onDeleteEquipment 
                       )}
                     </div>
 
-                    {/* Примечания видны всегда */}
+                    {/* Примечания — ТОЛЬКО ДЛЯ ПРОСМОТРА, без отдельной кнопки редактирования */}
                     {item.notes && (
                       <div className="mt-2 pt-2 border-t border-gray-100">
                         <div className="flex items-start gap-2">
                           <StickyNote className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
                           <div className="flex-1">
-                            {isEditingNotes ? (
-                              <div className="space-y-2">
-                                <Textarea
-                                  value={editNotesText}
-                                  onChange={(e) => setEditNotesText(e.target.value)}
-                                  placeholder="Введите примечания..."
-                                  rows={2}
-                                  className="text-sm"
-                                />
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => saveNotes(item.id)}
-                                    className="gap-1"
-                                  >
-                                    <Save className="h-3.5 w-3.5" />
-                                    Сохранить
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={cancelEditNotes}
-                                    className="gap-1"
-                                  >
-                                    <X className="h-3.5 w-3.5" />
-                                    Отмена
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
-                                  {item.notes}
-                                </p>
-                                <button
-                                  onClick={() => startEditNotes(item)}
-                                  className="text-xs text-blue-500 hover:text-blue-600 mt-1 inline-flex items-center gap-1"
-                                >
-                                  Редактировать
-                                </button>
-                              </>
-                            )}
+                            <p className="text-sm text-gray-600 whitespace-pre-wrap break-words">
+                              {item.notes}
+                            </p>
                           </div>
                         </div>
                       </div>

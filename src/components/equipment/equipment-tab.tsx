@@ -37,6 +37,19 @@ export function EquipmentTab() {
     return daysDiff > 0 && daysDiff <= daysThreshold;
   };
 
+  // Функции для применения фильтров при клике на карточку статистики
+  const applyStatusFilter = (filter: string) => {
+    setStatusFilter(filter);
+    setSearchQuery('');
+    setTypeFilter('');
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('');
+    setStatusFilter('all');
+  };
+
   const filteredEquipment = useMemo(() => {
     let filtered = equipment.filter(item => {
       if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
@@ -85,9 +98,13 @@ export function EquipmentTab() {
 
   return (
     <div className="space-y-6">
-      {/* Статистика */}
+      {/* Статистика - кликабельные карточки */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <Card className="bg-blue-50 border-blue-200">
+        {/* Всего единиц */}
+        <Card 
+          className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={clearAllFilters}
+        >
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -99,7 +116,11 @@ export function EquipmentTab() {
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 border-green-200">
+        {/* Активных */}
+        <Card 
+          className="bg-green-50 border-green-200 cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => applyStatusFilter('active')}
+        >
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
@@ -111,19 +132,39 @@ export function EquipmentTab() {
           </CardContent>
         </Card>
 
-        <Card className="bg-yellow-50 border-yellow-200">
+        {/* Скоро истекает */}
+        <Card 
+          className={`${expiringSoonCount > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'} cursor-pointer hover:shadow-md transition-shadow`}
+          onClick={() => {
+            if (expiringSoonCount > 0) {
+              applyStatusFilter('expiring');
+            }
+          }}
+        >
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs text-yellow-600 font-medium">Скоро истекает</div>
-                <div className="text-lg font-bold text-yellow-800">{expiringSoonCount}</div>
+                <div className={`text-xs font-medium ${expiringSoonCount > 0 ? 'text-yellow-600' : 'text-gray-600'}`}>
+                  Скоро истекает
+                </div>
+                <div className={`text-lg font-bold ${expiringSoonCount > 0 ? 'text-yellow-800' : 'text-gray-800'}`}>
+                  {expiringSoonCount}
+                </div>
               </div>
-              <AlertTriangle className="h-6 w-6 text-yellow-600 opacity-60" />
+              <AlertTriangle className={`h-6 w-6 ${expiringSoonCount > 0 ? 'text-yellow-600' : 'text-gray-500'} opacity-60`} />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={`${expiredCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+        {/* Просрочено */}
+        <Card 
+          className={`${expiredCount > 0 ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'} cursor-pointer hover:shadow-md transition-shadow`}
+          onClick={() => {
+            if (expiredCount > 0) {
+              applyStatusFilter('overdue');
+            }
+          }}
+        >
           <CardContent className="p-3">
             <div className="flex items-center justify-between">
               <div>
