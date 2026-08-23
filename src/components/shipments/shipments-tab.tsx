@@ -11,12 +11,27 @@ import { ProductsSection } from '@/components/sections/products-section';
 export function ShipmentsTab() {
   const { shipments, shipmentsLoading } = useAppData();
   const [subTab, setSubTab] = useState<'shipments' | 'clients' | 'products'>('shipments');
+  
+  // Состояния для фильтров
+  const [clientFilter, setClientFilter] = useState<string>('');
+  const [productFilter, setProductFilter] = useState<string>('');
+
+  // Функции для применения фильтров при клике на карточку
+  const applyClientFilter = (clientId: number | 'all') => {
+    if (clientId === 'all') {
+      setClientFilter(''); // Сбрасываем фильтр
+    } else {
+      setClientFilter(String(clientId));
+    }
+    setSubTab('shipments'); // переключаемся на вкладку отгрузок
+  };
 
   if (shipmentsLoading) return <div className="text-center py-8">Загрузка отгрузок...</div>;
 
   return (
     <div>
-      <ClientStats shipments={shipments} />
+      {/* Статистика по клиентам - кликабельная */}
+      <ClientStats shipments={shipments} onClientClick={applyClientFilter} />
 
       <div className="flex gap-4 border-b border-gray-200 mt-6 mb-4">
         <button
@@ -54,7 +69,13 @@ export function ShipmentsTab() {
         </button>
       </div>
 
-      {subTab === 'shipments' && <ShipmentsSection />}
+      {subTab === 'shipments' && (
+        <ShipmentsSection 
+          clientFilter={clientFilter} 
+          productFilter={productFilter}
+          onClearClientFilter={() => setClientFilter('')}
+        />
+      )}
       {subTab === 'clients' && <ClientsSection />}
       {subTab === 'products' && <ProductsSection />}
     </div>

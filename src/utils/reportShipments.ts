@@ -11,6 +11,7 @@ interface GenerateShipmentsReportParams {
     clientFilter?: string;
     dateFrom?: string;
     dateTo?: string;
+    productFilter?: string; // добавляем productFilter
   };
 }
 
@@ -25,6 +26,10 @@ export function generateShipmentsReport({
   if (filters.clientFilter) {
     const client = clients.find(c => c.id === Number(filters.clientFilter));
     if (client) filtersParts.push(`Клиент: ${client.name}`);
+  }
+  if (filters.productFilter) {
+    const product = products.find(p => p.id === Number(filters.productFilter));
+    if (product) filtersParts.push(`Товар: ${product.name}`);
   }
   if (filters.dateFrom) filtersParts.push(`Дата от: ${filters.dateFrom}`);
   if (filters.dateTo) filtersParts.push(`Дата до: ${filters.dateTo}`);

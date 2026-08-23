@@ -1,12 +1,15 @@
+'use client';
+
 import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Box } from 'lucide-react';
 
 interface ProductStatsProps {
   shipments: any[];
+  onProductClick?: (productId: number) => void;
 }
 
-export function ProductStats({ shipments }: ProductStatsProps) {
+export function ProductStats({ shipments, onProductClick }: ProductStatsProps) {
   const productStats = useMemo(() => {
     const map = new Map<number, {
       productId: number;
@@ -14,7 +17,7 @@ export function ProductStats({ shipments }: ProductStatsProps) {
       unit: string;
       netQuantity: number;
       totalSum: number;
-      avgPrice: number; // средневзвешенная цена
+      avgPrice: number;
     }>();
 
     shipments.forEach(shipment => {
@@ -32,7 +35,6 @@ export function ProductStats({ shipments }: ProductStatsProps) {
           const entry = map.get(productId)!;
           entry.netQuantity += netQty;
           entry.totalSum += sum;
-          // avgPrice пересчитаем после цикла
         } else {
           map.set(productId, {
             productId,
@@ -46,7 +48,6 @@ export function ProductStats({ shipments }: ProductStatsProps) {
       });
     });
 
-    // Вычисляем средневзвешенную цену для каждого продукта
     const result = Array.from(map.values()).map(stat => {
       const avgPrice = stat.netQuantity > 0 ? stat.totalSum / stat.netQuantity : 0;
       return { ...stat, avgPrice };
@@ -54,6 +55,12 @@ export function ProductStats({ shipments }: ProductStatsProps) {
 
     return result.sort((a, b) => b.totalSum - a.totalSum);
   }, [shipments]);
+
+  const handleCardClick = (productId: number) => {
+    if (onProductClick) {
+      onProductClick(productId);
+    }
+  };
 
   if (productStats.length === 0) {
     return <div className="text-center text-gray-500 py-4">Нет данных по отгруженным товарам</div>;
@@ -75,7 +82,11 @@ export function ProductStats({ shipments }: ProductStatsProps) {
       {productStats.map((stat, index) => {
         const colorClass = bgColors[index % bgColors.length];
         return (
-          <Card key={stat.productId} className={`${colorClass} shadow-sm`}>
+          <Card 
+            key={stat.productId} 
+            className={`${colorClass} shadow-sm ${onProductClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+            onClick={() => handleCardClick(stat.productId)}
+          >
             <CardContent className="p-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -98,7 +109,6 @@ export function ProductStats({ shipments }: ProductStatsProps) {
                   <div className="text-base font-bold text-green-700">{stat.totalSum.toFixed(2)} BYN</div>
                 </div>
               </div>
-              {/* Новая строка со средней ценой */}
               <div className="mt-1 flex justify-end">
                 <div className="text-xs text-gray-500">
                   Ср. цена: <span className="font-medium text-gray-700">{stat.avgPrice.toFixed(2)} BYN/{stat.unit}</span>

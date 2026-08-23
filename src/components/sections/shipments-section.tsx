@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react'; // добавляем useRef
+import { useState, useEffect, useRef } from 'react';
 import { Shipment, Client, Product } from '@/types';
 import { useApi } from '@/hooks/useApi';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,19 @@ import { ShipmentForm } from '@/components/shipments/shipment-form';
 import { ShipmentFilters } from '@/components/shipments/shipment-filters';
 import { generateShipmentsReport } from '@/utils/reportShipments';
 
-export function ShipmentsSection() {
+interface ShipmentsSectionProps {
+  clientFilter?: string;
+  productFilter?: string;
+  onClearClientFilter?: () => void;
+  onClientFilterChange?: (clientId: string) => void;
+}
+
+export function ShipmentsSection({ 
+  clientFilter = '', 
+  productFilter = '',
+  onClearClientFilter,
+  onClientFilterChange 
+}: ShipmentsSectionProps) {
   const [shipments, setShipments] = useState<Shipment[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -18,13 +30,28 @@ export function ShipmentsSection() {
   const [showForm, setShowForm] = useState(false);
   const [editingShipment, setEditingShipment] = useState<Shipment | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState('');
-  const [clientFilter, setClientFilter] = useState('');
+  const [clientFilterLocal, setClientFilterLocal] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const { getBaseUrl } = useApi();
 
   // Реф для прокрутки к форме
   const formRef = useRef<HTMLDivElement>(null);
+
+  // Эффект для синхронизации фильтра из родителя
+  useEffect(() => {
+    if (clientFilter) {
+      setClientFilterLocal(clientFilter);
+    }
+  }, [clientFilter]);
+
+  // Эффект для сброса фильтра при клике на "Все клиенты"
+  useEffect(() => {
+    if (clientFilter === '' && clientFilterLocal !== '') {
+      // Если фильтр сброшен в родителе, сбрасываем локальный
+      setClientFilterLocal('');
+    }
+  }, [clientFilter]);
 
   const fetchData = async () => {
     try {
@@ -71,7 +98,6 @@ export function ShipmentsSection() {
   // Эффект для прокрутки к форме, когда она появляется
   useEffect(() => {
     if (showForm && formRef.current) {
-      // Даём время на рендер формы
       setTimeout(() => {
         formRef.current?.scrollIntoView({
           behavior: 'smooth',
@@ -153,15 +179,43 @@ export function ShipmentsSection() {
     setEditingShipment(undefined);
   };
 
+  const handleClientFilterChange = (value: string) => {
+    setClientFilterLocal(value);
+    // Сообщаем родителю об изменении фильтра
+    if (onClientFilterChange) {
+      onClientFilterChange(value);
+    }
+    // Если выбрали "Все клиенты" в выпадающем списке, сбрасываем фильтр в родителе
+    if (value === '' && onClearClientFilter) {
+      onClearClientFilter();
+    }
+  };
+
+  // Определяем активный фильтр (из родителя или локальный)
+  const activeClientFilter = clientFilter || clientFilterLocal;
+
   const filtered = shipments.filter(shipment => {
     const client = clients.find(c => c.id === shipment.clientId);
+    
+    // Поиск
     const matchSearch =
       (client?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (shipment.notes || '').toLowerCase().includes(searchQuery.toLowerCase());
-    const matchClient = clientFilter ? shipment.clientId === parseInt(clientFilter) : true;
+    
+    // Фильтр по клиенту
+    const matchClient = activeClientFilter ? shipment.clientId === parseInt(activeClientFilter) : true;
+    
+    // Фильтр по продукту (из пропса)
+    let matchProduct = true;
+    if (productFilter) {
+      matchProduct = shipment.items.some(item => String(item.productId) === productFilter);
+    }
+    
+    // Фильтр по дате
     const matchDateFrom = dateFrom ? new Date(shipment.date) >= new Date(dateFrom) : true;
     const matchDateTo = dateTo ? new Date(shipment.date) <= new Date(dateTo) : true;
-    return matchSearch && matchClient && matchDateFrom && matchDateTo;
+    
+    return matchSearch && matchClient && matchProduct && matchDateFrom && matchDateTo;
   });
 
   const handleGenerateReport = () => {
@@ -171,9 +225,10 @@ export function ShipmentsSection() {
       products,
       filters: {
         searchQuery,
-        clientFilter,
+        clientFilter: activeClientFilter,
         dateFrom,
         dateTo,
+        productFilter,
       },
     });
   };
@@ -199,8 +254,8 @@ export function ShipmentsSection() {
         clients={clients}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        clientFilter={clientFilter}
-        onClientFilterChange={setClientFilter}
+        clientFilter={activeClientFilter}
+        onClientFilterChange={handleClientFilterChange}
         dateFrom={dateFrom}
         onDateFromChange={setDateFrom}
         dateTo={dateTo}
