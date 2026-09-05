@@ -375,3 +375,5 @@ export function VehiclesTab() {
     </div>
   );
 }
+
+export default VehiclesTab;

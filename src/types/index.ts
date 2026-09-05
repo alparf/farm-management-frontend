@@ -1,3 +1,4 @@
+// src/types/index.ts
 
 export interface ChemicalProduct {
   id?: number;
@@ -15,6 +16,9 @@ export interface ChemicalProduct {
     updatedAt: Date;
   };
 }
+
+// ДОБАВЛЕН ЭКСПОРТ Treatment (алиас для ChemicalTreatment)
+export type Treatment = ChemicalTreatment;
 
 export interface ChemicalTreatment {
   id: number;
@@ -161,7 +165,7 @@ export type EquipmentType =
   | 'дозатор'
   | 'другое';
 
-  export interface Client {
+export interface Client {
   id: number;
   name: string;
   phone?: string;

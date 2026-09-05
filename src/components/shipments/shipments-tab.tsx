@@ -81,3 +81,5 @@ export function ShipmentsTab() {
     </div>
   );
 }
+
+export default ShipmentsTab;

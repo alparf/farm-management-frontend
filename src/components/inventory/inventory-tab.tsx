@@ -309,3 +309,5 @@ export function InventoryTab() {
     </div>
   );
 }
+
+export default InventoryTab;

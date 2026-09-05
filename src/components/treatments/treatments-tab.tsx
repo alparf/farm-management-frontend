@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { ErrorState } from '@/components/common';
 import { generateTreatmentsReport } from '@/utils/reportTreatments';
 
-export function TreatmentsTab() {
+function TreatmentsTab() {
   const [showTreatmentForm, setShowTreatmentForm] = useState(false);
   const [cultureFilter, setCultureFilter] = useState('');
   const [productTypeFilter, setProductTypeFilter] = useState('');
@@ -22,7 +22,6 @@ export function TreatmentsTab() {
   const { treatments, isLoading, error, addTreatment, updateTreatment, deleteTreatment, completeTreatment, uncompleteTreatment, refetch } = useTreatments();
   const { inventory } = useInventory();
 
-  // Функция для применения фильтра по культуре
   const applyCultureFilter = (culture: string) => {
     setCultureFilter(culture);
     setSearchQuery('');
@@ -56,7 +55,6 @@ export function TreatmentsTab() {
     <>
       {error && <ErrorState error={error} onRetry={refetch} />}
       
-      {/* Статистика по культурам с общей статистикой */}
       <Stats 
         treatments={treatments} 
         onCultureClick={applyCultureFilter}
@@ -97,3 +95,5 @@ export function TreatmentsTab() {
     </>
   );
 }
+
+export default TreatmentsTab;

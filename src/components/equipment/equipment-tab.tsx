@@ -214,3 +214,5 @@ export function EquipmentTab() {
     </div>
   );
 }
+
+export default EquipmentTab;

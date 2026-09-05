@@ -9,13 +9,13 @@ import { ProductAnalytics } from './product-analytics';
 import { ClientAnalytics } from './client-analytics';
 import { MonthlyChart } from './monthly-chart';
 
-export function AnalyticsContent() {
+export default function AnalyticsContent() {
   const { shipments, shipmentsLoading, shipmentsError } = useAppData();
   const [selectedYear, setSelectedYear] = useState<number | 'all'>('all');
   const [selectedMonth, setSelectedMonth] = useState<number | 'all'>('all');
 
   useEffect(() => {
-    console.log('📊 AnalyticsContent - shipments updated:', shipments?.length);
+    console.log('📊 AnalyticsContent - shipments:', shipments?.length);
   }, [shipments]);
 
   const filteredShipments = useMemo(() => {
@@ -39,7 +39,16 @@ export function AnalyticsContent() {
   }
 
   if (shipmentsError) {
-    return <div className="text-center py-8 text-red-500">Ошибка: {shipmentsError}</div>;
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center text-red-500">
+            <p>Ошибка загрузки данных</p>
+            <p className="text-xs mt-2">{shipmentsError}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!shipments || shipments.length === 0) {

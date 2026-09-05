@@ -1,7 +1,7 @@
 'use client';
 
-import { AnalyticsContent } from './analytics-content';
+import AnalyticsContent from '../analytics/analytics-content'
 
-export function AnalyticsTab() {
+export default function AnalyticsTab() {
   return <AnalyticsContent />;
 }
