@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MaintenanceRecord, Vehicle, MaintenanceType } from '@/types';
+import { MaintenanceRecord, Vehicle } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, X, Save } from 'lucide-react';
+import { X, Save, CheckCircle, Clock } from 'lucide-react';
 
 interface MaintenanceFormProps {
   onSubmit: (record: Omit<MaintenanceRecord, 'id' | 'createdAt'>) => void;
@@ -18,52 +18,50 @@ interface MaintenanceFormProps {
   isEditing?: boolean;
 }
 
-const MAINTENANCE_TYPES: MaintenanceType[] = ['Плановое ТО', 'Внеплановый ремонт'];
-
-export function MaintenanceForm({ 
-  onSubmit, 
-  onCancel, 
-  vehicles, 
-  initialData, 
-  isEditing = false 
+export function MaintenanceForm({
+  onSubmit,
+  onCancel,
+  vehicles,
+  initialData,
+  isEditing = false,
 }: MaintenanceFormProps) {
   const [vehicleId, setVehicleId] = useState<number>(initialData?.vehicleId || vehicles[0]?.id || 0);
-  const [type, setType] = useState<MaintenanceType>(initialData?.type || MAINTENANCE_TYPES[0]);
-  const [date, setDate] = useState<Date | undefined>(initialData?.date ? new Date(initialData.date) : new Date());
+  const [date, setDate] = useState<Date | undefined>(
+    initialData?.date ? new Date(initialData.date) : new Date()
+  );
   const [hours, setHours] = useState(initialData?.hours?.toString() || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [notes, setNotes] = useState(initialData?.notes || '');
+  const [completed, setCompleted] = useState<boolean>(initialData?.completed ?? false);
 
   useEffect(() => {
     if (initialData) {
       setVehicleId(initialData.vehicleId);
-      setType(initialData.type);
       setDate(new Date(initialData.date));
       setHours(initialData.hours?.toString() || '');
       setDescription(initialData.description);
       setNotes(initialData.notes || '');
+      setCompleted(initialData.completed ?? false);
     }
   }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!vehicleId) {
       alert('Выберите технику');
       return;
     }
-
     if (!description.trim()) {
-      alert('Введите описание обслуживания');
+      alert('Введите описание работ');
       return;
     }
-
     if (!date) {
-      alert('Выберите дату обслуживания');
+      alert('Выберите дату');
       return;
     }
 
-    const selectedVehicle = vehicles.find(v => v.id === vehicleId);
+    const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
     if (!selectedVehicle) {
       alert('Выбранная техника не найдена');
       return;
@@ -72,18 +70,19 @@ export function MaintenanceForm({
     onSubmit({
       vehicleId,
       vehicleName: selectedVehicle.name,
-      type,
       date,
       hours: hours ? parseFloat(hours) : undefined,
       description: description.trim(),
       notes: notes.trim() || undefined,
+      completed,
+      actualDate: completed ? new Date() : undefined,
     });
   };
 
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>{isEditing ? 'Редактировать запись' : 'Новая запись обслуживания'}</CardTitle>
+        <CardTitle>{isEditing ? 'Редактировать запись' : 'Новая заявка на ремонт'}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -108,23 +107,39 @@ export function MaintenanceForm({
             </div>
 
             <div>
-              <Label htmlFor="type">Тип обслуживания</Label>
-              <select
-                id="type"
-                value={type}
-                onChange={(e) => setType(e.target.value as MaintenanceType)}
-                className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                {MAINTENANCE_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+              <Label>Статус заявки</Label>
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={() => setCompleted(false)}
+                  className={`flex-1 h-10 rounded-md border flex items-center justify-center gap-2 text-sm transition-colors ${
+                    !completed
+                      ? 'bg-orange-50 border-orange-300 text-orange-700 font-medium'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  <Clock className="h-4 w-4" />
+                  Не выполнена
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCompleted(true)}
+                  className={`flex-1 h-10 rounded-md border flex items-center justify-center gap-2 text-sm transition-colors ${
+                    completed
+                      ? 'bg-green-50 border-green-300 text-green-700 font-medium'
+                      : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Выполнена
+                </button>
+              </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Дата обслуживания *</Label>
+              <Label>Дата заявки *</Label>
               <DatePicker value={date} onChange={setDate} />
             </div>
 
@@ -142,12 +157,12 @@ export function MaintenanceForm({
           </div>
 
           <div>
-            <Label htmlFor="description">Описание обслуживания *</Label>
+            <Label htmlFor="description">Описание работ *</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Опишите проведенные работы..."
+              placeholder="Опишите необходимые работы или неисправность..."
               rows={4}
               required
             />
@@ -171,7 +186,7 @@ export function MaintenanceForm({
             </Button>
             <Button type="submit" className="gap-1">
               <Save className="h-4 w-4" />
-              Добавить
+              {isEditing ? 'Сохранить' : 'Создать заявку'}
             </Button>
           </div>
         </form>

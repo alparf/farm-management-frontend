@@ -100,11 +100,12 @@ export interface MaintenanceRecord {
   id: number;
   vehicleId: number;
   vehicleName: string;
-  type: MaintenanceType;
   date: Date;
   hours?: number;
   description: string;
   notes?: string;
+  completed: boolean;
+  actualDate?: Date;    
   createdAt: Date;
 }
 

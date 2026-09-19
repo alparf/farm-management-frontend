@@ -11,8 +11,8 @@ interface MaintenanceFiltersProps {
   vehicles: Vehicle[];
   selectedVehicleId: string;
   onVehicleChange: (vehicleId: string) => void;
-  typeFilter: string;
-  onTypeFilterChange: (type: string) => void;
+  statusFilter: string;
+  onStatusFilterChange: (status: string) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
   sortBy: string;
@@ -24,24 +24,18 @@ export function MaintenanceFilters({
   vehicles,
   selectedVehicleId,
   onVehicleChange,
-  typeFilter,
-  onTypeFilterChange,
+  statusFilter,
+  onStatusFilterChange,
   searchQuery,
   onSearchChange,
   sortBy,
   onSortChange,
   onGenerateReport,
 }: MaintenanceFiltersProps) {
-  const maintenanceTypes = [
-    { value: 'all', label: 'Все типы' },
-    { value: 'Плановое ТО', label: 'Плановое ТО' },
-    { value: 'Внеплановый ремонт', label: 'Внеплановый ремонт' },
-  ];
-
   return (
     <Card className="mb-6">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Фильтры обслуживания</CardTitle>
+        <CardTitle className="text-lg">Фильтры заявок на ремонт</CardTitle>
         {onGenerateReport && (
           <Button variant="outline" size="sm" onClick={onGenerateReport}>
             <FileText className="mr-2 h-4 w-4" />
@@ -69,18 +63,16 @@ export function MaintenanceFilters({
           </div>
 
           <div>
-            <Label htmlFor="type-filter">Тип обслуживания</Label>
+            <Label htmlFor="status-filter">Статус заявки</Label>
             <select
-              id="type-filter"
-              value={typeFilter}
-              onChange={(e) => onTypeFilterChange(e.target.value)}
+              id="status-filter"
+              value={statusFilter}
+              onChange={(e) => onStatusFilterChange(e.target.value)}
               className="w-full h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
             >
-              {maintenanceTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
+              <option value="all">Все заявки</option>
+              <option value="completed">Выполненные</option>
+              <option value="pending">Не выполненные</option>
             </select>
           </div>
 
@@ -105,7 +97,7 @@ export function MaintenanceFilters({
               <option value="dateDesc">По дате (новые сначала)</option>
               <option value="dateAsc">По дате (старые сначала)</option>
               <option value="vehicle">По технике</option>
-              <option value="type">По типу</option>
+              <option value="status">По статусу (невыполненные сначала)</option>
             </select>
           </div>
         </div>

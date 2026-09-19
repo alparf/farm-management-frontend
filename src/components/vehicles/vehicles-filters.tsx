@@ -4,6 +4,8 @@ import { VehicleType } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { FileText } from 'lucide-react';
 
 interface VehiclesFiltersProps {
   searchQuery: string;
@@ -16,6 +18,7 @@ interface VehiclesFiltersProps {
   onRoadLegalFilterChange: (filter: string) => void;
   sortBy: string;
   onSortChange: (sort: string) => void;
+  onGenerateReport?: () => void;
 }
 
 export function VehiclesFilters({
@@ -29,6 +32,7 @@ export function VehiclesFilters({
   onRoadLegalFilterChange,
   sortBy,
   onSortChange,
+  onGenerateReport,
 }: VehiclesFiltersProps) {
   const vehicleTypes: VehicleType[] = [
     'трактор',
@@ -37,7 +41,7 @@ export function VehiclesFilters({
     'легковой автомобиль',
     'прицеп',
     'сельхозорудие',
-    'другая техника'
+    'другая техника',
   ];
 
   const insuranceFilters = [
@@ -58,8 +62,14 @@ export function VehiclesFilters({
 
   return (
     <Card className="mb-6">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Фильтры техники</CardTitle>
+        {onGenerateReport && (
+          <Button variant="outline" size="sm" onClick={onGenerateReport}>
+            <FileText className="mr-2 h-4 w-4" />
+            Отчет
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
