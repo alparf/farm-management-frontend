@@ -38,7 +38,7 @@ export function PeriodSelector({
 }: PeriodSelectorProps) {
   const availableYears = useMemo(() => {
     const years = new Set<number>();
-    shipments.forEach(s => {
+    shipments.forEach((s) => {
       years.add(new Date(s.date).getFullYear());
     });
     return Array.from(years).sort((a, b) => b - a);
@@ -52,26 +52,31 @@ export function PeriodSelector({
             <Label className="text-sm">Сезон (год)</Label>
             <select
               value={selectedYear}
-              onChange={(e) => onYearChange(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              onChange={(e) => onYearChange(Number(e.target.value))}
               className="w-32 h-9 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
             >
-              <option value="all">Все сезоны</option>
-              {availableYears.map(year => (
-                <option key={year} value={year}>{year}</option>
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
               ))}
             </select>
           </div>
 
           <div>
-            <Label className="text-sm">Месяц </Label>
+            <Label className="text-sm">Месяц</Label>
             <select
               value={selectedMonth}
-              onChange={(e) => onMonthChange(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              onChange={(e) =>
+                onMonthChange(e.target.value === 'all' ? 'all' : Number(e.target.value))
+              }
               className="w-36 h-9 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm"
             >
-              <option value="all">Все месяцы </option>
-              {MONTHS.map(month => (
-                <option key={month.value} value={month.value}>{month.label}</option>
+              <option value="all">Все месяцы</option>
+              {MONTHS.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
+                </option>
               ))}
             </select>
           </div>
