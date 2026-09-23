@@ -12,7 +12,7 @@ import { VehiclesFilters } from './vehicles-filters';
 import { MaintenanceFilters } from './maintenance-filters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Wrench, Car, ShieldOff, RouteOff, AlertTriangle, CheckCircle, Clock, FileText } from 'lucide-react';
+import { Wrench, Car, ShieldOff, RouteOff, AlertTriangle } from 'lucide-react';
 import { generateVehiclesReport } from '@/utils/reportVehicles';
 import { generateMaintenanceReport } from '@/utils/reportMaintenance';
 
@@ -92,12 +92,6 @@ export default function VehiclesTab() {
     expiringRoadLegal: vehicles.filter(
       (v) => v.roadLegalUntil && !isDateExpired(v.roadLegalUntil) && isDateExpiringSoon(v.roadLegalUntil),
     ).length,
-  };
-
-  const maintenanceStats = {
-    total: maintenance.length,
-    completed: maintenance.filter((m) => m.completed).length,
-    pending: maintenance.filter((m) => !m.completed).length,
   };
 
   const vehiclesMap = useMemo(() => {
@@ -442,20 +436,20 @@ export default function VehiclesTab() {
 
       {/* Вкладка Техника */}
       {currentView === 'vehicles' && (
-  <>
-        <VehiclesFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-          insuranceFilter={insuranceFilter}
-          onInsuranceFilterChange={setInsuranceFilter}
-          roadLegalFilter={roadLegalFilter}
-          onRoadLegalFilterChange={setRoadLegalFilter}
-          sortBy={sortBy}
-          onSortChange={setSortBy}
-          onGenerateReport={handleGenerateVehiclesReport}
-        />
+        <>
+          <VehiclesFilters
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            typeFilter={typeFilter}
+            onTypeFilterChange={setTypeFilter}
+            insuranceFilter={insuranceFilter}
+            onInsuranceFilterChange={setInsuranceFilter}
+            roadLegalFilter={roadLegalFilter}
+            onRoadLegalFilterChange={setRoadLegalFilter}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
+            onGenerateReport={handleGenerateVehiclesReport}
+          />
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">
               Учет техники ({filteredVehicles.length} из {vehicles.length})
@@ -478,76 +472,6 @@ export default function VehiclesTab() {
       {/* Вкладка Заявки на ремонт */}
       {currentView === 'maintenance' && (
         <>
-          {/* Статистика заявок */}
-          <div className="grid grid-cols-3 gap-3">
-            <Card
-              className="bg-blue-50 border-blue-200 cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setMaintenanceStatusFilter('all')}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-medium text-blue-600">Всего заявок</div>
-                    <div className="text-lg font-bold text-blue-800">{maintenanceStats.total}</div>
-                  </div>
-                  <Wrench className="h-5 w-5 text-blue-500 opacity-60" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className="bg-green-50 border-green-200 cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => setMaintenanceStatusFilter('completed')}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-xs font-medium text-green-600">Выполнено</div>
-                    <div className="text-lg font-bold text-green-800">
-                      {maintenanceStats.completed}
-                    </div>
-                  </div>
-                  <CheckCircle className="h-5 w-5 text-green-500 opacity-60" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className={`${
-                maintenanceStats.pending > 0
-                  ? 'bg-orange-50 border-orange-200'
-                  : 'bg-gray-50 border-gray-200'
-              } cursor-pointer hover:shadow-md transition-shadow`}
-              onClick={() => setMaintenanceStatusFilter('pending')}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div
-                      className={`text-xs font-medium ${
-                        maintenanceStats.pending > 0 ? 'text-orange-600' : 'text-gray-600'
-                      }`}
-                    >
-                      Не выполнено
-                    </div>
-                    <div
-                      className={`text-lg font-bold ${
-                        maintenanceStats.pending > 0 ? 'text-orange-800' : 'text-gray-800'
-                      }`}
-                    >
-                      {maintenanceStats.pending}
-                    </div>
-                  </div>
-                  <Clock
-                    className={`h-5 w-5 ${
-                      maintenanceStats.pending > 0 ? 'text-orange-500' : 'text-gray-400'
-                    } opacity-60`}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           <MaintenanceFilters
             vehicles={vehicles}
             selectedVehicleId={maintenanceVehicleId}
